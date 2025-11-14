@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCMXpertLite — Sign in / Sign up</title>
+
+  <!-- Google font + jQuery + Paper.js -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.11.3/paper-full.min.js"></script>
+
+  <!-- external stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- decorative background container -->
+  <div id="bg-wrap">
+    <canvas id="bg-canvas"></canvas>
+    <div class="bg-left"></div>
+    <div class="bg-right"></div>
+  </div>
+
+  <!-- sliding auth box -->
+  <div id="slideBox" aria-hidden="false">
+    <div class="topLayer">
+
+      <!-- SIGNUP (left) -->
+      <section class="pane pane-left">
+        <div class="pane-inner">
+          <h2>Create account</h2>
+          <p class="muted">Start managing your shipments in minutes — secure and simple.</p>
+
+          <!-- POSTs to your backend signup route -->
+          <form method="post" action="/api/users/signup" class="form-stack">
+            <label>Username</label>
+            <input name="username" required>
+
+            <label>Email</label>
+            <input name="email" type="email" required>
+
+            <label>Password</label>
+            <input name="password" type="password" required>
+
+            <label>Confirm password</label>
+            <input name="confirm_password" type="password" required>
+
+            <div class="form-row">
+              <button type="submit" class="btn primary">Create account</button>
+              <button id="goLeft" type="button" class="btn ghost">Have account? Log in</button>
+            </div>
+          </form>
+
+          <p class="foot muted">By creating an account you agree to our Terms.</p>
+        </div>
+      </section>
+
+      <!-- LOGIN (right) -->
+      <section class="pane pane-right">
+        <div class="pane-inner">
+          <h2>Welcome back</h2>
+          <p class="muted">Sign in to access shipments, devices and live data.</p>
+
+          <!-- POSTs to your backend login route -->
+          <form method="post" action="/api/users/login" class="form-stack">
+            <label>Username or Email</label>
+            <input name="identifier" required>
+
+            <label>Password</label>
+            <input name="password" type="password" required>
+
+            <div class="form-row">
+              <button type="submit" class="btn primary alt">Sign in</button>
+              <button id="goRight" type="button" class="btn ghost">Create account</button>
+            </div>
+          </form>
+
+          <p class="foot muted"><a href="/ui/forgot.html" class="link">Forgot password?</a></p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+<script>
+  // Slide left/right handlers (keeps same UX as you had)
+  $(function(){
+    $("#goRight").on("click", function(){
+      $("#slideBox").animate({ 'marginLeft': '0' }, 420);
+      $(".topLayer").animate({ 'marginLeft': '100%' }, 420);
+    });
+    $("#goLeft").on("click", function(){
+      if (window.innerWidth > 768) {
+        $("#slideBox").animate({ 'marginLeft': '50%' }, 420);
+      } else {
+        $("#slideBox").animate({ 'marginLeft': '20%' }, 420);
+      }
+      $(".topLayer").animate({ 'marginLeft': '0' }, 420);
+    });
+  });
+
+  // Paper.js background: soft flowing blobs, light professional look
+  paper.install(window);
+  paper.setup(document.getElementById('bg-canvas'));
+
+  // Create three soft circles with light blue tones
+  var g = new Group();
+  function addBlob(x,y,r,color,opacity){
+    var c = new Path.Circle(new Point(x,y), r);
+    c.fillColor = color;
+    c.opacity = opacity;
+    g.addChild(c);
+  }
+
+  // initial blobs (positions will be updated on resize)
+  addBlob(180, 220, 140, '#D8EEFF', 0.55);
+  addBlob(560, 140, 100, '#EAF6FF', 0.42);
+  addBlob(420, 380, 160, '#E3F2FF', 0.45);
+
+  view.onFrame = function(event){
+    // gentle sinusoidal motion for each blob
+    for (var i=0; i<g.children.length; i++){
+      var n = g.children[i];
+      n.position.x += Math.sin((event.count/80)+(i*1.7)) * 0.4;
+      n.position.y += Math.cos((event.count/100)+(i*2.2)) * 0.35;
+    }
+  };
+
+  // ensure canvas fills full window
+  function resizeCanvas(){
+    var c = document.getElementById('bg-canvas');
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+    paper.view.viewSize = new Size(c.width, c.height);
+
+    // reposition blobs relative to size
+    if (paper.view.size.width < 840) {
+      g.children[0].position = new Point(paper.view.size.width*0.2, paper.view.size.height*0.35);
+      g.children[1].position = new Point(paper.view.size.width*0.7, paper.view.size.height*0.18);
+      g.children[2].position = new Point(paper.view.size.width*0.55, paper.view.size.height*0.68);
+    } else {
+      g.children[0].position = new Point(180, 220);
+      g.children[1].position = new Point(560, 140);
+      g.children[2].position = new Point(420, 380);
+    }
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+</script>
+</body>
+</html>
