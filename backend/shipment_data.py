@@ -8,7 +8,8 @@ router = APIRouter(prefix="/api/shipments", tags=["shipments"])
 def create_shipment(
     shipment_number: str = Form(...),
     container_number: str = Form(...),
-    route_details: str = Form(...),
+    route_from: str = Form(...),
+    route_to: str = Form(...),
     goods_type: str = Form(...),
     expected_delivery_date: str = Form(...),
     po_number: str = Form(...),
@@ -28,7 +29,8 @@ def create_shipment(
     doc = {
         "shipment_number": shipment_number,
         "container_number": container_number,
-        "route_details": route_details,
+        "route_from": route_from,
+        "route_to": route_to,
         "goods_type": goods_type,
         "expected_delivery_date": expected_delivery_date,
         "po_number": po_number,
