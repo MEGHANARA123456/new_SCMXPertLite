@@ -1,36 +1,32 @@
 from fastapi import FastAPI
-from dotenv import load_dotenv
-from pymongo import MongoClient, errors
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse, FileResponse
+from dotenv import load_dotenv
 from pathlib import Path
-import random, string, logging
-from fastapi import Response
+import requests
+from fastapi import HTTPException
 import os
-from backend.db import client, db
-from backend import user, shipment_data, device_data
+import logging
+
+from backend import user, shipment_data, device_data, admin_privileges, role_management   # your existing routers
+# -------------------- ENV + DATABASE --------------------
 load_dotenv()
-
 logging.basicConfig(level=logging.INFO)
+# -------------------- FASTAPI APP ------------------------
+app = FastAPI(title="SCMXpertLite Backend", version="1.0.0")
 
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
-
-if not MONGO_URI or not MONGO_DB:
-    raise RuntimeError("MONGO_URI and MONGO_DB must be set in .env file")
-
-# client and db are imported from backend.db above
-
-app = FastAPI(title="SCMXPertLite API")
-# Routers
+app.include_router(user.router)
 app.include_router(shipment_data.router)
 app.include_router(device_data.router)
-app.include_router(user.router)
-# CORS
+app.include_router(admin_privileges.router)
+app.include_router(role_management.router)
+
+# -------------------- CORS ------------------------
 origins = [
-    "http://127.0.0.1:5500",  #for frontend 5500
+    "http://127.0.0.1:5500",
     "http://localhost:5500",
-    "http://127.0.0.1:8000",   #for backend 8000  
+    "http://127.0.0.1:8000",
     "http://localhost:8000",
 ]
 
@@ -42,37 +38,60 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve Frontend (compute absolute path relative to repo root)
-frontend_path = Path(__file__).resolve().parent.parent / "frontend"
-if frontend_path.exists() and frontend_path.is_dir():
-    app.mount("/ui", StaticFiles(directory=str(frontend_path), html=True), name="ui")
-else:
-    logging.warning(f"Frontend directory not found at {frontend_path}. /ui will not be mounted.")
+# -------------------- FRONTEND PATH ------------------------
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = BASE_DIR / "frontend"
+
+# serve the entire frontend folder at /frontend/...
+app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+
+# Utility: load any html file by name
+def page(name: str):
+    return FileResponse(FRONTEND_DIR / name)
+
+
+# -------------------- PAGE ROUTES (FRIENDLY URLS) ------------------------
+
+@app.get("/")
+def home_page():
+    return page("user.html")     # default page is login/signup
+
+
+@app.get("/login")
+def login_page():
+    return page("user.html")
+
+
+@app.get("/dashboard")
+def dashboard_page():
+    return page("dashboard.html")
+
+
+@app.get("/shipments")
+def shipments_page():
+    return page("shipments.html")
+
+
+@app.get("/create-shipment")
+def create_shipment_page():
+    return page("shipment_data.html")
+
+
+@app.get("/device-data")
+def device_data_page():
+    return page("device_data.html")
+
+
+@app.get("/logout")
+def logout_page():
+    return page("logout.html")
+
 
 @app.get("/ping")
 def ping():
     return {"status": "ok"}
 
-@app.get("/")
-def root():
-    return {"message": "Backend running!"}
 
-
-@app.on_event("startup")
-async def startup_event():
-    logging.info("Starting up: checking MongoDB connection...")
-    try:
-        # This will raise if the server is unreachable
-        client.admin.command("ping")
-        logging.info("MongoDB ping successful")
-    except Exception as exc:
-        logging.warning(f"MongoDB startup check failed (running in degraded mode): {exc}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    try:
-        client.close()
-        logging.info("MongoDB client closed")
-    except Exception:
-        pass
+@app.get("/public/recaptcha-site-key")
+def get_recaptcha_key():
+    return {"site_key": os.getenv("RECAPTCHA_SITE_KEY")}

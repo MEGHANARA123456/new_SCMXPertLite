@@ -3,13 +3,137 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SCMXPertLite — Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+
+/* Top bar */
+.topbar {
+  width: 100%;
+  background:  #6C27D9;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e2e2;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.nav-menu {
+  display: flex;
+  gap: 35px;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.nav-menu a {
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+}
+
+.nav-menu a:hover {
+  color: #0288d1;
+}
+
+
+/* Page container spacing */
+.container {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+/* Header brand */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.logo {
+  background: #6C27D9;
+  color: white;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.brand div div.small {
+  color: #777;
+}
+
+/* Cards same as shipment page */
+.card {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.10);
+  margin-bottom: 25px;
+}
+
+.card h3 {
+  color: #6C27D9;
+  font-weight: 700;
+}
+
+.small {
+  color: #555;
+}
+
+/* Grid columns (2 equal boxes) */
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Stream box styling */
+.stream-box {
+  background: #f4f0ff;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.stream-item {
+  font-size: 15px;
+  padding: 6px 0;
+}
+
+.footer-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 </head>
 <body>
-  <div class="container">
+
+  
+   <header class="topbar" role="navigation" aria-label="Main navigation">
+      <nav class="nav-menu" role="menubar" aria-label="Primary">
+        <a href="/frontend/dashboard.html" role="menuitem"><i class="fa fa-home"></i> Dashboard</a>
+        <a href="/frontend/user.html" role="menuitem"><i class="fa fa-user"></i> My Account</a>
+        <a href="/frontend/device.html" role="menuitem"><i class="fa fa-microchip"></i> Device Data</a>
+         <a href="/frontend/shipment_data.html" role="menuitem"><i class="fa fa-microchip"></i> create_shipment</a>
+      </nav>
+    </header>
+    <div class="container">
     <div class="header">
       <div class="brand"><div class="logo">S</div><div><div style="font-weight:700">SCMXPertLite</div><div class="small">Overview</div></div></div>
-      <div><a href="dashboard.html" class="small">Refresh</a></div>
     </div>
 
     <div class="grid cols-2">
@@ -18,15 +142,7 @@
         <p class="small">Quick snapshot of latest shipments</p>
         <div class="small footer-note">(UI only — connect to API to populate)</div>
       </div>
-
-      <div class="card">
-        <h3>Device Health</h3>
-        <p class="small">Average battery & last readings</p>
-        <div class="small footer-note">(UI only — connect to API to populate)</div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:16px">
+      <div class="card" style="margin-top:16px">
       <h3>Recent Activity (Live)</h3>
       <div class="stream-box">
         <div class="stream-item">No live data — UI-only</div>

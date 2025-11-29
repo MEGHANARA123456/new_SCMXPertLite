@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCMXpertLite — Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,600" rel="stylesheet">
+  <style>
+    /* ===== Palette & base (matches your UI) ===== */
+    :root{
+      --purple:#673AB7;
+      --purple-dark:#4A1CA0;
+      --teal:#03C2E0;
+      --bg:#f7f7fb;
+      --panel:#ffffff;
+      --muted:#666;
+      --success:#2ecc71;
+      --danger:#e74c3c;
+      --accent:#6ac4ee;
+      --shadow: 0 8px 28px rgba(46,17,84,0.06);
+    }
+    *{box-sizing:border-box}
+    body{font-family:Roboto,system-ui,Arial; margin:0; background:var(--bg); color:#222; -webkit-font-smoothing:antialiased}
+    a{color:inherit}
+
+    /* topbar */
+    .topbar{width:100%; background:var(--purple); padding:14px 20px; box-shadow:0 3px 12px rgba(0,0,0,0.08); position:sticky; top:0; z-index:40}
+    .nav-menu{display:flex; gap:18px; align-items:center; justify-content:flex-start}
+    .nav-menu a{color:#fff; text-decoration:none; font-weight:600; font-size:14px}
+    .brand{display:flex;align-items:center;gap:12px;color:#fff}
+
+    /* layout */
+    .layout{display:flex; max-width:1200px; margin:28px auto; gap:24px; padding:0 16px}
+    .sidebar{width:260px; background:linear-gradient(180deg,#2c2a45, #3a2d66); color:#fff; border-radius:12px; padding:10px; box-shadow:var(--shadow)}
+    .sidebar h3{margin:0 0 12px; font-size:16px}
+    .menu-item{display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; padding:12px 10px; border-radius:8px; cursor:pointer; color:#f1f1fb; margin-bottom:8px; transition:all .14s ease}
+    .menu-item:hover{transform:translateX(4px)}
+    .menu-item.active{background:rgba(255,255,255,0.04)}
+    .menu-item small{color:#dcd6ff; font-weight:400; margin-top:6px; display:block}
+
+    .main{flex:1}
+    .panel{background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 6px 22px rgba(0,0,0,0.06); margin-bottom:18px; transition:all .12s ease}
+
+    .header-row{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+    .title{font-size:20px; color:var(--purple); font-weight:700}
+    .controls{display:flex; gap:8px; align-items:center}
+
+    .small{font-size:13px;color:var(--muted)}
+    .muted{color:var(--muted)}
+
+    /* tables */
+    table{width:100%; border-collapse:collapse}
+    th,td{padding:12px 10px; text-align:left; border-bottom:1px solid #f0f0f3; font-size:14px}
+    th{font-weight:600; color:#444}
+    .user-table tbody tr:hover{background:#fbfbff}
+    .role-badge{padding:6px 10px; border-radius:999px; background:#f3f0ff; color:var(--purple); font-weight:700; font-size:13px; display:inline-block}
+
+    .btn{padding:9px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:700; transition:all .12s ease}
+    .btn.primary{background:var(--purple); color:#fff}
+    .btn.ghost{background:transparent; border:1px solid #eee; color:#222}
+    .btn.warn{background:var(--teal); color:#042}
+    .btn.icon{display:inline-flex; align-items:center; gap:8px; padding:8px 10px}
+    .actions button{margin-right:6px}
+
+    /* two column grid */
+    .grid{display:grid; grid-template-columns:1fr 420px; gap:18px}
+    @media (max-width:980px){ .layout{margin:12px} .grid{grid-template-columns:1fr} .sidebar{display:none} }
+
+    /* modal */
+    .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:all .18s ease}
+    .modal-backdrop.show{opacity:1; pointer-events:auto}
+    .modal{width:760px; max-width:96%; background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 18px 60px rgba(30,12,60,0.18)}
+    .modal h4{margin:0 0 8px; color:var(--purple)}
+    .close-btn{background:#eee; border-radius:8px; padding:6px 8px; border:0; cursor:pointer}
+
+    /* permissions grid */
+    .perm-grid{width:100%; border-collapse:collapse; margin-top:12px}
+    .perm-grid th,.perm-grid td{padding:10px; border:1px solid #f0eff6; text-align:center}
+    .perm-grid th{background:#fbf8ff; color:var(--purple); font-weight:700}
+    .chip.yes{background:var(--success); color:white; padding:6px 8px; border-radius:8px}
+    .chip.no{background:var(--danger); color:white; padding:6px 8px; border-radius:8px}
+
+    /* toast */
+    #toast{position:fixed; top:22px; left:50%; transform:translateX(-50%) translateY(-26px); background:var(--purple); color:#fff; padding:12px 18px; border-radius:10px; box-shadow:0 10px 30px rgba(102,20,170,0.18); opacity:0; transition:all .28s ease; z-index:1200}
+    #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+    /* tiny helpers */
+    .muted-block{color:var(--muted); font-size:13px}
+    .search{padding:8px 10px; border-radius:8px; border:1px solid #eee; width:100%}
+    .flex{display:flex; gap:8px; align-items:center}
+    .gap{height:12px}
+
+    /* small UI niceties */
+    .hidden { display:none !important; opacity:0; transform:translateY(-6px) }
+    .fade-in { animation: fadeInUp .18s ease both }
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+
+    /* logged-in list */
+    .logged-list { margin-top:10px; border-radius:8px; padding:10px; background:#fbfbff; font-size:13px; max-height:160px; overflow:auto; }
+    .logout-btn { background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; cursor:pointer }
+    .logout-btn svg { vertical-align:middle }
+
+    /* action menu icon */
+    .three-dots { width:28px; height:28px; border-radius:6px; background:#f6f6fb; display:inline-flex; align-items:center; justify-content:center; cursor:pointer }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:18px;">
+      <div class="brand"><strong style="font-size:18px">SCMXpertLite</strong> <span style="opacity:.85;font-size:13px;margin-left:8px">Admin</span></div>
+      <nav class="nav-menu" style="margin-left:18px">
+        <a href="/frontend/dashboard.html">Dashboard</a>
+        <a href="/frontend/shipments.html">Shipments</a>
+        <a href="/frontend/device_data.html">Device Data</a>
+        <a href="/frontend/live_streamingdata.html">Live Stream</a>
+      </nav>
+
+      <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
+        <div style="color:#fff; font-weight:600">Welcome — <span id="currentAdmin">...</span></div>
+        <button id="logoutBtn" class="logout-btn" title="Logout">
+          <!-- logout icon -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right:6px" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 17L21 12L16 7" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12H9" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13 19H6C5.44772 19 5 18.5523 5 18V6C5 5.44772 5.44772 5 6 5H13" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>Admin Tools</h3>
+
+      <div id="menuUsers" class="menu-item active" data-section="users">
+        Users
+        <small>manage accounts</small>
+      </div>
+
+      <div id="menuRequests" class="menu-item" data-section="requests">
+        Pending Requests
+        <small>access requests</small>
+      </div>
+
+      <div id="menuRoles" class="menu-item" data-section="roles">
+        Roles & Permissions
+        <small>edit roles</small>
+      </div>
+
+      <div id="menuAudit" class="menu-item" data-section="audit">
+        Audit & Logs
+        <small>history</small>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small muted">Logged in sessions</div>
+        <div id="loggedList" class="logged-list"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="grid">
+
+        <!-- LEFT: Main content area -->
+        <div>
+          <!-- USERS PANEL (hidden by quick buttons, initially hidden because request page should be dominant per user) -->
+          <section id="panelUsers" class="panel hidden fade-in">
+            <div class="header-row">
+              <div>
+                <div class="title">Team Members</div>
+                <div class="small">Active users in the system — assign roles & permissions</div>
+              </div>
+
+              <div class="controls">
+                <input id="userSearch" class="search" placeholder="Search users by name or email" />
+                <button class="btn primary" id="refreshAll">Refresh</button>
+                <button class="btn ghost" id="btnShowRequests">Show Requests</button>
+              </div>
+            </div>
+
+            <div style="overflow:auto">
+              <table class="user-table" id="usersTable">
+                <thead>
+                  <tr><th>Username</th><th>Email</th><th>Role</th><th>Admin</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  <!-- filled by JS -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- PENDING REQUESTS PANEL (prominent on load) -->
+          <section id="panelRequests" class="panel fade-in">
+            <div class="header-row">
+              <div>
+                <div class="title">Pending Admin Requests</div>
+                <div class="small">Users requesting elevated access</div>
+              </div>
+              <div class="controls">
+                <input id="requestsFilter" class="search" placeholder="Filter username..." />
+                <button class="btn ghost" id="refreshRequests">Refresh</button>
+              </div>
+            </div>
+
+            <div style="overflow:auto">
+              <table id="requestsTable">
+                <thead><tr><th>Username</th><th>Requested At</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody><!-- filled by JS --></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- AUDIT PANEL -->
+          <section id="panelAudit" class="panel hidden fade-in">
+            <div class="header-row">
+              <div>
+                <div class="title">Audit & Logs</div>
+                <div class="small">Activity & admin actions</div>
+              </div>
+              <div class="controls">
+                <button class="btn ghost" id="refreshAudit">Refresh</button>
+              </div>
+            </div>
+
+            <div style="overflow:auto">
+              <table id="auditTable">
+                <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+                <tbody><!-- filled by JS with either real audit logs or mock data --></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT: Role editor (kept hidden initially, show on demand) -->
+        <aside>
+          <section class="panel">
+            <div class="header-row">
+              <div>
+                <div class="title">Quick Tools</div>
+                <div class="small">Open panels & quick actions</div>
+              </div>
+            </div>
+
+            <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
+              <button id="btnTeamMembers" class="btn primary">Team Members</button>
+              <button id="btnEditRoles" class="btn ghost">Edit Roles</button>
+              <button id="btnShowPendingFull" class="btn warn">Show Pending Requests (Full)</button>
+
+              <div class="gap"></div>
+              <div class="muted-block">Permissions preview</div>
+              <table class="perm-grid" id="permGrid">
+                <thead>
+                  <tr><th>Permission</th><th>Admin</th><th>Manager</th><th>Editor</th><th>Viewer</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>View Dashboard</td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td></tr>
+                  <tr><td>Export Users</td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
+                  <tr><td>Manage Shipments</td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </aside>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Role modal -->
+  <div id="roleModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <h4>Edit Team Member Role</h4>
+        <button class="close-btn" id="closeModal">Close</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="muted-block">User: <strong id="modalUsername">—</strong></div>
+
+        <div style="margin-top:12px">
+          <label style="display:block;margin-bottom:8px">Role</label>
+          <select id="modalRoleSelect" class="search">
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+            <option value="user">User</option>
+          </select>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end">
+          <button class="btn ghost" id="modalCancel">Cancel</button>
+          <button class="btn primary" id="modalSave">Save Role</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+<script>
+/*
+  admin_dashboard.html
+  - Uses localStorage.token for auth
+  - Reads backend endpoints:
+      GET  /admin/pending
+      GET  /admin/users (preferred)
+      POST /admin/set-role/{username}  with JSON { role: "..." }
+  - Graceful fallback to mock data when endpoints missing
+  - "Logged-in users" stored in localStorage and optionally POSTed to /admin/loggedin
+*/
+
+const API_BASE_URL = "http://127.0.0.1:8000";
+const toastEl = document.getElementById("toast");
+function showToast(msg, t=3000){ toastEl.textContent = msg; toastEl.classList.add("show"); setTimeout(()=> toastEl.classList.remove("show"), t); }
+
+// Auth helpers
+function getToken(){ return localStorage.getItem("token") || ""; }
+function authHeaders(){ const t = getToken(); return t ? { "Authorization": "Bearer " + t } : {}; }
+function decodeToken(){ const t = getToken(); if(!t) return null; try{ return JSON.parse(atob(t.split(".")[1])); }catch{return null;} }
+function populateCurrentAdmin(){ const p = decodeToken(); document.getElementById("currentAdmin").textContent = (p && (p.username || p.sub)) || "guest" }
+
+// UI panels
+const panelUsers = document.getElementById("panelUsers");
+const panelRequests = document.getElementById("panelRequests");
+const panelAudit = document.getElementById("panelAudit");
+
+// Sidebar buttons
+const menuUsers = document.getElementById("menuUsers");
+const menuRequests = document.getElementById("menuRequests");
+const menuRoles = document.getElementById("menuRoles");
+const menuAudit = document.getElementById("menuAudit");
+
+// Quick buttons
+const btnTeamMembers = document.getElementById("btnTeamMembers");
+const btnEditRoles = document.getElementById("btnEditRoles");
+const btnShowPendingFull = document.getElementById("btnShowPendingFull");
+const btnShowRequests = document.getElementById("btnShowRequests");
+
+// modal
+const roleModal = document.getElementById("roleModal");
+const modalUsernameEl = document.getElementById("modalUsername");
+const modalRoleSelect = document.getElementById("modalRoleSelect");
+const modalSave = document.getElementById("modalSave");
+
+// logout
+document.getElementById("logoutBtn").addEventListener("click", ()=> {
+  localStorage.removeItem("token");
+  showToast("Logged out");
+  setTimeout(()=> window.location.href = "/frontend/user.html", 700);
+});
+
+// toggle helpers
+function hideAllPanels(){
+  panelUsers.classList.add("hidden");
+  panelUsers.classList.remove("fade-in");
+  panelRequests.classList.add("hidden");
+  panelRequests.classList.remove("fade-in");
+  panelAudit.classList.add("hidden");
+  panelAudit.classList.remove("fade-in");
+}
+function activateMenuItem(el){
+  document.querySelectorAll(".menu-item").forEach(x => x.classList.remove("active"));
+  if(el) el.classList.add("active");
+}
+
+// start with Pending Requests visible (user required this)
+function showPendingAsMain(){
+  hideAllPanels();
+  panelRequests.classList.remove("hidden");
+  panelRequests.classList.add("fade-in");
+  activateMenuItem(menuRequests);
+}
+
+// click handlers for sidebar
+menuUsers.addEventListener("click", ()=> {
+  hideAllPanels();
+  panelUsers.classList.remove("hidden");
+  panelUsers.classList.add("fade-in");
+  activateMenuItem(menuUsers);
+});
+menuRequests.addEventListener("click", ()=> {
+  showPendingAsMain();
+});
+menuRoles.addEventListener("click", ()=> {
+  // show right panel's role tools (open modal to edit or show quick role selector)
+  openRoleModal(prompt("Enter username to edit:") || "");
+});
+menuAudit.addEventListener("click", ()=> {
+  hideAllPanels();
+  panelAudit.classList.remove("hidden");
+  panelAudit.classList.add("fade-in");
+  activateMenuItem(menuAudit);
+});
+
+// quick buttons
+btnTeamMembers.addEventListener("click", ()=> {
+  // reveal users panel
+  hideAllPanels();
+  panelUsers.classList.remove("hidden");
+  panelUsers.classList.add("fade-in");
+  activateMenuItem(menuUsers);
+});
+btnEditRoles.addEventListener("click", ()=> {
+  // open modal (but only if user picks a username)
+  const uname = prompt("Enter username to edit role:");
+  if(uname) openRoleModal(uname);
+});
+btnShowPendingFull.addEventListener("click", ()=> {
+  showPendingAsMain();
+});
+document.getElementById("btnShowRequests").addEventListener("click", ()=> showPendingAsMain());
+
+// modal controls
+document.getElementById("closeModal").addEventListener("click", closeRoleModal);
+document.getElementById("modalCancel").addEventListener("click", closeRoleModal);
+function openRoleModal(username){
+  if(!username){ showToast("No username provided"); return; }
+  modalUsernameEl.textContent = username;
+  modalRoleSelect.value = "";
+  roleModal.classList.add("show");
+  roleModal.setAttribute("aria-hidden","false");
+}
+function closeRoleModal(){
+  roleModal.classList.remove("show");
+  roleModal.setAttribute("aria-hidden","true");
+}
+
+// save role
+modalSave.addEventListener("click", async ()=>{
+  const username = modalUsernameEl.textContent;
+  const role = modalRoleSelect.value;
+  if(!username || !role){ showToast("Pick a role"); return; }
+  try {
+    await setRoleForUser(username, role);
+    showToast(`Role updated: ${username} → ${role}`);
+    closeRoleModal();
+    loadUsers();
+    loadRequests();
+  } catch(e){ console.error(e); showToast("Update failed") }
+});
+
+// --- Data loading & rendering ---
+function fmt(dt){ try { return new Date(dt).toLocaleString(); } catch { return dt } }
+async function loadRequests(){
+  const tbody = document.querySelector("#requestsTable tbody");
+  tbody.innerHTML = "<tr><td colspan='4' class='muted'>Loading...</td></tr>";
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/pending`, { headers: authHeaders() });
+    if(!res.ok){
+      tbody.innerHTML = "<tr><td colspan='4' class='muted'>No pending requests or cannot reach server</td></tr>";
+      return;
+    }
+    const data = await res.json();
+    const rows = (data.requests || []).map(r => {
+      const id = r.username || Math.random().toString(36).slice(2,8);
+      return `<tr>
+        <td>${r.username}</td>
+        <td>${fmt(r.requested_at)}</td>
+        <td>${r.status}</td>
+        <td class="actions">
+          <button class="btn" data-approve="${r.username}">Approve</button>
+          <button class="btn" data-reject="${r.username}">Reject</button>
+        </td>
+      </tr>`;
+    }).join("");
+    tbody.innerHTML = rows || "<tr><td colspan='4' class='muted'>No pending requests</td></tr>";
+  } catch(err){
+    console.error(err);
+    tbody.innerHTML = "<tr><td colspan='4' class='muted'>Error loading requests</td></tr>";
+  }
+}
+
+async function loadUsers(){
+  const tbody = document.querySelector("#usersTable tbody");
+  tbody.innerHTML = "<tr><td colspan='5' class='muted'>Loading users…</td></tr>";
+  try {
+    // First, check if users were pre-loaded from login page (stored in localStorage)
+    let users = [];
+    const cachedUsers = localStorage.getItem('adminUsers');
+    if (cachedUsers) {
+      try {
+        users = JSON.parse(cachedUsers);
+        console.log('Loaded ' + users.length + ' users from login cache');
+      } catch (e) {
+        console.error('Failed to parse cached users:', e);
+      }
+    }
+
+    // If no cached users, fetch from backend
+    if (users.length === 0) {
+      let res = await fetch(`${API_BASE_URL}/admin/users`, { headers: authHeaders() });
+      if(!res.ok){
+        // try commons
+        res = await fetch(`${API_BASE_URL}/users`, { headers: authHeaders() });
+        if(!res.ok) res = await fetch(`${API_BASE_URL}/user/list`, { headers: authHeaders() });
+      }
+      if(!res.ok){
+        populateUsersMock();
+        return;
+      }
+      const data = await res.json();
+      if(Array.isArray(data)) users = data;
+      else if(Array.isArray(data.users)) users = data.users;
+      else if(Array.isArray(data.data)) users = data.data;
+      else users = data.users || data.items || [];
+    }
+    
+    // Clear the cached users after rendering (optional, can keep for refresh)
+    // localStorage.removeItem('adminUsers');
+    
+    renderUsers(users);
+  } catch(err){
+    console.error(err);
+    populateUsersMock();
+  }
+}
+function populateUsersMock(){
+  const mock = [
+    { username: "meghana", email: "meghana.ramki@143gmail.com", role: "admin" },
+    { username: "kamatammeghana", email: "kamatammeghana.143@gmail.com", role: "manager" },
+    { username: "raji", email: "meghana.mokshi143@gmail.com", role: "user1" },
+    { username: "raji", email: "muvvalarajeswari69@gmail.com", role: "user2" }
+  ];
+  renderUsers(mock);
+}
+function renderUsers(users){
+  const tbody = document.querySelector("#usersTable tbody");
+  const select = document.getElementById("roleQuickSelect");
+  tbody.innerHTML = "";
+  (users || []).forEach(u=>{
+    const isAdmin = (u.role === "admin");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.username || u.name || "-"}</td>
+      <td>${u.email || "-"}</td>
+      <td><span class="role-badge">${u.role || "user"}</span></td>
+      <td>${isAdmin ? "Yes" : "No"}</td>
+      <td class="actions">
+        <button class="btn" data-edit="${u.username}">Edit</button>
+        <button class="btn" data-setrole="${u.username}" data-role="user">Set user</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  // keep logged-in sessions updated view
+  updateLoggedList();
+}
+
+// audit mock
+async function loadAudit(){
+  const tbody = document.querySelector("#auditTable tbody");
+  tbody.innerHTML = "<tr><td colspan='4' class='muted'>Loading...</td></tr>";
+  try {
+    // If you have a backend audit endpoint, call it here
+    // fallback to mock:
+    const mock = [
+      { t: new Date().toISOString(), u: "admin", a: "Approved request", d: "Promoted userX to admin" },
+      { t: new Date().toISOString(), u: "manager1", a: "Created shipment", d: "Shipment #123" }
+    ];
+    tbody.innerHTML = mock.map(m => `<tr><td>${fmt(m.t)}</td><td>${m.u}</td><td>${m.a}</td><td>${m.d}</td></tr>`).join("");
+  } catch(e){
+    tbody.innerHTML = "<tr><td colspan='4' class='muted'>Error loading audit</td></tr>";
+  }
+}
+
+/* Click delegation for table actions */
+document.addEventListener("click", async (e) => {
+  if(e.target && e.target.dataset){
+    if(e.target.dataset.approve){
+      const username = e.target.dataset.approve;
+      try {
+        await setRoleForUser(username, "admin");
+        showToast(`${username} promoted to admin`);
+        loadRequests(); loadUsers(); loadAudit();
+      } catch(err){ showToast("Operation failed") }
+    }
+    if(e.target.dataset.reject){
+      const username = e.target.dataset.reject;
+      try {
+        await fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(username)}/reject`, { method: "POST", headers: authHeaders() }).catch(()=>{});
+        showToast(`${username} rejected`);
+        loadRequests(); loadUsers();
+      } catch(err){ showToast("Operation failed") }
+    }
+    if(e.target.dataset.edit){
+      openRoleModal(e.target.dataset.edit);
+    }
+    if(e.target.dataset.setrole){
+      const username = e.target.dataset.setrole;
+      const role = e.target.dataset.role || "user";
+      try {
+        await setRoleForUser(username, role);
+        showToast(`${username} → ${role}`);
+        loadUsers();
+      } catch(err){ showToast("Update failed") }
+    }
+  }
+});
+
+// API to set role
+async function setRoleForUser(username, role){
+  const url = `${API_BASE_URL}/admin/set-role/${encodeURIComponent(username)}`;
+  const headers = Object.assign({ "Content-Type":"application/json" }, authHeaders());
+  const res = await fetch(url, { method: "POST", headers, body: JSON.stringify({ role }) });
+  if(!res.ok){
+    const txt = await res.text().catch(()=>null);
+    throw new Error(txt || "failed");
+  }
+  return res.json().catch(()=>({}));
+}
+
+/* Search */
+document.getElementById("userSearch").addEventListener("input", (e)=>{
+  const q = e.target.value.toLowerCase().trim();
+  document.querySelectorAll("#usersTable tbody tr").forEach(tr=>{
+    const txt = tr.innerText.toLowerCase();
+    tr.style.display = txt.includes(q) ? "" : "none";
+  });
+});
+document.getElementById("requestsFilter").addEventListener("input", (e)=>{
+  const q = e.target.value.toLowerCase().trim();
+  document.querySelectorAll("#requestsTable tbody tr").forEach(tr=>{
+    tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
+  });
+});
+
+/* Refresh controls */
+document.getElementById("refreshAll").addEventListener("click", ()=>{ loadUsers(); loadRequests(); loadAudit(); });
+document.getElementById("refreshRequests").addEventListener("click", loadRequests);
+document.getElementById("refreshAudit").addEventListener("click", loadAudit);
+
+/* Initial display rules: show pending requests large per user's instruction */
+populateCurrentAdmin();
+showPendingAsMain();
+loadRequests();
+loadUsers();
+loadAudit();
+
+/* ---- Logged-in users feature (client-side + optional server post) ----
+   We store a small heartbeat object in localStorage.sessions and render it.
+   On each page load, we add current username to sessions with timestamp.
+*/
+function getSessions(){
+  try { return JSON.parse(localStorage.getItem("scmx_sessions")||"[]"); } catch { return []; }
+}
+function saveSessions(sessions){ localStorage.setItem("scmx_sessions", JSON.stringify(sessions)); }
+function addCurrentSession(){
+  const p = decodeToken();
+  const username = (p && (p.username || p.sub)) || ("guest_" + Math.random().toString(36).slice(2,5));
+  const sessions = getSessions().filter(s => s && s.username !== username); // remove duplicates
+  sessions.unshift({ username, ts: new Date().toISOString() });
+  // keep only 20
+  saveSessions(sessions.slice(0,20));
+  // try to POST to backend endpoint if exists (optional)
+  fetch(`${API_BASE_URL}/admin/loggedin`, {
+    method: "POST",
+    headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
+    body: JSON.stringify({ username, ts: new Date().toISOString() })
+  }).catch(()=>{ /* ignore if endpoint not implemented */ });
+  updateLoggedList();
+}
+function updateLoggedList(){
+  const el = document.getElementById("loggedList");
+  const sessions = getSessions();
+  if(!sessions.length){ el.innerHTML = "<div class='muted'>No active sessions recorded</div>"; return; }
+  el.innerHTML = sessions.map(s => `<div style="display:flex; justify-content:space-between; gap:10px; padding:6px 8px; border-radius:6px; margin-bottom:6px; background:#fff;">
+    <div><strong>${s.username}</strong><div style="font-size:12px;color:#777">${new Date(s.ts).toLocaleString()}</div></div>
+    <div style="font-size:12px;color:#999">${/* show "minutes ago" */ Math.max(0, Math.floor((Date.now() - new Date(s.ts))/60000))}m</div>
+  </div>`).join("");
+}
+
+/* call on load */
+addCurrentSession();
+
+/* Keep sessions refreshed on activity (simple) */
+let lastTouch = Date.now();
+setInterval(()=>{
+  if(Date.now() - lastTouch > 1000*60*5) addCurrentSession(); // every 5 minutes
+}, 1000*60);
+
+/* small UI: menu highlight when panels change */
+document.querySelectorAll(".menu-item").forEach(mi=>{
+  mi.addEventListener("click", ()=> {
+    document.querySelectorAll(".menu-item").forEach(x=>x.classList.remove("active"));
+    mi.classList.add("active");
+  });
+});
+</script>
+</body>
+</html>

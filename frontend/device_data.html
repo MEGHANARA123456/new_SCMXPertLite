@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Device Data Stream</title>
+
+  <!-- ⭐ YOUR ORIGINAL CSS (unchanged) -->
+  <style>
+/* Beige top card */
+.card[style*="background:#fdeedb"] {
+    background:  #a7dfff !important;
+    border-radius: 18px;
+    box-shadow: 0px 6px 20px rgba(0,0,0,0.08);
+    border: 1px solid #a7dfff;
+}
+
+/* ===== TOP NAVIGATION ===== */
+.topbar {
+  width: 100%;
+  background:  #6C27D9;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e2e2;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.nav-menu {
+  display: flex;
+  gap: 35px;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.nav-menu a {
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+}
+
+.nav-menu a:hover {
+  color: #0288d1;
+}
+
+/* Inputs */
+#deviceForm .input,
+#deviceForm select {
+    border: 2px solid #b9b9b9;
+    border-radius: 8px;
+    padding: 10px;
+    transition: 0.3s;
+    font-size: 15px;
+}
+
+#deviceForm .input:focus,
+#deviceForm select:focus {
+    border-color: #03A9F4;
+    box-shadow: 0 0 6px rgba(3,169,244,0.3);
+}
+
+/* Button style match */
+#deviceForm .btn-primary {
+    background: #03A9F4 !important;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: 0.25s;
+}
+
+#deviceForm .btn-primary:hover {
+    background: #0288D1 !important;
+    transform: translateY(-2px);
+}
+
+/* Table styling */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+.table th {
+    background: #f0f5ff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 2px solid #d7d7d7;
+    color: #333;
+}
+
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid #ececec;
+    color: #444;
+}
+
+.table tr:hover {
+    background: #f7faff;
+}
+
+/* Card styling */
+.card {
+    border-radius: 16px !important;
+    padding: 22px;
+    background: #ffffff;
+    box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
+}
+
+/* Title */
+.container h2 {
+    color: #333;
+    font-weight: 700;
+}
+
+/* Responsive Fix */
+@media (max-width: 768px) {
+    #deviceForm .grid {
+        grid-template-columns: 1fr !important;
+        text-align: center;
+    }
+
+    #deviceForm .field {
+        width: 100% !important;
+    }
+}
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <nav class="nav-menu">
+    <a href="/frontend/user.html">My Account</a>
+    <a href="/frontend/shipments.html">My Shipments</a>
+    <a href="/frontend/shipment_data.html">Create Shipment</a>
+    <a href="/frontend/logout.html">logout</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <h2 style="text-align:center; font-weight:700; margin-top:10px;">
+    Device Data Stream
+  </h2>
+
+  <!-- Top card -->
+  <div class="card" style="margin-top:24px; background: #a7dfff; padding:40px; text-align:center;">
+
+    <h3 style="margin-top:0; font-weight:600;">
+      Please Enter a Device Id to See the Data Stream
+    </h3>
+
+    <form id="deviceForm" style="margin-top:20px;">
+      <div class="grid cols-2" style="display:flex; gap:20px; justify-content:center;">
+
+        <!-- ⭐ Manual Input Instead of Dropdown -->
+        <div class="field" style="width:250px; margin:auto;">
+          <label>Device Id*</label>
+          <input type="text" id="device_id" class="input" placeholder="Enter Device ID" required>
+        </div>
+
+        <!-- Submit Button -->
+        <div style="margin:auto;">
+          <button type="submit" class="btn btn-primary" style="padding:12px 26px; font-size:14px;">
+            GET DEVICE DATA
+          </button>
+        </div>
+
+      </div>
+    </form>
+
+  </div>
+
+  <!-- Data table -->
+  <div class="card" style="margin-top:26px;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Device Id</th>
+          <th>Battery Level</th>
+          <th>Temperature</th>
+          <th>Route From</th>
+          <th>Route To</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody id="streamData">
+        <tr><td colspan="6" style="text-align:center;" class="small">No data loaded</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ==================== UPDATED LIVE STREAM JS ==================== -->
+<script>
+const API_URL = "http://127.0.0.1:8000";
+let selectedDevice = null;
+
+// Handle input submit
+document.getElementById("deviceForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    selectedDevice = document.getElementById("device_id").value.trim();
+    if (!selectedDevice) {
+        alert("Please enter a Device ID");
+        return;
+    }
+    loadStream();
+});
+
+// Fetch stream data
+async function loadStream() {
+    if (!selectedDevice) return;
+
+    const tbody = document.getElementById("streamData");
+    tbody.innerHTML = "";
+
+    try {
+        const res = await fetch(`${API_URL}/device-data/${selectedDevice}`);
+        if (!res.ok) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No data found</td></tr>`;
+            return;
+        }
+
+        const data = await res.json();
+        const records = data.records || data; // handle both formats
+
+        if (!records.length) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No data found</td></tr>`;
+            return;
+        }
+
+        records.forEach(row => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${row.Device_ID || row.device_id || ""}</td>
+                    <td>${row.Battery_Level || row.battery_level || ""}</td>
+                    <td>${row.First_Sensor_temperature || row.first_sensor_temperature || ""}</td>
+                    <td>${row.Route_From || row.route_from || ""}</td>
+                    <td>${row.Route_To || row.route_to || ""}</td>
+                    <td>${row.timestamp || ""}</td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error loading data</td></tr>`;
+    }
+}
+
+// Auto refresh every 3s
+setInterval(loadStream, 3000);
+</script>
+
+</body>
+</html>

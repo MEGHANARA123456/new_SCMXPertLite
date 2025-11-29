@@ -1,155 +1,235 @@
-from fastapi import APIRouter, Form, HTTPException, Depends
-from pydantic import EmailStr, BaseModel, Field
+from fastapi import APIRouter, Form, HTTPException, Depends, Request
+from pydantic import EmailStr
 from jose import jwt, JWTError
-from typing import Union, Optional, Dict, Any
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from dotenv import load_dotenv
-import os, hashlib, random, re, logging
+import os, hashlib, random, re
+import base64, hmac
+import requests
 
 load_dotenv()
 router = APIRouter()
 
-# ---------------------------
-# ENV / CONFIG
-# ---------------------------
-SECRET_KEY = os.getenv("SECRET_KEY", "super-secret")
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
 
-# Strict validation: fail fast with a clear error if Mongo configuration is missing.
-if not MONGO_URI or not MONGO_DB:
-    raise RuntimeError(
-        "MONGO_URI and MONGO_DB must be set in environment or .env before importing backend.user"
-    )
+# ===== reCAPTCHA configuration (Enterprise or standard) =====
+# Support multiple env var names for convenience
+RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY") or os.getenv("RECAPTCHA_SITEKEY")
+RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY") or os.getenv("YOUR_RECAPTCHA_SECURITY_KEY")
+RECAPTCHA_PROJECT_ID = os.getenv("RECAPTCHA_PROJECT_ID")
 
-# Create a Mongo client for this module (main also creates one for app-level checks).
-try:
-    client = MongoClient(MONGO_URI)
-    db = client[MONGO_DB]
-    users_collection = db["users"]
-except Exception as e:
-    raise RuntimeError(f"Failed to connect to MongoDB: {e}")
 
-# In-memory OTP store
+def verify_recaptcha(token: str, action: str):
+    """Verify reCAPTCHA token.
+    - If `RECAPTCHA_PROJECT_ID` is set we attempt reCAPTCHA Enterprise assessment.
+    - Otherwise if `RECAPTCHA_SECRET_KEY` is set we call the standard siteverify API.
+    - If no secret is configured, verification is skipped (useful for local dev).
+    Returns True when verification passes, False otherwise.
+    """
+    if not token:
+        return False
+
+    # 1) Enterprise path
+    if RECAPTCHA_PROJECT_ID and RECAPTCHA_SECRET_KEY:
+        try:
+            url = (
+                f"https://recaptchaenterprise.googleapis.com/v1/projects/"
+                f"{RECAPTCHA_PROJECT_ID}/assessments?key={RECAPTCHA_SECRET_KEY}"
+            )
+            payload = {
+                "event": {"token": token, "expectedAction": action, "siteKey": RECAPTCHA_SITE_KEY}
+            }
+            res = requests.post(url, json=payload, timeout=5)
+            data = res.json()
+            # basic checks
+            if not data.get("tokenProperties", {}).get("valid"):
+                return False
+            score = data.get("riskAnalysis", {}).get("score", 0)
+            return score >= 0.5
+        except Exception:
+            return False
+
+    # 2) Standard reCAPTCHA siteverify (v2/v3)
+    if RECAPTCHA_SECRET_KEY:
+        try:
+            url = "https://www.google.com/recaptcha/api/siteverify"
+            res = requests.post(url, data={"secret": RECAPTCHA_SECRET_KEY, "response": token}, timeout=5)
+            data = res.json()
+            # data = { success: bool, score: float (v3), action: str, ... }
+            if not data.get("success"):
+                return False
+            # if v3, we can check score and action
+            if "score" in data:
+                if data.get("action") and data.get("action") != action:
+                    return False
+                return float(data.get("score", 0)) >= 0.5
+            return True
+        except Exception:
+            return False
+
+    # 3) No recaptcha configured — allow (development)
+    return True
+
+# ==== MONGO ====
+client = MongoClient(os.getenv("MONGO_URI"))
+db = client[os.getenv("MONGO_DB")]
+users = db["user"]
+oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 otp_store = {}
 
-# ---------------------------
-# Helper functions
-# ---------------------------
-def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
+# ========================
+# PASSWORD UTILITIES
+# ========================
 
-def validate_password(password: str) -> bool:
+def hash_password(p):
+    return hashlib.sha256(p.encode()).hexdigest()
+
+def pbkdf2_hash(password: str, iterations: int = 200_000) -> str:
+    salt = os.urandom(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, iterations)
+    return f"pbkdf2_sha256${iterations}${base64.b64encode(salt).decode()}${base64.b64encode(dk).decode()}"
+
+def pbkdf2_verify(stored: str, password: str) -> bool:
+    try:
+        algo, iters, salt_b64, dk_b64 = stored.split("$", 3)
+        if algo != "pbkdf2_sha256":
+            return False
+        iterations = int(iters)
+        salt = base64.b64decode(salt_b64)
+        expected = base64.b64decode(dk_b64)
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, iterations)
+        return hmac.compare_digest(dk, expected)
+    except Exception:
+        return False
+
+def verify_and_migrate_password(user, plain):
+    hashed = user.get("password", "")
+
+    # pbkdf2
+    if isinstance(hashed, str) and hashed.startswith("pbkdf2_sha256$"):
+        return pbkdf2_verify(hashed, plain)
+
+    # legacy SHA256
+    if isinstance(hashed, str) and re.fullmatch(r"[0-9a-fA-F]{64}", hashed):
+        if hash_password(plain) == hashed:
+            new_hash = pbkdf2_hash(plain)
+            users.update_one({"_id": user["_id"]}, {"$set": {"password": new_hash}})
+            return True
+
+    return False
+
+# ========================
+# TOKEN
+# ========================
+
+def create_token(data: dict):
+    payload = data.copy()
+    payload["exp"] = datetime.utcnow() + timedelta(hours=10)
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def validate_password(p):
     return (
-        len(password) >= 8
-        and re.search(r"[A-Z]", password)
-        and re.search(r"[a-z]", password)
-        and re.search(r"[0-9]", password)
-        and re.search(r"[!@#$%^&*(),.?\":{}|<>]", password)
+        len(p) >= 8 and
+        re.search(r"[A-Z]", p) and
+        re.search(r"[a-z]", p) and
+        re.search(r"[0-9]", p) and
+        re.search(r"[!@#$%^&*]", p)
     )
 
-def create_access_token(data: dict, expires_delta=None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+def get_current_user(token: str = Depends(oauth2)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub") or payload.get("username")
+    except:
+        raise HTTPException(401, "Invalid or expired token")
 
-# ---------------------------
-# Routes
-# ---------------------------
+    user = users.find_one({"username": username})
+    if not user:
+        raise HTTPException(401, "User not found")
+    return user
+
+# ========================
+# SIGNUP
+# ========================
 
 @router.post("/signup")
-def signup(username: str = Form(...), email: EmailStr = Form(...),
-           password: str = Form(...), confirm_password: str = Form(...)):
-    if password != confirm_password:
-        raise HTTPException(status_code=400, detail="Passwords do not match")
-    if not validate_password(password):
-        raise HTTPException(status_code=400, detail="Weak password. Use upper, lower, number, special char.")
-    if users_collection.find_one({"$or": [{"username": username}, {"email": email}]}):
-        raise HTTPException(status_code=400, detail="Username or email already exists")
+def signup(
+    username: str = Form(...),
+    email: EmailStr = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    recaptcha_token: str = Form(...),
+    recaptcha_action: str = Form(...)
+):
 
-    users_collection.insert_one({
+    #  NEW: recaptcha verify
+    if not verify_recaptcha(recaptcha_token, recaptcha_action):
+        raise HTTPException(400, "reCAPTCHA validation failed")
+
+    if password != confirm_password:
+        raise HTTPException(400, "Passwords do not match")
+
+    if not validate_password(password):
+        raise HTTPException(400, "Weak password format")
+
+    if users.find_one({"$or": [{"username": username}, {"email": email}]}):
+        raise HTTPException(400, "User already exists")
+
+    users.insert_one({
         "username": username,
         "email": email,
-        "password": hash_password(password),
+        "password": pbkdf2_hash(password),
+        "role": "user",
+        "created_at": datetime.utcnow()
     })
-    return {"message": f"Signup successful for {username}"}
+    return {"message": "Signup successful"}
 
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
-
+# ========================
+# LOGIN
+# ========================
 
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    username_or_email = form_data.username
-    password = form_data.password
+def login(
+    username: str = Form(...),
+    password: str = Form(...),
+    recaptcha_token: str = Form(...),
+    recaptcha_action: str = Form(...)
+):
 
-    user = users_collection.find_one({
-        "$or": [
-            {"username": username_or_email},
-            {"email": username_or_email}
-        ]
-    })
+    #  NEW: recaptcha verify
+    if not verify_recaptcha(recaptcha_token, recaptcha_action):
+        raise HTTPException(401, "reCAPTCHA validation failed")
+
+    user = users.find_one(
+        {"$or": [
+            {"username": username},
+            {"email": username}
+        ]}
+    )
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(401, "Invalid username/email")
 
-    if hash_password(password) != user["password"]:
-        raise HTTPException(status_code=401, detail="Invalid password")
+    if not verify_and_migrate_password(user, password):
+        raise HTTPException(401, "Invalid password")
 
-    token = create_access_token({"sub": user["username"]})
-    return {"access_token": token, "token_type": "bearer"}
-
-
-# ---------------------------
-# Forgot Password (OTP)
-# ---------------------------
-
-@router.post("/forgot-password")
-def forgot_password(email: EmailStr = Form(...)):
-    """Generates a 6-digit OTP and stores it temporarily (valid for 5 minutes)."""
-    user = users_collection.find_one({"email": email})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    otp = str(random.randint(100000, 999999))
-    expiry = datetime.utcnow() + timedelta(minutes=5)
-    otp_store[email] = {"otp": otp, "expiry": expiry}
+    token = create_token({"username": user["username"], "role": user["role"]})
 
     return {
-        "message": f"OTP generated for {email}",
-        "otp": otp,
-        "valid_for_minutes": 5
+        "access_token": token,
+        "token_type": "bearer",
+        "role": user["role"],
+        "username": user["username"]
     }
 
-@router.post("/reset-password")
-def reset_password(
-    email: EmailStr = Form(...),
-    otp: str = Form(...),
-    new_password: str = Form(...),
-    confirm_password: str = Form(...)
-):
-    """Verifies OTP and resets the user's password."""
-    entry = otp_store.get(email)
-    if not entry:
-        raise HTTPException(status_code=400, detail="No OTP found for this email. Request again.")
-    if datetime.utcnow() > entry["expiry"]:
-        del otp_store[email]
-        raise HTTPException(status_code=400, detail="OTP expired. Please request a new one.")
-    if entry["otp"] != otp:
-        raise HTTPException(status_code=400, detail="Invalid OTP.")
-    if new_password != confirm_password:
-        raise HTTPException(status_code=400, detail="Passwords do not match.")
-    if not validate_password(new_password):
-        raise HTTPException(status_code=400, detail="Weak password format.")
 
-    users_collection.update_one(
-        {"email": email},
-        {"$set": {"password": hash_password(new_password)}}
-    )
-    del otp_store[email]
-    return {"message": "Password reset successful. You can now log in with your new password."}
+@router.post("/public/recaptcha-verify")
+def debug_verify_recaptcha(token: str = Form(...), action: str = Form(...)):
+    """Debug endpoint: POST a recaptcha token+action to verify server-side.
+    Returns JSON { verified: bool } so you can test tokens acquired from the browser.
+    """
+    ok = verify_recaptcha(token, action)
+    return {"verified": bool(ok)}

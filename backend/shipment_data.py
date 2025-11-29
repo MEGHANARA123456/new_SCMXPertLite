@@ -1,54 +1,52 @@
-from fastapi import APIRouter, Form, HTTPException
+# backend/shipments.py
+from fastapi import APIRouter, Form, Depends, HTTPException, Body
+from pymongo import MongoClient
 from datetime import datetime
-from backend.db import get_collections
+from backend.user import get_current_user
+from pydantic import BaseModel
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-router = APIRouter(prefix="/api/shipments", tags=["shipments"])
+router = APIRouter()
 
-@router.post("/create")
-def create_shipment(
-    shipment_number: str = Form(...),
-    container_number: str = Form(...),
-    route_from: str = Form(...),
-    route_to: str = Form(...),
-    goods_type: str = Form(...),
-    expected_delivery_date: str = Form(...),
-    po_number: str = Form(...),
-    ndc_number: str = Form(...),
-    serial_number_goods: str = Form(...),
-    delivery_number: int = Form(...),
-    batch_id: str = Form(...),
-    shipment_description: str = Form(...),
-    device: str = Form(...),
-):
-    cols = get_collections()
-    shipments = cols["shipments"]
-      #to check duplicate shipments
-    if shipments.find_one({"shipment_number": shipment_number}):
-        raise HTTPException(status_code=400, detail="Shipment already exists")
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
+client = MongoClient(MONGO_URI)
+db = client[MONGO_DB]
+shipments_collection = db["shipments"]
 
-    doc = {
-        "shipment_number": shipment_number,
-        "container_number": container_number,
-        "route_from": route_from,
-        "route_to": route_to,
-        "goods_type": goods_type,
-        "expected_delivery_date": expected_delivery_date,
-        "po_number": po_number,
-        "ndc_number": ndc_number,
-        "serial_number_goods": serial_number_goods,
-        "delivery_number": delivery_number,
-        "batch_id": batch_id,
-        "shipment_description": shipment_description,
-        "device": device,
-        "created_at": datetime.utcnow().isoformat(),
-    }
 
-    shipments.insert_one(doc)
-    return {"message": "Shipment created", "shipment_number": shipment_number}
+class ShipmentCreate(BaseModel):
+    shipment_number: str
+    container_number: str
+    route_from: str
+    route_to: str
+    goods_type: str
+    expected_delivery_date: str
+    po_number: str
+    ndc_number: str
+    serial_number_goods: str
+    delivery_number: str
+    batch_id: str
+    shipment_description: str
+    device: str
 
-@router.get("/")
-def list_shipments():
-    cols = get_collections()
-    shipments = cols["shipments"]
-    items = list(shipments.find({}, {"_id": 0}))
-    return {"total_shipments": len(items), "shipments": items}
+
+@router.post("/api/shipments/create")
+def create_shipment(shipment: ShipmentCreate = Body(...), current_user: dict = Depends(get_current_user)):
+    shipment_number = shipment.shipment_number
+    if shipments_collection.find_one({"shipment_number": shipment_number}):
+        raise HTTPException(400, "Shipment number already exists")
+
+    doc = shipment.dict()
+    doc.update({"created_by": current_user["username"], "created_at": datetime.utcnow()})
+
+    shipments_collection.insert_one(doc)
+    return {"message": "Shipment created successfully"}
+
+
+@router.get("/api/shipments")
+def get_shipments():
+    data = list(shipments_collection.find({}, {"_id": 0}))
+    return {"total": len(data), "shipments": data}

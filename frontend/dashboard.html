@@ -1,37 +1,142 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SCMXPertLite — Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- Your existing shared stylesheet -->
+  <link rel="stylesheet" href="/frontend/style.css">
 </head>
+
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="brand"><div class="logo">S</div><div><div style="font-weight:700">SCMXPertLite</div><div class="small">Overview</div></div></div>
-      <div><a href="dashboard.html" class="small">Refresh</a></div>
-    </div>
+<header class="topbar">
+  <nav class="nav-menu">
+    <a href="/frontend/user.html">My Account</a>
+    <a href="/frontend/shipments.html">My Shipments</a>
+    <a href="/frontend/device_data.html">Device Data</a>
+    <a href="/frontend/shipment_data.html" id="createShipmentLink">Create Shipment</a>
 
-    <div class="grid cols-2">
-      <div class="card">
-        <h3>Active Shipments</h3>
-        <p class="small">Quick snapshot of latest shipments</p>
-        <div class="small footer-note">(UI only — connect to API to populate)</div>
-      </div>
+    <!-- ROLE BADGE -->
+    <span id="roleBadge" class="hidden"
+      style="padding:6px 12px; background:#6C27D9; color:white;
+      border-radius:10px; font-weight:600;">
+    </span>
 
-      <div class="card">
-        <h3>Device Health</h3>
-        <p class="small">Average battery & last readings</p>
-        <div class="small footer-note">(UI only — connect to API to populate)</div>
-      </div>
-    </div>
+    <!-- ADMIN LINK (only for admin) -->
+    <a id="adminLink" href="/frontend/admin_dashboard.html" class="hidden">Admin</a>
 
-    <div class="card" style="margin-top:16px">
-      <h3>Recent Activity (Live)</h3>
-      <div class="stream-box">
-        <div class="stream-item">No live data — UI-only</div>
-      </div>
+    <a href="/frontend/logout.html">Logout</a>
+  </nav>
+</header>
+
+<!-- ROLE-BASED GREETING -->
+<div class="welcome" id="welcomeText">
+  Hi user, Welcome to SCMXPertLite
+</div>
+
+<div class="split-bg">
+
+  <!-- LEFT HALF -->
+  <div class="left-side">
+    <div class="box-content">
+      <h2>Create a New Shipment</h2>
+      <p>Start tracking by creating your shipment.</p>
+      <a href="/frontend/shipment_data.html" class="btn-blue" id="createShipmentBtn">CREATE SHIPMENT</a>
     </div>
   </div>
+
+  <!-- RIGHT HALF -->
+  <div class="right-side">
+    <div class="box-content">
+      <h2>To see Device Data Stream</h2>
+      <p>Monitor your real-time device activity.</p>
+      <a href="/frontend/device_data.html" class="btn-purple">DEVICE DATA STREAM</a>
+    </div>
+  </div>
+
+  <!-- MANAGER-ONLY TILE -->
+  <div id="managerTile" class="right-side hidden">
+    <div class="box-content">
+      <h2>Pending Shipment Approvals</h2>
+      <p>Managers can approve shipments waiting for clearance.</p>
+      <a href="/frontend/manager_approvals.html" class="btn-purple">REVIEW REQUESTS</a>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API_BASE_URL = "http://127.0.0.1:8000";
+
+/* Helpers */
+function getToken() {
+  return localStorage.getItem("token") || "";
+}
+
+function decodeToken() {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+}
+
+
+
+/* Toast (uses same id as auth page if you want) */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  if (!t) return alert(msg);
+  t.innerText = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+/* Apply role-based UI permissions */
+function applyRoleRules() {
+  const payload = requireAuth();
+  if (!payload) return;
+
+  const username = payload.sub || "user";
+  const role = payload.role || localStorage.getItem("role") || "user";
+
+  document.getElementById("welcomeText").textContent =
+    `Hi ${username} (${role.toUpperCase()}), Welcome to SCMXPertLite`;
+
+  const badge = document.getElementById("roleBadge");
+  badge.textContent = role.toUpperCase();
+  badge.classList.remove("hidden");
+
+  // viewer: no create shipment
+  if (role === "viewer") {
+    const btn = document.getElementById("createShipmentBtn");
+    const link = document.getElementById("createShipmentLink");
+    if (btn) btn.style.display = "none";
+    if (link) link.style.display = "none";
+  }
+
+  // manager: show extra tile
+  if (role === "manager") {
+    const tile = document.getElementById("managerTile");
+    if (tile) tile.classList.remove("hidden");
+  }
+
+  // admin: show link to admin dashboard
+  if (role === "admin") {
+    const a = document.getElementById("adminLink");
+    if (a) a.classList.remove("hidden");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  applyRoleRules();
+});
+</script>
+
 </body>
 </html>

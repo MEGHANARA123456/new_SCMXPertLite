@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logout — SCMXPertLite</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #0099FF;     /* Shipment blue */
+      --primary-dark: #007ACC;      /* Darker blue */
+      --secondary-color: #6C27D9;   /* Shipment purple */
+      --secondary-dark: #5A1FB8;    /* Darker purple */
+    }
+
+    body {
+      margin: 0;
+      font-family: "Roboto", sans-serif;
+      background: #f5f7fb;
+    }
+
+    /* ==========================
+       TOP NAV MENU
+    ===========================*/
+    .topbar {
+      width: 100%;
+      background: var(--secondary-color); /* Purple bar */
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      padding: 14px 0;
+    }
+
+    .nav-menu {
+      display: flex;
+      justify-content: center;
+      gap: 36px;
+      font-size: 16px;
+    }
+
+    .nav-menu a {
+      text-decoration: none;
+      font-weight: 600;
+      color: #ffffff;                         /* White text */
+      transition: 0.2s;
+    }
+
+    .nav-menu a:hover {
+      color: #e0e0e0;                         /* Light hover */
+    }
+
+    /* ==========================
+       LOGOUT CARD
+    ===========================*/
+    .logout-container {
+      max-width: 500px;
+      margin: 120px auto;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 18px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .logout-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--secondary-color);         /* Purple title */
+    }
+
+    .logout-text {
+      margin-top: 12px;
+      font-size: 15px;
+      color: #555;
+    }
+
+    /* ==========================
+       BUTTONS — MATCH SHIPMENT STYLE
+    ===========================*/
+    .btn-main {
+      background: var(--primary-color);       /* Blue button */
+      padding: 12px 26px;
+      border-radius: 10px;
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      margin-top: 24px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    .btn-main:hover {
+      background: var(--primary-dark);        /* Blue hover */
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #ddd;
+      padding: 12px 26px;
+      border-radius: 10px;
+      border: none;
+      color: #333;
+      font-weight: 600;
+      margin-left: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    .btn-secondary:hover {
+      background: #c9c9c9;
+    }
+</style>
+
+  </style>
+</head>
+
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar" role="navigation">
+    <nav class="nav-menu">
+        <a href="/frontend/user.html">My Account</a>
+      
+    </nav>
+  </header>
+
+  <!-- LOGOUT CARD -->
+  <div class="logout-container">
+    <div class="logout-title">You Are Logged Out</div>
+    <p class="logout-text">
+      Your session has been securely closed.<br>
+      Click below to login again.
+    </p>
+
+    <button class="btn-main" onclick="window.location.href='/frontend/auth.html'">
+      LOGIN AGAIN
+    </button>
+  </div>
+
+</body>
+</html>

@@ -1,6 +1,13 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime
+# ==========================
+# TOKEN RESPONSE MODEL
+# ==========================
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
 class Signup(BaseModel):

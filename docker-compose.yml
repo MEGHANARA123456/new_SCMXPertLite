@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scmxpertlite_backend
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DB: ${MONGO_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      REFRESH_SECRET_KEY: ${REFRESH_SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY}
+      YOUR_RECAPTCHA_SECURITY_KEY: ${YOUR_RECAPTCHA_SECURITY_KEY}
+      toipc: ${toipc}
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+    networks:
+      - scmxpertlite-network
+
+networks:
+  scmxpertlite-network:
+    driver: bridge
