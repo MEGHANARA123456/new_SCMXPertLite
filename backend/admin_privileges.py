@@ -3,15 +3,14 @@ from datetime import datetime
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-
-from backend.user import get_current_user
+from backend.auth_utils import get_current_user
 from backend.auth_utils import require_role
 
 load_dotenv()
 router = APIRouter()
 
 client = MongoClient(os.getenv("MONGO_URI"))
-db = client[os.getenv("MONGO_DB")]
+db = client[os.getenv("MONGO_DB_APP")]
 requests_col = db["admin_requests"]
 users_col = db["user"]
 sessions_col = db["logged_sessions"]

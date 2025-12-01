@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Form, Depends, HTTPException
 from pymongo import MongoClient
 from datetime import datetime, timezone
-from backend.user import get_current_user
+from backend.auth_utils import get_current_user
+from bson import ObjectId
 import os
 from dotenv import load_dotenv
 
@@ -9,20 +10,29 @@ load_dotenv()
 router = APIRouter()
 
 # ============================================================
-# 🔌 DATABASE CONNECTION
+#  DATABASE CONNECTION
 # ============================================================
 MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
+MONGO_DB = os.getenv("MONGO_DB_IOT")
 
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 
-# Collection: sensor_readings (IoT data)
+# Main IoT collection
 device_data_collection = db["sensor_readings"]
 
 
 # ============================================================
-# 1️⃣  FETCH UNIQUE DEVICE LIST   (Used in dropdown)
+#  Utility: Convert _id to string
+# ============================================================
+def fix_id(record: dict):
+    if "_id" in record:
+        record["_id"] = str(record["_id"])
+    return record
+
+
+# ============================================================
+# 1️ FETCH UNIQUE DEVICE LIST
 # ============================================================
 @router.get("/devices/list")
 def list_devices():
@@ -38,7 +48,7 @@ def list_devices():
 
 
 # ============================================================
-# 2️⃣  INSERT DEVICE DATA  (Manual + IoT ingestion)
+# 2️ INSERT DEVICE DATA
 # ============================================================
 @router.post("/device-data")
 def add_device_data(
@@ -67,28 +77,36 @@ def add_device_data(
 
 
 # ============================================================
-# 3️⃣  FETCH LIVE STREAM DATA FOR A DEVICE
+# 3️  FETCH STREAM DATA FOR A DEVICE (REPLACED WITH YOUR VERSION)
 # ============================================================
-@router.get("/device-data/{device_id}")
-def get_device_data(device_id: str):
+@router.get("/device-data/recent")
+def get_recent_data():
+    try:
+        print("DEBUG: Connecting to MongoDB...")
+        print("DEBUG COLLECTION:", device_data_collection)
 
-    # Support both Device_ID and device_id (Kafka vs Form input)
-    query = {
-        "$or": [
-            {"Device_ID": device_id},
-            {"device_id": device_id}
-        ]
-    }
+        records = list(
+            device_data_collection
+            .find({})
+            .sort("timestamp", -1)
+            .limit(50)
+        )
 
-    # Latest 50 records
-    records = list(
-        device_data_collection
-        .find(query, {"_id": 0})
-        .sort("_id", -1)
-        .limit(50)
-    )
+        print("DEBUG RECORD COUNT:", len(records))
 
-    if not records:
-        raise HTTPException(404, "No data found for this device")
+        final_records = []
+        for r in records:
+            final_records.append({
+                "Device_ID": r.get("Device_ID", ""),
+                "Battery_Level": r.get("Battery_Level", ""),
+                "First_Sensor_temperature": r.get("First_Sensor_temperature", ""),
+                "Route_From": r.get("Route_From", ""),
+                "Route_To": r.get("Route_To", ""),
+                "timestamp": r.get("timestamp", "")
+            })
 
-    return records
+        return {"records": final_records}
+
+    except Exception as e:
+        print(" ERROR in /device-data/recent:", e)
+        raise HTTPException(status_code=500, detail=str(e))

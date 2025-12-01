@@ -111,9 +111,8 @@
     .btn-secondary:hover {
       background: #c9c9c9;
     }
-</style>
-
   </style>
+
 </head>
 
 <body>
@@ -122,7 +121,6 @@
   <header class="topbar" role="navigation">
     <nav class="nav-menu">
         <a href="/frontend/user.html">My Account</a>
-      
     </nav>
   </header>
 
@@ -134,10 +132,42 @@
       Click below to login again.
     </p>
 
-    <button class="btn-main" onclick="window.location.href='/frontend/auth.html'">
+    <button class="btn-main" onclick="goToLogin()">
       LOGIN AGAIN
     </button>
   </div>
+
+  <script>
+    // Clear all authentication data on page load
+    function performLogout() {
+      console.log("[Logout] Clearing authentication data...");
+      
+      // Clear localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("role");
+      localStorage.removeItem("adminUsers");
+      
+      // Clear sessionStorage
+      sessionStorage.clear();
+      
+      console.log("[Logout] Authentication data cleared");
+    }
+
+    // Redirect to login page
+    function goToLogin() {
+      console.log("[Logout] Redirecting to login page...");
+      window.location.href = "/frontend/user.html";
+    }
+
+    // Perform logout when page loads
+    window.addEventListener("load", function() {
+      performLogout();
+    });
+
+    // Also perform logout immediately
+    performLogout();
+  </script>
 
 </body>
 </html>

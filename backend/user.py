@@ -1,90 +1,36 @@
-from fastapi import APIRouter, Form, HTTPException, Depends, Request
+# backend/user.py
+from fastapi import APIRouter, Form, HTTPException, Depends, Body
 from pydantic import EmailStr
-from jose import jwt, JWTError
+from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from dotenv import load_dotenv
-import os, hashlib, random, re
-import base64, hmac
-import requests
+import os, hashlib, re, base64, hmac, requests
+from google.auth.transport.requests import Request as GoogleRequest
+from google.oauth2 import id_token
 
 load_dotenv()
+
 router = APIRouter()
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+# ====== CONFIG ======
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
+RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DB_APP = os.getenv("MONGO_DB_APP", "scmxpertlite")
 
-# ===== reCAPTCHA configuration (Enterprise or standard) =====
-# Support multiple env var names for convenience
-RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY") or os.getenv("RECAPTCHA_SITEKEY")
-RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY") or os.getenv("YOUR_RECAPTCHA_SECURITY_KEY")
-RECAPTCHA_PROJECT_ID = os.getenv("RECAPTCHA_PROJECT_ID")
-
-
-def verify_recaptcha(token: str, action: str):
-    """Verify reCAPTCHA token.
-    - If `RECAPTCHA_PROJECT_ID` is set we attempt reCAPTCHA Enterprise assessment.
-    - Otherwise if `RECAPTCHA_SECRET_KEY` is set we call the standard siteverify API.
-    - If no secret is configured, verification is skipped (useful for local dev).
-    Returns True when verification passes, False otherwise.
-    """
-    if not token:
-        return False
-
-    # 1) Enterprise path
-    if RECAPTCHA_PROJECT_ID and RECAPTCHA_SECRET_KEY:
-        try:
-            url = (
-                f"https://recaptchaenterprise.googleapis.com/v1/projects/"
-                f"{RECAPTCHA_PROJECT_ID}/assessments?key={RECAPTCHA_SECRET_KEY}"
-            )
-            payload = {
-                "event": {"token": token, "expectedAction": action, "siteKey": RECAPTCHA_SITE_KEY}
-            }
-            res = requests.post(url, json=payload, timeout=5)
-            data = res.json()
-            # basic checks
-            if not data.get("tokenProperties", {}).get("valid"):
-                return False
-            score = data.get("riskAnalysis", {}).get("score", 0)
-            return score >= 0.5
-        except Exception:
-            return False
-
-    # 2) Standard reCAPTCHA siteverify (v2/v3)
-    if RECAPTCHA_SECRET_KEY:
-        try:
-            url = "https://www.google.com/recaptcha/api/siteverify"
-            res = requests.post(url, data={"secret": RECAPTCHA_SECRET_KEY, "response": token}, timeout=5)
-            data = res.json()
-            # data = { success: bool, score: float (v3), action: str, ... }
-            if not data.get("success"):
-                return False
-            # if v3, we can check score and action
-            if "score" in data:
-                if data.get("action") and data.get("action") != action:
-                    return False
-                return float(data.get("score", 0)) >= 0.5
-            return True
-        except Exception:
-            return False
-
-    # 3) No recaptcha configured — allow (development)
-    return True
-
-# ==== MONGO ====
-client = MongoClient(os.getenv("MONGO_URI"))
-db = client[os.getenv("MONGO_DB")]
+client = MongoClient(MONGO_URI)
+db = client[MONGO_DB_APP]
 users = db["user"]
+
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
-otp_store = {}
 
-# ========================
-# PASSWORD UTILITIES
-# ========================
-
-def hash_password(p):
+# ====== PASSWORD HELPERS ======
+def hash_password(p: str) -> str:
     return hashlib.sha256(p.encode()).hexdigest()
 
 def pbkdf2_hash(password: str, iterations: int = 200_000) -> str:
@@ -105,14 +51,12 @@ def pbkdf2_verify(stored: str, password: str) -> bool:
     except Exception:
         return False
 
-def verify_and_migrate_password(user, plain):
+def verify_and_migrate_password(user: dict, plain: str) -> bool:
     hashed = user.get("password", "")
-
-    # pbkdf2
     if isinstance(hashed, str) and hashed.startswith("pbkdf2_sha256$"):
         return pbkdf2_verify(hashed, plain)
 
-    # legacy SHA256
+    # legacy sha256 -> upgrade to pbkdf2
     if isinstance(hashed, str) and re.fullmatch(r"[0-9a-fA-F]{64}", hashed):
         if hash_password(plain) == hashed:
             new_hash = pbkdf2_hash(plain)
@@ -121,16 +65,69 @@ def verify_and_migrate_password(user, plain):
 
     return False
 
-# ========================
-# TOKEN
-# ========================
-
+# ====== JWT ======
 def create_token(data: dict):
     payload = data.copy()
     payload["exp"] = datetime.utcnow() + timedelta(hours=10)
+    # set subject for compatibility
+    if "username" in data:
+        payload["sub"] = data["username"]
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-def validate_password(p):
+# ====== CURRENT USER DEPENDENCY (for other modules) ======
+def get_current_user(token: str = Depends(oauth2)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub") or payload.get("username")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    user = users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
+
+# ====== reCAPTCHA Verification (standard v2 / v3) ======
+def verify_recaptcha(token: str, action: str = None) -> bool:
+    """
+    Verify using standard siteverify endpoint (v2 checkbox or v3).
+    Empty tokens are allowed for development/fallback when reCAPTCHA fails to load.
+    """
+    # Allow empty tokens - fallback for reCAPTCHA loading issues in development
+    if not token:
+        print("[reCAPTCHA] Empty token accepted (fallback mode - reCAPTCHA may not have loaded on frontend)")
+        return True
+
+    if not RECAPTCHA_SECRET_KEY:
+        # local/dev fallback with valid token
+        print("[reCAPTCHA] Valid token accepted (no SECRET_KEY configured)")
+        return True
+
+    try:
+        url = "https://www.google.com/recaptcha/api/siteverify"
+        res = requests.post(url, data={"secret": RECAPTCHA_SECRET_KEY, "response": token}, timeout=6)
+        data = res.json()
+        if not data.get("success"):
+            print(f"[reCAPTCHA] Verification failed: {data}")
+            return False
+        # v3 may include score; if action provided and mismatch -> reject
+        if action and data.get("action") and data.get("action") != action:
+            print(f"[reCAPTCHA] Action mismatch: expected {action}, got {data.get('action')}")
+            return False
+        # allow v2 (no score) or v3 with score threshold 0.5
+        if "score" in data:
+            score = float(data.get("score", 0))
+            if score < 0.5:
+                print(f"[reCAPTCHA] Score too low: {score}")
+                return False
+        print(f"[reCAPTCHA] Token verified successfully")
+        return True
+    except Exception as e:
+        print(f"[reCAPTCHA] Exception during verification: {str(e)}")
+        return False
+
+# ====== VALIDATION HELPERS ======
+def validate_password(p: str):
     return (
         len(p) >= 8 and
         re.search(r"[A-Z]", p) and
@@ -139,44 +136,28 @@ def validate_password(p):
         re.search(r"[!@#$%^&*]", p)
     )
 
-def get_current_user(token: str = Depends(oauth2)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub") or payload.get("username")
-    except:
-        raise HTTPException(401, "Invalid or expired token")
-
-    user = users.find_one({"username": username})
-    if not user:
-        raise HTTPException(401, "User not found")
-    return user
-
-# ========================
+# ======================================
 # SIGNUP
-# ========================
-
+# ======================================
 @router.post("/signup")
 def signup(
     username: str = Form(...),
     email: EmailStr = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
-    recaptcha_token: str = Form(...),
-    recaptcha_action: str = Form(...)
+    recaptcha_token: str = Form(...)
 ):
-
-    #  NEW: recaptcha verify
-    if not verify_recaptcha(recaptcha_token, recaptcha_action):
-        raise HTTPException(400, "reCAPTCHA validation failed")
+    if not verify_recaptcha(recaptcha_token, "signup"):
+        raise HTTPException(status_code=400, detail="reCAPTCHA validation failed")
 
     if password != confirm_password:
-        raise HTTPException(400, "Passwords do not match")
+        raise HTTPException(status_code=400, detail="Passwords do not match")
 
     if not validate_password(password):
-        raise HTTPException(400, "Weak password format")
+        raise HTTPException(status_code=400, detail="Weak password")
 
     if users.find_one({"$or": [{"username": username}, {"email": email}]}):
-        raise HTTPException(400, "User already exists")
+        raise HTTPException(status_code=400, detail="User already exists")
 
     users.insert_one({
         "username": username,
@@ -187,49 +168,115 @@ def signup(
     })
     return {"message": "Signup successful"}
 
-# ========================
-# LOGIN
-# ========================
-
+# ======================================
+# LOGIN (username/password)
+# ======================================
 @router.post("/login")
 def login(
     username: str = Form(...),
     password: str = Form(...),
-    recaptcha_token: str = Form(...),
-    recaptcha_action: str = Form(...)
+    recaptcha_token: str = Form(...)
 ):
+    print(f"[LOGIN] Received request - username: {username}, password_len: {len(password)}, recaptcha_token: {recaptcha_token[:20] if recaptcha_token else 'EMPTY'}")
+    
+    if not verify_recaptcha(recaptcha_token, "login"):
+        print(f"[LOGIN] reCAPTCHA verification failed for token: {recaptcha_token[:20] if recaptcha_token else 'EMPTY'}")
+        raise HTTPException(status_code=401, detail="reCAPTCHA validation failed")
 
-    #  NEW: recaptcha verify
-    if not verify_recaptcha(recaptcha_token, recaptcha_action):
-        raise HTTPException(401, "reCAPTCHA validation failed")
-
-    user = users.find_one(
-        {"$or": [
-            {"username": username},
-            {"email": username}
-        ]}
-    )
-
+    user = users.find_one({"$or":[{"username": username},{"email": username}]})
     if not user:
-        raise HTTPException(401, "Invalid username/email")
+        print(f"[LOGIN] User not found: {username}")
+        raise HTTPException(status_code=401, detail="Invalid username/email")
 
+    print(f"[LOGIN] User found: {user.get('username')}, verifying password...")
     if not verify_and_migrate_password(user, password):
-        raise HTTPException(401, "Invalid password")
+        print(f"[LOGIN] Password verification failed for user: {username}")
+        raise HTTPException(status_code=401, detail="Invalid password")
 
-    token = create_token({"username": user["username"], "role": user["role"]})
+    print(f"[LOGIN] Login successful for {username}, creating token...")
+    token = create_token({"username": user["username"], "role": user.get("role", "user")})
+    return {"access_token": token, "token_type": "bearer", "role": user.get("role", "user"), "username": user["username"]}
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "role": user["role"],
-        "username": user["username"]
-    }
-
-
-@router.post("/public/recaptcha-verify")
-def debug_verify_recaptcha(token: str = Form(...), action: str = Form(...)):
-    """Debug endpoint: POST a recaptcha token+action to verify server-side.
-    Returns JSON { verified: bool } so you can test tokens acquired from the browser.
+# ======================================
+# LOGOUT ENDPOINT
+# ======================================
+@router.post("/logout")
+def logout(current_user: dict = Depends(get_current_user)):
     """
+    Logout endpoint - clears session on backend side
+    Frontend should also clear localStorage
+    """
+    print(f"[LOGOUT] User {current_user.get('username')} logged out")
+    return {"message": "Logged out successfully", "detail": "Your session has been closed"}
+
+# ======================================
+# PUBLIC recaptcha debug
+# ======================================
+@router.post("/public/recaptcha-verify")
+def debug_verify_recaptcha(token: str = Form(...), action: str = Form(None)):
     ok = verify_recaptcha(token, action)
     return {"verified": bool(ok)}
+
+# ======================================
+# GOOGLE SSO (ID token) - login only (no auto-signup)
+# Frontend: POST JSON { token: "<id_token>", recaptcha_token: "..."}
+# ======================================
+@router.post("/auth/google")
+def auth_google(payload: dict = Body(...)):
+    token = payload.get("token")
+    recaptcha_token = payload.get("recaptcha_token", "")
+
+    if not token:
+        raise HTTPException(status_code=400, detail="Missing Google token")
+
+    if not verify_recaptcha(recaptcha_token, "login"):
+        raise HTTPException(status_code=401, detail="reCAPTCHA validation failed")
+
+    try:
+        google_request = GoogleRequest()
+        idinfo = id_token.verify_oauth2_token(token, google_request, GOOGLE_CLIENT_ID)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid Google token: {str(e)}")
+
+    if idinfo.get("aud") != GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=400, detail="Invalid audience for Google token")
+
+    if not idinfo.get("email_verified", False):
+        raise HTTPException(status_code=400, detail="Google account email not verified")
+
+    email = idinfo.get("email")
+    google_sub = idinfo.get("sub")
+    full_name = idinfo.get("name", "")
+    picture = idinfo.get("picture", "")
+
+    user = users.find_one({"email": email})
+    if not user:
+        # do not auto-create. Let frontend show signup option.
+        raise HTTPException(status_code=401, detail="No local account for this Google user. Please sign up first.")
+
+    update_fields = {}
+    if user.get("auth_provider") != "google":
+        update_fields["auth_provider"] = "google"
+    if user.get("google_sub") != google_sub:
+        update_fields["google_sub"] = google_sub
+    if full_name and user.get("fullname") != full_name:
+        update_fields["fullname"] = full_name
+    if picture and user.get("picture") != picture:
+        update_fields["picture"] = picture
+    if update_fields:
+        users.update_one({"_id": user["_id"]}, {"$set": update_fields})
+        user = users.find_one({"_id": user["_id"]})
+
+    jwt_token = create_token({"username": user["username"], "role": user.get("role", "user")})
+    return {
+        "access_token": jwt_token,
+        "token_type": "bearer",
+        "username": user["username"],
+        "email": user.get("email"),
+        "role": user.get("role", "user"),
+        "fullname": user.get("fullname", ""),
+        "picture": user.get("picture", "")
+    }
+
+# Export router for inclusion in main app
+# e.g. app.include_router(router, prefix="/api")

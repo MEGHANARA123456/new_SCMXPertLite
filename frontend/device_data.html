@@ -109,6 +109,9 @@
     box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
 }
 
+/* small helper */
+.small { font-size: 14px; color: #666; }
+
 /* Title */
 .container h2 {
     color: #333;
@@ -154,12 +157,12 @@
     </h3>
 
     <form id="deviceForm" style="margin-top:20px;">
-      <div class="grid cols-2" style="display:flex; gap:20px; justify-content:center;">
+      <div class="grid cols-2" style="display:flex; gap:20px; justify-content:center; align-items:center;">
 
-        <!-- ⭐ Manual Input Instead of Dropdown -->
+        <!--  Manual Input Instead of Dropdown -->
         <div class="field" style="width:250px; margin:auto;">
           <label>Device Id*</label>
-          <input type="text" id="device_id" class="input" placeholder="Enter Device ID" required>
+          <input type="text" id="device_id" class="input" placeholder="Enter Device ID or leave blank to view recent" >
         </div>
 
         <!-- Submit Button -->
@@ -197,63 +200,116 @@
 
 <!-- ==================== UPDATED LIVE STREAM JS ==================== -->
 <script>
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "http://127.0.0.1:8001";
 let selectedDevice = null;
+let autoRefreshTimer = null;
 
-// Handle input submit
-document.getElementById("deviceForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    selectedDevice = document.getElementById("device_id").value.trim();
-    if (!selectedDevice) {
-        alert("Please enter a Device ID");
-        return;
-    }
-    loadStream();
-});
+// Helper: show a friendly row message
+function showMessage(msg) {
+    const tbody = document.getElementById("streamData");
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;" class="small">${msg}</td></tr>`;
+}
 
-// Fetch stream data
+// Format timestamp (fallback to raw if invalid)
+function formatTimestamp(ts) {
+    try {
+        const d = new Date(ts);
+        if (isNaN(d)) return ts || "";
+        return d.toLocaleString();
+    } catch { return ts || ""; }
+}
+
+// Load records: if selectedDevice is null/empty -> fetch recent (last 50)
 async function loadStream() {
-    if (!selectedDevice) return;
-
     const tbody = document.getElementById("streamData");
     tbody.innerHTML = "";
+    showMessage("Loading...");
+
+    // choose endpoint - always fetch recent 50 records
+    const endpoint = `${API_URL}/device-data/recent`;
+
+    console.log("[Device Data] Fetching from:", endpoint);
 
     try {
-        const res = await fetch(`${API_URL}/device-data/${selectedDevice}`);
+        const res = await fetch(endpoint);
         if (!res.ok) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No data found</td></tr>`;
+            // if 404 -> show no data
+            if (res.status === 404) {
+                showMessage("No data found");
+                return;
+            }
+            showMessage("Error loading data");
+            console.error("[Device Data] Fetch error", res.status, await res.text());
             return;
         }
 
         const data = await res.json();
-        const records = data.records || data; // handle both formats
+        console.log("[Device Data] Response:", data);
+        
+        const records = data.records || data;
 
-        if (!records.length) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No data found</td></tr>`;
+        if (!records || records.length === 0) {
+            showMessage("No data found");
             return;
         }
 
+        console.log("[Device Data] Got", records.length, "records");
+
+        // build rows
+        tbody.innerHTML = ""; // clear
         records.forEach(row => {
+            const deviceId = row.Device_ID ?? row.device_id ?? "N/A";
+            const battery = row.Battery_Level ?? row.battery_level ?? "N/A";
+            const temperature = row.First_Sensor_temperature ?? row.first_sensor_temperature ?? "N/A";
+            const routeFrom = row.Route_From ?? row.route_from ?? "N/A";
+            const routeTo = row.Route_To ?? row.route_to ?? "N/A";
+            const timestamp = formatTimestamp(row.timestamp);
+
             tbody.innerHTML += `
                 <tr>
-                    <td>${row.Device_ID || row.device_id || ""}</td>
-                    <td>${row.Battery_Level || row.battery_level || ""}</td>
-                    <td>${row.First_Sensor_temperature || row.first_sensor_temperature || ""}</td>
-                    <td>${row.Route_From || row.route_from || ""}</td>
-                    <td>${row.Route_To || row.route_to || ""}</td>
-                    <td>${row.timestamp || ""}</td>
+                    <td>${deviceId}</td>
+                    <td>${battery}</td>
+                    <td>${temperature}</td>
+                    <td>${routeFrom}</td>
+                    <td>${routeTo}</td>
+                    <td>${timestamp}</td>
                 </tr>
             `;
         });
 
     } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error loading data</td></tr>`;
+        console.error("[Device Data] Error:", err);
+        showMessage("Error loading data: " + err.message);
     }
 }
 
-// Auto refresh every 3s
-setInterval(loadStream, 3000);
+// Handle input submit (optional - search by device ID)
+document.getElementById("deviceForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    selectedDevice = document.getElementById("device_id").value.trim();
+
+    console.log("[Device Data] Device ID entered:", selectedDevice);
+
+    // reload immediately
+    loadStream();
+
+    // reset auto-refresh timer
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(loadStream, 3000);
+});
+
+// Auto load last 50 records on page load
+window.addEventListener("load", () => {
+    console.log("[Device Data] Page loaded, fetching initial data...");
+    
+    // start with recent (no device entered)
+    selectedDevice = "";
+    loadStream();
+
+    // auto refresh every 3 seconds
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(loadStream, 3000);
+});
 </script>
 
 </body>

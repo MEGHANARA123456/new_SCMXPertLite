@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Form, Depends, HTTPException, Body
 from pymongo import MongoClient
 from datetime import datetime
-from backend.user import get_current_user
+from backend.auth_utils import get_current_user
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
@@ -11,7 +11,7 @@ load_dotenv()
 router = APIRouter()
 
 MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
+MONGO_DB = os.getenv("MONGO_DB_APP")
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 shipments_collection = db["shipments"]

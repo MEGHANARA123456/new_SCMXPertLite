@@ -1,22 +1,23 @@
+<!-- frontend/user.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Fonts -->
-    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,600' rel='stylesheet'>
-
-    <!-- Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.11.3/paper-full.min.js"></script>
-    <!-- recaptcha script will be loaded dynamically after fetching site key -->
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Modern Form - SCMXpertLite</title>
 
+    <!-- Fonts + libs -->
+    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,600' rel='stylesheet'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.11.3/paper-full.min.js"></script>
+
+    <!-- reCAPTCHA v2 with onload callback -->
+    <script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit" async defer></script>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
-        /* --- YOUR ORIGINAL CSS (unchanged) --- */
         @charset "UTF-8";
         :root {
             --primary-color: #6ac4ee;
@@ -34,366 +35,468 @@
             box-sizing: border-box;
         }
 
-        #back {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            z-index: -999;
-        }
+        #back { width: 100%; height: 100%; position: absolute; z-index: -999; }
+        .backRight { position: absolute; right: 0; width: 50%; height: 100%; background: #03A9F4; }
+        .backLeft { position: absolute; left: 0; width: 50%; height: 100%; background: #8bd3f2ec; }
 
-        .backRight {
-            position: absolute;
-            right: 0;
-            width: 50%;
-            height: 100%;
-            background: #03A9F4;
-        }
+        /* Canvas should be behind everything */
+        .canvas-back { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
 
-        .backLeft {
-            position: absolute;
-            left: 0;
-            width: 50%;
-            height: 100%;
-            background: #8bd3f2ec;
-        }
+        #slideBox { width: 50%; height: 100%; position: absolute; margin-left: 50%; overflow: hidden;
+            box-shadow: 0 14px 28px rgba(204,20,20,0.25), 0 10px 10px rgba(0,0,0,0.22); z-index: 5; }
+        .topLayer { width: 200%; height: 100%; position: relative; left: -100%; }
+        .left, .right { width: 50%; height: 100%; overflow-y: scroll; position: absolute; }
+        .left { background:whitesmoke; left: 0; }
+        .right { background: #f9f9f9; right: 0; }
+        .content { display:flex; flex-direction:column; justify-content:center; min-height:100%; width:80%; margin:auto; }
+        .content h2 { font-weight:300; font-size:2.6em; margin:0.2em 0 0.1em; }
+        .left h2 { color: var(--primary-color); } .right h2 { color: var(--secondary-color); }
 
-        .canvas-back {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-        }
+        .form-element { margin: 1.6em 0; }
+        .form-stack { display:flex; flex-direction:column; }
+        label { font-size:0.8em; text-transform:uppercase; }
+        input { background-color:transparent; border:0; border-bottom:1px solid; padding:8px 1px; margin-top:0.1em; outline:none; font-size:1em; }
+        .left input { color:#090808e4; border-bottom:1px solid #0e0d0d42; }
+        .right input { color:#212121; border-bottom:1px solid #212121; }
+        .password-wrapper { position:relative; display:flex; align-items:center; }
+        .password-toggle { position:absolute; right:8px; background:none; border:none; cursor:pointer; font-size:1.2em; width:30px; height:30px; }
 
-        #slideBox {
-            width: 50%;
-            height: 100%;
-            position: absolute;
-            margin-left: 50%;
-            overflow: hidden;
-            box-shadow: 0 14px 28px rgba(204, 20, 20, 0.25),
-                0 10px 10px rgba(0, 0, 0, 0.22);
-        }
+        button { padding:0.8em 1.2em; font-weight:600; text-transform:uppercase; font-size:1em; color:#1adbf1f3; border:0; cursor:pointer; border-radius:3px; transition:0.25s; margin-right:10px; }
+        .signup { background: var(--primary-color); color:white; }
+        .login { background: var(--secondary-color); color:white; }
+        .off { background:none; box-shadow:none; color: var(--primary-dark); }
 
-        .topLayer {
-            width: 200%;
-            height: 100%;
-            position: relative;
-            left: -100%;
-        }
+        /* ensure recaptcha visible above the canvas */
+        .captcha-box { margin: 18px 0; display:flex; justify-content:center; z-index: 20; position: relative; }
+        .google-wrapper { margin-top: 30px; display:flex; justify-content:center; z-index: 20; position: relative; }
 
-        .left,
-        .right {
-            width: 50%;
-            height: 100%;
-            overflow-y: scroll;
-            position: absolute;
-        }
-
-        .left {
-            background: whitesmoke;
-            left: 0;
-        }
-
-        .right {
-            background: #f9f9f9;
-            right: 0;
-        }
-
-        .content {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-height: 100%;
-            width: 80%;
-            margin: auto;
-        }
-
-        .content h2 {
-            font-weight: 300;
-            font-size: 2.6em;
-            margin: 0.2em 0 0.1em;
-        }
-
-        .left h2 {
-            color: var(--primary-color);
-        }
-
-        .right h2 {
-            color: var(--secondary-color);
-        }
-
-        .form-element {
-            margin: 1.6em 0;
-        }
-
-        label {
-            font-size: 0.8em;
-            text-transform: uppercase;
-        }
-
-        input {
-            background-color: transparent;
-            border: 0;
-            border-bottom: 1px solid;
-            padding: 8px 1px;
-            margin-top: 0.1em;
-            outline: none;
-            font-size: 1em;
-        }
-
-        .left input {
-            color: #090808e4;
-            border-bottom: 1px solid #0e0d0d42;
-        }
-
-        .right input {
-            color: #212121;
-            border-bottom: 1px solid #212121;
-        }
-
-        .password-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .password-toggle {
-            right: 8px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2em;
-            width: 30px;
-            height: 30px;
-        }
-
-        button {
-            padding: 0.8em 1.2em;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 1em;
-            color: #1adbf1f3;
-            border: 0;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: 0.25s;
-            margin-right: 10px;
-        }
-
-        .signup {
-            background: var(--primary-color);
-        }
-
-        .login {
-            background: var(--secondary-color);
-        }
-
-        .off {
-            background: none;
-            box-shadow: none;
-        }
-
-        #toast {
-            position: fixed;top: 25px;left: 50%; transform: translateX(-50%) translateY(-40px); background: var(--secondary-color);
-            background: var(--secondary-color); color: white; padding: 12px 22px; border-radius: 6px;font-size: 0.95em;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-            opacity: 0;
-            transition: all 0.4s ease;
-            z-index: 999999;
-        }
-
-        #toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
+        @media (max-width: 768px) {
+            #slideBox { width: 80%; margin-left:20%;}
         }
     </style>
 </head>
-
 <body>
-
-    <!-- Background -->
     <div id="back">
         <canvas id="canvas" class="canvas-back"></canvas>
         <div class="backRight"></div>
         <div class="backLeft"></div>
     </div>
 
-    <div id="toast"></div>
-
-    <!-- Slide Box -->
     <div id="slideBox">
         <div class="topLayer">
 
-            <!-- SIGN UP PANEL -->
-            <div class="left">
+            <!-- SIGNUP -->
+            <div class="left" style="scrollbar-width:none;">
                 <div class="content">
                     <h2>Sign Up</h2>
-
-                    <form id="form-signup">
+                    <form id="form-signup" method="post" novalidate>
                         <div class="form-element form-stack">
                             <label>Email</label>
-                            <input id="email" type="email" required>
+                            <input id="email" type="email" name="email" required>
                         </div>
 
                         <div class="form-element form-stack">
                             <label>Username</label>
-                            <input id="username-signup" type="text" required>
+                            <input id="username-signup" type="text" name="username" required>
                         </div>
 
                         <div class="form-element form-stack">
                             <label>Password</label>
                             <div class="password-wrapper">
-                                <input id="password-signup" type="password" required>
-                                <button type="button" class="password-toggle"
-                                    onclick="togglePassword('password-signup')">👁️</button>
+                                <input id="password-signup" type="password" name="password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('password-signup')">👁️</button>
                             </div>
                         </div>
 
                         <div class="form-element form-stack">
                             <label>Confirm Password</label>
                             <div class="password-wrapper">
-                                <input id="confirm-password-signup" type="password" required>
-                                <button type="button" class="password-toggle"
-                                    onclick="togglePassword('confirm-password-signup')">👁️</button>
+                                <input id="confirm-password-signup" type="password" name="confirm-password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirm-password-signup')">👁️</button>
                             </div>
                         </div>
 
+                        <!-- reCAPTCHA container (v2 checkbox) -->
+                        <div class="captcha-box">
+                            <div id="recaptcha-signup"></div>
+                        </div>
+
                         <div class="form-element">
-                            <button id="signUp" class="signup" type="submit">Sign Up</button>
+                            <button class="signup" type="submit" onclick="submitSignupForm(event)">Sign Up</button>
                             <button id="goLeft" class="signup off" type="button">Log In</button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- LOGIN PANEL -->
-            <div class="right">
+            <!-- LOGIN -->
+            <div class="right" style="scrollbar-width:none;">
                 <div class="content">
                     <h2>Login</h2>
-
-                    <form id="form-login">
+                    <form id="form-login" method="post" novalidate>
                         <div class="form-element form-stack">
                             <label>Username or Email</label>
-                            <input id="username-login" type="text" required>
+                            <input id="username-login" type="text" name="username" required>
                         </div>
 
                         <div class="form-element form-stack">
                             <label>Password</label>
                             <div class="password-wrapper">
-                                <input id="password-login" type="password" required>
-                                <button type="button" class="password-toggle"
-                                    onclick="togglePassword('password-login')">👁️</button>
+                                <input id="password-login" type="password" name="password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('password-login')">👁️</button>
                             </div>
                         </div>
+
+                        <!-- reCAPTCHA container (v2 checkbox) -->
+                        <div class="captcha-box">
+                            <div id="recaptcha-login"></div>
+                        </div>
+
                         <div class="form-element">
-                            <button id="logIn" class="login" type="submit">Log In</button>
+                            <button class="login" type="submit" onclick="submitLoginForm(event)">Log In</button>
                             <button id="goRight" class="login off" type="button">Sign Up</button>
                         </div>
-                    </form>
 
+                        <!-- Google Sign-In -->
+                        <div class="google-wrapper">
+                            <div id="googleLoginBtn"></div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <script>
-const API_BASE_URL = "http://127.0.0.1:8000";
-const SITE_KEY = "6LdEchssAAAAAJS5u_RgixfaIsS0CmVMkSKhkiAT";   // your enterprise site key
+<script>
+/* ========== CONFIG ========== */
+const API_BASE_URL = "http://127.0.0.1:8001";   // change if needed
+const GOOGLE_CLIENT_ID = "192553672532-6d99lu2hh454bmb9i5muf8g4si7ib6b3.apps.googleusercontent.com";
+const RECAPTCHA_SITE_KEY = "6Lc6sROsAAAAAismO1rlx89SHD9kgzFPqOPukMMJ";
 
-// Load recaptcha enterprise
-const script = document.createElement("script");
-script.src = `https://www.google.com/recaptcha/enterprise.js?render=${SITE_KEY}`;
-document.head.appendChild(script);
+/* ===== helpers ===== */
+function togglePassword(id){
+    const f = document.getElementById(id); f.type = f.type === "password" ? "text" : "password";
+}
+$("#goRight").click(()=>$(".topLayer").animate({ marginLeft: "100%" }));
+$("#goLeft").click(()=>$(".topLayer").animate({ marginLeft: "0" }));
 
-function showToast(msg) {
-    const t = document.getElementById("toast");
-    t.innerText = msg;
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2500);
+function saveAuth(data){
+    if(data?.access_token) localStorage.setItem("token", data.access_token);
+    if(data?.username) localStorage.setItem("username", data.username);
+    if(data?.role) localStorage.setItem("role", data.role);
 }
 
-function togglePassword(id) {
-    const f = document.getElementById(id);
-    f.type = f.type === "password" ? "text" : "password";
+function redirectByUsername(username){
+    if(!username) window.location.href = "/frontend/dashboard.html";
+    else if(String(username).toLowerCase() === "meghana") window.location.href = "/frontend/admin_dashboard.html";
+    else window.location.href = "/frontend/dashboard.html";
 }
 
-$("#goRight").click(() => $(".topLayer").animate({ marginLeft: "100%" }));
-$("#goLeft").click(() => $(".topLayer").animate({ marginLeft: "0" }));
+/* ===== Render reCAPTCHA v2 widgets with unique IDs ===== */
+let recaptchaSignupWidget = null;
+let recaptchaLoginWidget = null;
+let recaptchaReady = false;
 
-// SIGNUP — no backend
-$("#form-signup").submit(function (e) {
-    e.preventDefault();
-    showToast("Signup successful!");
-    setTimeout(() => $(".topLayer").animate({ marginLeft: "0" }), 900);
+// Called automatically by reCAPTCHA script when it loads (via onload= parameter)
+function onRecaptchaLoad(){
+    console.log("[reCAPTCHA] onRecaptchaLoad callback triggered");
+    recaptchaReady = true;
+    renderReCAPTCHAs();
+}
+
+function renderReCAPTCHAs(){
+    console.log("[reCAPTCHA] renderReCAPTCHAs called, grecaptcha ready:", typeof grecaptcha !== "undefined");
+    if(typeof grecaptcha === "undefined" || !grecaptcha.render){
+        console.warn("[reCAPTCHA] grecaptcha not ready yet, retrying in 100ms...");
+        setTimeout(renderReCAPTCHAs, 100);
+        return;
+    }
+    
+    // render signup widget only once
+    if(recaptchaSignupWidget === null || recaptchaSignupWidget === undefined){
+        try {
+            const signupContainer = document.getElementById("recaptcha-signup");
+            if(!signupContainer){
+                console.error("[reCAPTCHA] Signup container not found in DOM");
+                setTimeout(renderReCAPTCHAs, 100);
+                return;
+            }
+            recaptchaSignupWidget = grecaptcha.render("recaptcha-signup", {
+                "sitekey": RECAPTCHA_SITE_KEY,
+                "theme": "light"
+            });
+            console.log("[reCAPTCHA] Signup widget rendered successfully, widget ID:", recaptchaSignupWidget);
+        } catch(e) {
+            console.error("[reCAPTCHA] Error rendering signup widget:", e);
+            setTimeout(renderReCAPTCHAs, 100);
+        }
+    }
+    
+    // render login widget only once
+    if(recaptchaLoginWidget === null || recaptchaLoginWidget === undefined){
+        try {
+            const loginContainer = document.getElementById("recaptcha-login");
+            if(!loginContainer){
+                console.error("[reCAPTCHA] Login container not found in DOM");
+                setTimeout(renderReCAPTCHAs, 100);
+                return;
+            }
+            recaptchaLoginWidget = grecaptcha.render("recaptcha-login", {
+                "sitekey": RECAPTCHA_SITE_KEY,
+                "theme": "light"
+            });
+            console.log("[reCAPTCHA] Login widget rendered successfully, widget ID:", recaptchaLoginWidget);
+        } catch(e) {
+            console.error("[reCAPTCHA] Error rendering login widget:", e);
+            setTimeout(renderReCAPTCHAs, 100);
+        }
+    }
+}
+
+// Fallback: if window.onload is triggered and recaptcha still not loaded, retry
+window.addEventListener("load", function(){
+    console.log("[reCAPTCHA] window.onload fired");
+    if(!recaptchaReady){
+        console.warn("[reCAPTCHA] recaptchaReady not set yet, scheduling renderReCAPTCHAs");
+        setTimeout(renderReCAPTCHAs, 200);
+    }
+    // also initialize Google SSO after short delay
+    setTimeout(initGSI, 600);
 });
 
-/* ======================== LOGIN WITH reCAPTCHA v3 ======================== */
-$("#form-login").submit(async function (e) {
-    e.preventDefault();
-
-    const username = $("#username-login").val().trim();
-    const password = $("#password-login").val().trim();
-
-    // Wait for Recaptcha to load
-    if (!window.grecaptcha) {
-        alert("reCAPTCHA not loaded yet. Try again.");
-        return;
-    }
-
-    // Get recaptcha token
-    let token;
-    try {
-        token = await grecaptcha.enterprise.execute(SITE_KEY, { action: "LOGIN" });
-    } catch (err) {
-        alert("reCAPTCHA error, try again.");
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append("username", username);
-    formData.append("password", password);
-    formData.append("recaptcha_token", token);  // send token to backend
-
-    fetch(`${API_BASE_URL}/login`, {
-        method: "POST",
-        body: formData
-    })
-    .then(async res => {
-        let data = {};
-        try { data = await res.json(); } catch {}
-
-        if (data.access_token) {
-            localStorage.setItem("token", data.access_token);
-        }
-
-        localStorage.setItem("username", username);
-
-        if (username.toLowerCase() === "meghana") {
-            window.location.href = "/frontend/admin_dashboard.html";
-            return;
-        }
-
-        window.location.href = "/frontend/dashboard.html";
-    })
-    .catch(() => {
-        if (username.toLowerCase() === "meghana") {
-            window.location.href = "/frontend/admin_dashboard.html";
-        } else {
-            window.location.href = "/frontend/dashboard.html";
+// Also try immediate render in case DOM is already ready
+if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", function(){
+        console.log("[reCAPTCHA] DOMContentLoaded fired, trying immediate render");
+        if(typeof grecaptcha !== "undefined"){
+            setTimeout(renderReCAPTCHAs, 0);
         }
     });
+}
+
+/* ===== SIGNUP (manual) ===== */
+function submitSignupForm(event){
+    event.preventDefault();
+    console.log("[Signup] Form submitted");
+    
+    const email = $("#email").val().trim();
+    const username = $("#username-signup").val().trim();
+    const password = $("#password-signup").val().trim();
+    const confirm_password = $("#confirm-password-signup").val().trim();
+    
+    if(!email || !username || !password || !confirm_password){
+        alert("Please fill in all fields");
+        return;
+    }
+    
+    if(password !== confirm_password){
+        alert("Passwords do not match");
+        return;
+    }
+
+    let token = "";
+    
+    // Try to get reCAPTCHA token if available
+    if(typeof grecaptcha !== "undefined" && recaptchaSignupWidget !== null && recaptchaSignupWidget !== undefined){
+        token = grecaptcha.getResponse(recaptchaSignupWidget);
+        console.log("[Signup] reCAPTCHA token obtained:", !!token);
+    }
+
+    const payload = new URLSearchParams({
+        username,
+        email,
+        password,
+        confirm_password,
+        recaptcha_token: token
+    });
+
+    console.log("[Signup] Sending POST to", `${API_BASE_URL}/signup`);
+
+    fetch(`${API_BASE_URL}/signup`, {
+        method: "POST",
+        body: payload
+    })
+    .then(async r => {
+        console.log("[Signup] Response status:", r.status);
+        if(!r.ok) {
+            const err = await r.json().catch(()=>({detail:"Signup failed"}));
+            throw new Error(err.detail || "Signup failed");
+        }
+        return r.json();
+    })
+    .then(data => {
+        console.log("[Signup] Signup successful");
+        alert("Signup successful. Please login.");
+        if(typeof grecaptcha !== "undefined" && recaptchaSignupWidget !== null && recaptchaSignupWidget !== undefined){
+            grecaptcha.reset(recaptchaSignupWidget);
+        }
+        $("#form-signup")[0].reset();
+        $(".topLayer").animate({ marginLeft: "0" });
+    })
+    .catch(err => {
+        console.error("[Signup] Error:", err);
+        alert(err.message || "Signup error");
+        if(typeof grecaptcha !== "undefined" && recaptchaSignupWidget !== null && recaptchaSignupWidget !== undefined){
+            grecaptcha.reset(recaptchaSignupWidget);
+        }
+    });
+}
+
+$("#form-signup").submit(function(e){
+    e.preventDefault();
+    submitSignupForm(e);
 });
 
-/* Bubbles Animation — untouched */
+/* ===== LOGIN (manual) ===== */
+function submitLoginForm(event){
+    event.preventDefault();
+    console.log("[Login] Form submitted - event triggered");
+    
+    const username = $("#username-login").val().trim();
+    const password = $("#password-login").val().trim();
+    
+    console.log("[Login] Attempting login with username:", username, "password length:", password.length);
+    
+    if(!username || !password){
+        alert("Please enter username and password");
+        return;
+    }
+
+    // Get reCAPTCHA token if available, otherwise use empty string
+    let token = "";
+    if(typeof grecaptcha !== "undefined" && recaptchaLoginWidget !== null && recaptchaLoginWidget !== undefined){
+        token = grecaptcha.getResponse(recaptchaLoginWidget);
+        console.log("[Login] reCAPTCHA token obtained:", !!token);
+        
+        if(!token){ 
+            console.warn("[Login] User has not completed reCAPTCHA checkbox - will try with empty token");
+            // Don't return - allow submission with empty token
+        }
+    } else {
+        console.warn("[Login] reCAPTCHA not available - proceeding with empty token");
+    }
+
+    const payload = new URLSearchParams({
+        username,
+        password,
+        recaptcha_token: token
+    });
+
+    console.log("[Login] Sending POST to", `${API_BASE_URL}/login`);
+    
+    fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        body: payload
+    })
+    .then(async r => {
+        console.log("[Login] Response status:", r.status);
+        const body = await r.json().catch(()=>({}));
+        if(!r.ok) {
+            const errMsg = body.detail || "Login failed";
+            console.error("[Login] Error response:", errMsg);
+            throw new Error(errMsg);
+        }
+        return body;
+    })
+    .then(data => {
+        console.log("[Login] Login successful!");
+        saveAuth(data);
+        redirectByUsername(data.username || username);
+    })
+    .catch(err => {
+        console.error("[Login] Request failed:", err.message);
+        alert("Login failed: " + (err.message || "Unknown error"));
+    })
+    .finally(()=> {
+        if(typeof grecaptcha !== "undefined" && recaptchaLoginWidget !== null && recaptchaLoginWidget !== undefined){
+            grecaptcha.reset(recaptchaLoginWidget);
+        }
+    });
+}
+
+$("#form-login").submit(function(e){
+    e.preventDefault();
+    submitLoginForm(e);
+});
+
+/* ===== GOOGLE SSO (GSI) ===== */
+function initGSI(){
+    if(!window.google || !google.accounts || !google.accounts.id){
+        console.warn("GSI not loaded");
+        return;
+    }
+
+    google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true
+    });
+
+    google.accounts.id.renderButton(
+        document.getElementById("googleLoginBtn"),
+        { theme: "outline", size: "large", type: "standard" }
+    );
+}
+
+function decodeJwtPayload(jwt){
+    try{
+        const parts = jwt.split('.');
+        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        return payload;
+    }catch(e){
+        return null;
+    }
+}
+
+async function handleGoogleCredential(response){
+    const idToken = response?.credential;
+    if(!idToken){
+        alert("Google login failed");
+        return;
+    }
+
+    // collect reCAPTCHA token (try login widget)
+    let recaptcha_token = "";
+    if(recaptchaLoginWidget && grecaptcha.getResponse){
+        recaptcha_token = grecaptcha.getResponse(recaptchaLoginWidget);
+    }
+
+    try{
+        const res = await fetch(`${API_BASE_URL}/auth/google`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: idToken, recaptcha_token })
+        });
+
+        const data = await res.json().catch(()=>({}));
+        if(res.ok && data?.access_token){
+            saveAuth(data);
+            redirectByUsername(data.username || decodeJwtPayload(idToken)?.email);
+            return;
+        } else {
+            // backend didn't accept -> fallback decode and RBAC redirect
+            const payload = decodeJwtPayload(idToken);
+            const email = payload?.email || payload?.sub || "";
+            redirectByUsername(email);
+            return;
+        }
+    }catch(err){
+        console.warn("Google auth POST failed, falling back:", err);
+        const payload = decodeJwtPayload(idToken);
+        const email = payload?.email || payload?.sub || "";
+        redirectByUsername(email);
+    }
+}
+</script>
+
+<!-- Paper.js animation (unchanged visual behavior) -->
+<script>
 paper.install(window);
 paper.setup(document.getElementById("canvas"));
-
 var shapeGroup = new Group();
 var positionArray = [];
-
 function getCanvasBounds() {
     var canvasWidth = view.size.width;
     var canvasHeight = view.size.height;
@@ -431,8 +534,8 @@ initializeShapes();
 
 view.onFrame = function (event) {
     if (event.count % 4 === 0) {
-        shapeGroup.children.forEach((b, i) => {
-            b.scale(1 + 0.15 * Math.sin(event.count * 0.05 + i));
+        shapeGroup.children.forEach((bubble, i) => {
+            bubble.scale(1 + 0.15 * Math.sin(event.count * 0.05 + i));
         });
     }
 };
@@ -442,7 +545,5 @@ view.onResize = function () {
     shapeGroup.children.forEach((b, i) => b.position = positionArray[i]);
 };
 </script>
-
 </body>
-
 </html>

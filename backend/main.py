@@ -8,8 +8,16 @@ import requests
 from fastapi import HTTPException
 import os
 import logging
+import sys
 
-from backend import user, shipment_data, device_data, admin_privileges, role_management   # your existing routers
+# Add backend directory to path for imports
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import user
+import shipment_data
+import device_data
+import admin_privileges
+import role_management
 # -------------------- ENV + DATABASE --------------------
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
