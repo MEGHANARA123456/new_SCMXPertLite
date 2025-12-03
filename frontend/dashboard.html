@@ -5,15 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SCMXPertLite — Dashboard</title>
 
-  <!-- Your existing shared stylesheet -->
   <link rel="stylesheet" href="/frontend/style.css">
+
   <style>
-    /* small helpers used by script */
     .hidden { display:none !important; }
+
+    /* Floating Request Button */
+    #requestAccessBtn {
+      position: fixed;
+      bottom: 26px;
+      right: 26px;
+      background: linear-gradient(135deg,#6a11cb,#2575fc);
+      color: white;
+      border: none;
+      padding: 15px 20px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: bold;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+      cursor: pointer;
+      z-index: 9999;
+      transition: .25s ease;
+    }
+    #requestAccessBtn:hover {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    /* Modal Overlay */
+    #requestModalOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+    }
+
+    #requestModal {
+      width: 420px;
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 20px 42px rgba(0,0,0,0.35);
+    }
+
+    #requestDescription {
+      width: 100%;
+      height: 120px;
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 6px;
+      opacity: 0;
+      transition: .3s ease;
+      z-index: 999999;
+    }
+    #toast.show { opacity: 1; }
+
+    /* Reply Box */
+    .replyItem {
+      background:#f3eaff;
+      padding:10px;
+      border-radius:8px;
+      margin-bottom:8px;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity:0; transform: translateY(8px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+
   </style>
 </head>
 
 <body>
+
 <header class="topbar">
   <nav class="nav-menu">
     <a href="/frontend/user.html">My Account</a>
@@ -21,28 +99,12 @@
     <a href="/frontend/shipment_data.html">create Shipments</a>
     <a href="/frontend/device_data.html">live streaming</a>
     <a href="/frontend/logout.html">logout</a>
-    <a href="/frontend/admin_dashboard.html">admin roles</a>
-    <!-- ROLE BADGE -->
-    <span id="roleBadge" class="hidden"
-      style="padding:6px 12px; background:#6C27D9; color:rgba(38, 13, 180, 0.8);
-      border-radius:10px; font-weight:600;">
-    </span>
-
-    <!-- ADMIN LINK (only for admin) -->
-    <a id="adminLink" href="/frontend/admin_dashboard.html" class="hidden">Admin</a>
-
-    <a href="/frontend/logout.html">Logout</a>
   </nav>
 </header>
 
-<!-- ROLE-BASED GREETING -->
-<div class="welcome" id="welcomeText">
-  Hi user, Welcome to SCMXPertLite
-</div>
+<div class="welcome" id="welcomeText">Hi user, Welcome to SCMXPertLite</div>
 
 <div class="split-bg">
-
-  <!-- LEFT HALF -->
   <div class="left-side">
     <div class="box-content">
       <h2>Create a New Shipment</h2>
@@ -51,7 +113,6 @@
     </div>
   </div>
 
-  <!-- RIGHT HALF -->
   <div class="right-side">
     <div class="box-content">
       <h2>To see Device Data Stream</h2>
@@ -59,77 +120,215 @@
       <a href="/frontend/device_data.html" class="btn-purple">DEVICE DATA STREAM</a>
     </div>
   </div>
+</div>
+
+
+<!-- Floating Request Button -->
+<button id="requestAccessBtn">Request Access</button>
+
+<!-- Request Modal -->
+<div id="requestModalOverlay">
+  <div id="requestModal">
+    <span id="closeModal" style="float:right;font-size:20px;cursor:pointer;">&times;</span>
+    <h2>Request Access</h2>
+    <textarea id="requestDescription" placeholder="Type your request..."></textarea>
+    <button id="submitRequestBtn" class="btn-purple" style="width:100%;margin-top:12px;">Submit</button>
+  </div>
+</div>
+
+<!-- Replies Box -->
+<div id="replyBox" style="
+  position:fixed;
+  bottom:110px;
+  right:28px;
+  width:320px;
+  max-height:240px;
+  overflow-y:auto;
+  background:#ffffff;
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.15);
+  z-index:1200;
+  display:none;
+">
+  <div style="font-weight:700; color:#673AB7; font-size:16px;">Replies</div>
+  <div style="font-size:13px;color:#777;margin-bottom:10px;">Admin responses</div>
+
+  <div id="replyBoxList"></div>
+</div>
+
+
+<!-- ADMIN REPLY MODAL (you requested this added here) -->
+<div id="adminReplyModal" style="
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.45);
+  display:none; justify-content:center; align-items:center;
+  z-index:2000">
+  
+  <div style="width:360px;background:white;padding:18px;border-radius:12px;">
+    <h3>Send Reply</h3>
+    <div><b>User:</b> <span id="replyUser"></span></div>
+
+    <textarea id="replyMessage"
+      style="width:100%;height:110px;margin-top:8px;border:1px solid #ccc;border-radius:8px;padding:8px;">
+    </textarea>
+
+    <button onclick="sendReply()" style="width:100%;margin-top:10px;" class="btn-purple">Send Reply</button>
+    <button onclick="closeReplyBox()" style="width:100%;margin-top:6px;">Cancel</button>
+  </div>
+</div>
 
 <div id="toast"></div>
+
 
 <script>
 const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
 
-/* Helpers */
-function getToken() {
-  return localStorage.getItem("token") || "";
+function getToken(){ return localStorage.getItem("token") || ""; }
+function authHeaders(){ return { "Authorization":"Bearer "+getToken() }; }
+function decodeToken(){
+  try { return JSON.parse(atob(getToken().split(".")[1])); }
+  catch { return null; }
 }
 
-function decodeToken() {
-  const token = getToken();
-  if (!token) return null;
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch {
-    return null;
-  }
-}
-
-
-
-/* Toast (uses same id as auth page if you want) */
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  if (!t) return alert(msg);
-  t.innerText = msg;
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;
   t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2500);
+  setTimeout(()=>t.classList.remove("show"),2500);
 }
 
-/* Apply role-based UI permissions */
-function applyRoleRules() {
-  const payload = requireAuth();
-  if (!payload) return;
 
-  const username = payload.sub || "user";
-  const role = payload.role || localStorage.getItem("role") || "user";
-
-  document.getElementById("welcomeText").textContent =
-    `Hi ${username} (${role.toUpperCase()}), Welcome to SCMXPertLite`;
-
-  const badge = document.getElementById("roleBadge");
-  badge.textContent = role.toUpperCase();
-  badge.classList.remove("hidden");
-
-  // viewer: no create shipment
-  if (role === "viewer") {
-    const btn = document.getElementById("createShipmentBtn");
-    const link = document.getElementById("createShipmentLink");
-    if (btn) btn.style.display = "none";
-    if (link) link.style.display = "none";
-  }
-
-  // manager: show extra tile
-  if (role === "manager") {
-    const tile = document.getElementById("managerTile");
-    if (tile) tile.classList.remove("hidden");
-  }
-
-  // admin: show link to admin dashboard
-  if (role === "admin") {
-    const a = document.getElementById("adminLink");
-    if (a) a.classList.remove("hidden");
-  }
-}
-
+/* Apply Role Formatting */
 document.addEventListener("DOMContentLoaded", () => {
-  applyRoleRules();
+  const p = decodeToken();
+  if(p){
+    document.getElementById("welcomeText").textContent =
+      `Hi ${p.sub} (${p.role.toUpperCase()}), Welcome to SCMXPertLite. Ready to dive in?`;
+  }
 });
+
+
+/* ========== REQUEST MODAL ========== */
+const modalOverlay = document.getElementById("requestModalOverlay");
+
+document.getElementById("requestAccessBtn").onclick = () => modalOverlay.style.display = "flex";
+document.getElementById("closeModal").onclick = () => modalOverlay.style.display = "none";
+
+document.getElementById("submitRequestBtn").onclick = async () => {
+  const desc = document.getElementById("requestDescription").value.trim();
+  if(!desc) return showToast("Request cannot be empty");
+
+  const res = await fetch(`${API_BASE_URL}/admin/request-access`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", ...authHeaders() },
+    body: JSON.stringify({ description: desc })
+  });
+
+  const j = await res.json();
+
+  if(!res.ok) return showToast(j.detail || "Failed");
+  
+  showToast("Request submitted!");
+  modalOverlay.style.display="none";
+  document.getElementById("requestDescription").value="";
+};
+
+
+/* ========== USER REPLIES ========== */
+let lastReplyTime = 0;
+
+async function loadReplies(){
+  const box = document.getElementById("replyBox");
+  const list = document.getElementById("replyBoxList");
+
+  try{
+    const res = await fetch(`${API_BASE_URL}/user/replies`, { headers:authHeaders() });
+    if(!res.ok) return;
+
+    const data = await res.json();
+    const replies = data.replies || [];
+
+    if(replies.length === 0){
+      box.style.display="none";
+      return;
+    }
+
+    box.style.display="block";
+
+    list.innerHTML = replies.map(r => `
+      <div class="replyItem">
+        <div style="font-size:12px;color:#777">${new Date(r.sent_at).toLocaleString()}</div>
+        <div>${r.message}</div>
+      </div>
+    `).join("");
+    
+  }catch(e){
+    console.error(e);
+  }
+}
+
+async function watchReplies(){
+  try{
+    const res = await fetch(`${API_BASE_URL}/user/replies`, { headers:authHeaders() });
+    const data = await res.json();
+
+    const replies = data.replies || [];
+    if(replies.length === 0) return;
+
+    const latest = new Date(replies[replies.length - 1].sent_at).getTime();
+    if(latest > lastReplyTime){
+      if(lastReplyTime !== 0){
+        showToast("New reply from admin!");
+      }
+      lastReplyTime = latest;
+      loadReplies();
+    }
+
+  }catch(e){ }
+}
+
+loadReplies();
+setInterval(watchReplies, 4000);
+
+
+/* ===========================================================
+   ========== ADMIN REPLY MODAL (you requested this) ==========
+   =========================================================== */
+
+let replyTarget = null;
+
+function openReplyBox(username){
+  replyTarget = username;
+  document.getElementById("replyUser").textContent = username;
+  document.getElementById("adminReplyModal").style.display = "flex";
+}
+
+function closeReplyBox(){
+  document.getElementById("adminReplyModal").style.display = "none";
+}
+
+async function sendReply(){
+  const msg = document.getElementById("replyMessage").value.trim();
+  if(!msg) return showToast("Message cannot be empty");
+
+  try{
+    const res = await fetch(`${API_BASE_URL}/admin/replies/send`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", ...authHeaders() },
+      body: JSON.stringify({ username: replyTarget, message: msg })
+    });
+
+    const j = await res.json();
+    if(!res.ok) return showToast(j.detail || "Failed");
+
+    showToast("Reply Sent!");
+    closeReplyBox();
+
+  }catch(err){
+    showToast("Network Error");
+  }
+}
 </script>
 
 </body>

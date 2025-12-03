@@ -11,14 +11,21 @@ from backend.auth_utils import get_current_user, require_role
 load_dotenv()
 router = APIRouter()
 
-# DB
+# ======================================================
+#  DATABASE CONNECTION
+# ======================================================
 client = MongoClient(os.getenv("MONGO_URI"))
 db = client[os.getenv("MONGO_DB_APP")]
-requests_col = db["admin_requests"]
+
+requests_col = db["admin_requests"]          # main request collection
 users_col = db["user"]
 sessions_col = db["logged_sessions"]
+replies_col = db["admin_replies"]            # NEW — reply collection
 
-# EMAIL CONFIG
+
+# ======================================================
+#  SMTP CONFIG
+# ======================================================
 MAIL_USERNAME = os.getenv("MAIL_USERNAME")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_FROM = os.getenv("MAIL_FROM")
@@ -27,7 +34,7 @@ MAIL_PORT = int(os.getenv("MAIL_PORT"))
 
 
 # ======================================================
-#  EMAIL SENDER (Reusable for all notifications)
+#  EMAIL SENDER
 # ======================================================
 def send_email(to_email: str, subject: str, body: str):
     msg = MIMEText(body)
@@ -46,69 +53,194 @@ def send_email(to_email: str, subject: str, body: str):
 
 
 # ======================================================
-# 1️⃣ USER REQUESTS ADMIN ACCESS — SEND EMAIL TO ADMIN
+# 1️⃣ USER CREATES REQUEST
 # ======================================================
-@router.post("/admin/request-access")
-def request_admin(current_user: dict = Depends(get_current_user)):
-    username = current_user["username"]
-    email = current_user.get("email")
+@router.post("/requests")
+def create_request(data: dict, user=Depends(get_current_user)):
 
-    if current_user["role"] == "admin":
-        raise HTTPException(400, "Already admin")
-
-    if requests_col.find_one({"username": username}):
-        raise HTTPException(400, "Already requested")
-
-    requests_col.insert_one({
-        "username": username,
-        "email": email,
+    payload = {
+        "username": user["username"],
+        "email": user.get("email"),
+        "type": data.get("type"),
+        "title": data.get("title"),
+        "description": data.get("description"),
         "requested_at": datetime.utcnow(),
         "status": "pending"
-    })
-
-    # Notify admin email
-    admin_email = MAIL_USERNAME
-
-    subject = "New Admin Access Request"
-    body = f"""
-User {username} has requested admin access.
-
-Time: {datetime.utcnow()} UTC
-Email: {email}
-
-Login to SCMXpertLite Admin Dashboard to approve or reject.
-"""
-
-    email_sent, email_error = send_email(admin_email, subject, body)
-
-    return {
-        "message": "Admin request submitted",
-        "email_sent": email_sent,
-        "email_error": email_error
     }
 
+    requests_col.insert_one(payload)
+    return {"success": True, "message": "Request submitted"}
+
 
 # ======================================================
-# 2️⃣ GET PENDING REQUESTS
+# 2️⃣ GET ALL REQUESTS
+# ======================================================
+@router.get("/admin/requests")
+def get_all_requests(current_user=Depends(get_current_user)):
+    require_role(current_user, ["admin"])
+    reqs = list(requests_col.find({}, {"_id": 0}))
+    return {"requests": reqs}
+
+
+# ======================================================
+# 3️⃣ GET PENDING REQUESTS
 # ======================================================
 @router.get("/admin/pending")
-def get_pending(current_user: dict = Depends(get_current_user)):
+def get_pending(current_user=Depends(get_current_user)):
     require_role(current_user, ["admin"])
-    
-    data = list(requests_col.find({"status": "pending"}, {"_id": 0}))
-    return {"total": len(data), "requests": data}
+    reqs = list(requests_col.find({"status": "pending"}, {"_id": 0}))
+    return {"requests": reqs, "total": len(reqs)}
 
 
 # ======================================================
-# 3️⃣ ADMIN UPDATES ANY USER ROLE  (used in modal)
+# 4️⃣ APPROVE REQUEST
+# ======================================================
+@router.post("/admin/requests/{username}/approve")
+def approve_request(username: str, current_user=Depends(get_current_user)):
+    require_role(current_user, ["admin"])
+
+    req = requests_col.find_one({"username": username})
+    if not req:
+        raise HTTPException(404, "Request not found")
+
+    requests_col.update_one(
+        {"username": username},
+        {"$set": {"status": "approved", "admin_action_at": datetime.utcnow()}}
+    )
+
+    users_col.update_one(
+        {"username": username},
+        {"$set": {"role": "admin"}}
+    )
+
+    email = req.get("email")
+    if email:
+        subject = "Your Request Has Been Approved"
+        body = f"""
+Hello {username},
+
+Your admin access request has been APPROVED.
+
+Approved by: {current_user['username']}
+"""
+        send_email(email, subject, body)
+
+    return {"success": True, "message": "Approved"}
+
+
+# ======================================================
+# 5️⃣ REJECT REQUEST
+# ======================================================
+@router.post("/admin/requests/{username}/reject")
+def reject_request(username: str, current_user=Depends(get_current_user)):
+    require_role(current_user, ["admin"])
+
+    req = requests_col.find_one({"username": username})
+    if not req:
+        raise HTTPException(404, "Request not found")
+
+    requests_col.update_one(
+        {"username": username},
+        {"$set": {"status": "rejected", "admin_action_at": datetime.utcnow()}}
+    )
+
+    email = req.get("email")
+    if email:
+        subject = "Your Request Was Rejected"
+        body = f"""
+Hello {username},
+
+Your admin access request has been REJECTED.
+
+Reviewed by: {current_user['username']}
+"""
+        send_email(email, subject, body)
+
+    return {"success": True, "message": "Rejected"}
+
+
+# ======================================================
+# 6️⃣ ADMIN SENDS REPLY (drawer in admin dashboard)
+# ======================================================
+@router.post("/admin/reply")
+def admin_reply_1(data: dict, current_user=Depends(get_current_user)):
+    require_role(current_user, ["admin"])
+
+    username = data.get("username")
+    message = data.get("message")
+
+    if not username or not message:
+        raise HTTPException(400, "username & message required")
+
+    replies_col.insert_one({
+        "username": username,
+        "admin": current_user["username"],
+        "message": message,
+        "sent_at": datetime.utcnow()
+    })
+
+    return {"success": True, "message": "Reply sent"}
+
+
+# ======================================================
+# 7️⃣ ADMIN SENDS REPLY (used by /admin/replies/send)
+# ======================================================
+@router.post("/admin/replies/send")
+def admin_reply_2(payload: dict, current_user: dict = Depends(get_current_user)):
+    require_role(current_user, ["admin"])
+
+    username = payload.get("username")
+    message = payload.get("message")
+
+    if not username or not message:
+        raise HTTPException(400, "username & message required")
+
+    replies_col.insert_one({
+        "username": username,
+        "admin": current_user["username"],
+        "message": message,
+        "sent_at": datetime.utcnow()
+    })
+
+    return {"success": True, "message": "Reply sent"}
+
+
+# ======================================================
+# 8️⃣ ADMIN GETS ALL REPLIES
+# ======================================================
+@router.get("/admin/replies")
+def get_replies(current_user=Depends(get_current_user)):
+    require_role(current_user, ["admin"])
+    items = list(replies_col.find({}, {"_id": 0}))
+    return {"replies": items}
+
+
+# ======================================================
+# 9️⃣ USER FETCHES THEIR REPLIES
+# ======================================================
+@router.get("/user/replies")
+def get_user_replies(current_user: dict = Depends(get_current_user)):
+
+    username = current_user["username"]
+
+    data = list(replies_col.find(
+        {"username": username},
+        {"_id": 0}
+    ))
+
+    return {"replies": data}
+
+
+# ======================================================
+# 🔟 ADMIN UPDATES ROLE
 # ======================================================
 @router.post("/admin/set-role/{username}")
-def set_role_api(username: str, payload: dict, current_user: dict = Depends(get_current_user)):
+def set_role(username: str, payload: dict, current_user=Depends(get_current_user)):
     require_role(current_user, ["admin"])
 
     new_role = payload.get("role")
     if not new_role:
-        raise HTTPException(400, "Role is required")
+        raise HTTPException(400, "Role required")
 
     user = users_col.find_one({"username": username})
     if not user:
@@ -116,130 +248,26 @@ def set_role_api(username: str, payload: dict, current_user: dict = Depends(get_
 
     users_col.update_one({"username": username}, {"$set": {"role": new_role}})
 
-    # Notify the user by email
     email = user.get("email")
     if email:
-        subject = "Your Role Has Been Updated"
-        body = f"""
-Hello {username},
+        subject = "Your Role Has Changed"
+        body = f"Your role is now: {new_role}"
+        send_email(email, subject, body)
 
-Your SCMXpertLite role has been updated.
-
-New Role: {new_role}
-Updated by Admin: {current_user['username']}
-
-If you did not expect this change, contact support.
-"""
-        email_sent, email_error = send_email(email, subject, body)
-    else:
-        email_sent = False
-        email_error = "User has no email saved"
-
-    return {
-        "message": "Role updated successfully",
-        "email_sent": email_sent,
-        "email_error": email_error
-    }
+    return {"success": True, "message": "Role updated"}
 
 
 # ======================================================
-# 4️⃣ APPROVE ADMIN REQUEST — SEND EMAIL
-# ======================================================
-@router.post("/admin/role/approve")
-def approve_role(username: str = Form(...), current_user: dict = Depends(get_current_user)):
-    require_role(current_user, ["admin"])
-
-    users_col.update_one({"username": username}, {"$set": {"role": "admin"}})
-
-    req = requests_col.find_one({"username": username})
-
-    requests_col.update_one(
-        {"username": username},
-        {"$set": {
-            "status": "approved",
-            "admin_action_at": datetime.utcnow()
-        }}
-    )
-
-    # send email
-    email = req.get("email") if req else None
-    if email:
-        subject = "Your Admin Access Request Has Been Approved"
-        body = f"""
-Hello {username},
-
-Your request for admin access has been APPROVED.
-
-You now have full administrative privileges.
-
-Approved by: {current_user['username']}
-"""
-        email_sent, email_error = send_email(email, subject, body)
-    else:
-        email_sent, email_error = False, "No email on file"
-
-    return {
-        "message": "Role approved successfully",
-        "email_sent": email_sent,
-        "email_error": email_error
-    }
-
-
-# ======================================================
-# 5️⃣ REJECT ADMIN REQUEST — SEND EMAIL
-# ======================================================
-@router.post("/admin/role/reject")
-def reject_role(username: str = Form(...), current_user: dict = Depends(get_current_user)):
-    require_role(current_user, ["admin"])
-
-    req = requests_col.find_one({"username": username})
-
-    requests_col.update_one(
-        {"username": username, "status": "pending"},
-        {"$set": {
-            "status": "rejected",
-            "admin_action_at": datetime.utcnow()
-        }}
-    )
-
-    # send email
-    email = req.get("email") if req else None
-    if email:
-        subject = "Your Admin Access Request Was Rejected"
-        body = f"""
-Hello {username},
-
-Your request for admin access has been REJECTED.
-
-Reviewed by: {current_user['username']}
-
-You may submit a new request later if needed.
-"""
-        email_sent, email_error = send_email(email, subject, body)
-    else:
-        email_sent, email_error = False, "No email on file"
-
-    return {
-        "message": "User request rejected",
-        "email_sent": email_sent,
-        "email_error": email_error
-    }
-
-
-# ======================================================
-# 6️⃣ LOG SESSIONS (Sidebar "Active users")
+# 1️LOG ACTIVE SESSIONS
 # ======================================================
 @router.post("/admin/loggedin")
-def record_logged_in(payload: dict, current_user: dict = Depends(get_current_user)):
+def record_logged_in(payload: dict, current_user=Depends(get_current_user)):
     username = payload.get("username") or current_user.get("username")
     ts = payload.get("ts")
-
-    if not username:
-        raise HTTPException(400, "username required")
 
     sessions_col.update_one(
         {"username": username},
         {"$set": {"ts": ts}},
         upsert=True
     )
-    return {"message": "recorded"}
+    return {"message": "Recorded"}

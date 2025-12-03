@@ -1,108 +1,149 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SCMXpertLite — Admin Dashboard</title>
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,600" rel="stylesheet">
-  <style>
-    /* ===== Palette & base (matches your UI) ===== */
-    :root{
-      --purple:#673AB7;
-      --purple-dark:#4A1CA0;
-      --teal:#03C2E0;
-      --bg:#f7f7fb;
-      --panel:#ffffff;
-      --muted:#666;
-      --success:#2ecc71;
-      --danger:#e74c3c;
-      --accent:#6ac4ee;
-      --shadow: 0 8px 28px rgba(46,17,84,0.06);
-    }
-    *{box-sizing:border-box}
-    body{font-family:Roboto,system-ui,Arial; margin:0; background:var(--bg); color:#222; -webkit-font-smoothing:antialiased}
-    a{color:inherit}
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SCMXpertLite — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,600" rel="stylesheet">
+<style>
+  /* ===== Palette & base (matches your UI) ===== */
+  :root{
+    --purple:#673AB7;
+    --purple-dark:#4A1CA0;
+    --teal:#03C2E0;
+    --bg:#f7f7fb;
+    --panel:#ffffff;
+    --muted:#666;
+    --success:#2ecc71;
+    --danger:#e74c3c;
+    --accent:#6ac4ee;
+    --shadow: 0 8px 28px rgba(46,17,84,0.06);
+  }
+  *{box-sizing:border-box}
+  body{font-family:Roboto,system-ui,Arial; margin:0; background:var(--bg); color:#222; -webkit-font-smoothing:antialiased}
+  a{color:inherit}
 
-    /* topbar */
-    .topbar{width:100%; background:var(--purple); padding:14px 20px; box-shadow:0 3px 12px rgba(0,0,0,0.08); position:sticky; top:0; z-index:40}
-    .nav-menu{display:flex; gap:18px; align-items:center; justify-content:flex-start}
-    .nav-menu a{color:#fff; text-decoration:none; font-weight:600; font-size:14px}
-    .brand{display:flex;align-items:center;gap:12px;color:#fff}
+  /* topbar */
+  .topbar{width:100%; background:var(--purple); padding:14px 20px; box-shadow:0 3px 12px rgba(0,0,0,0.08); position:sticky; top:0; z-index:40}
+  .nav-menu{display:flex; gap:18px; align-items:center; justify-content:flex-start}
+  .nav-menu a{color:#fff; text-decoration:none; font-weight:600; font-size:14px}
+  .brand{display:flex;align-items:center;gap:12px;color:#fff}
 
-    /* layout */
-    .layout{display:flex; max-width:1200px; margin:28px auto; gap:24px; padding:0 16px}
-    .sidebar{width:260px; background:linear-gradient(180deg,#2c2a45, #3a2d66); color:#fff; border-radius:12px; padding:10px; box-shadow:var(--shadow)}
-    .sidebar h3{margin:0 0 12px; font-size:16px}
-    .menu-item{display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; padding:12px 10px; border-radius:8px; cursor:pointer; color:#f1f1fb; margin-bottom:8px; transition:all .14s ease}
-    .menu-item:hover{transform:translateX(4px)}
-    .menu-item.active{background:rgba(255,255,255,0.04)}
-    .menu-item small{color:#dcd6ff; font-weight:400; margin-top:6px; display:block}
+  /* layout */
+  .layout{display:flex; max-width:1200px; margin:28px auto; gap:24px; padding:0 16px}
+  .sidebar{width:260px; background:linear-gradient(180deg,#2c2a45, #3a2d66); color:#fff; border-radius:12px; padding:10px; box-shadow:var(--shadow)}
+  .sidebar h3{margin:0 0 12px; font-size:16px}
+  .menu-item{display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; padding:12px 10px; border-radius:8px; cursor:pointer; color:#f1f1fb; margin-bottom:8px; transition:all .14s ease}
+  .menu-item:hover{transform:translateX(4px)}
+  .menu-item.active{background:rgba(255,255,255,0.04)}
+  .menu-item small{color:#dcd6ff; font-weight:400; margin-top:6px; display:block}
 
-    .main{flex:1}
-    .panel{background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 6px 22px rgba(0,0,0,0.06); margin-bottom:18px; transition:all .12s ease}
+  .main{flex:1}
+  .panel{background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 6px 22px rgba(0,0,0,0.06); margin-bottom:18px; transition:all .12s ease}
 
-    .header-row{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
-    .title{font-size:20px; color:var(--purple); font-weight:700}
-    .controls{display:flex; gap:8px; align-items:center}
+  .header-row{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+  .title{font-size:20px; color:var(--purple); font-weight:700}
+  .controls{display:flex; gap:8px; align-items:center}
 
-    .small{font-size:13px;color:var(--muted)}
-    .muted{color:var(--muted)}
+  .small{font-size:13px;color:var(--muted)}
+  .muted{color:var(--muted)}
 
-    /* tables */
-    table{width:100%; border-collapse:collapse}
-    th,td{padding:12px 10px; text-align:left; border-bottom:1px solid #f0f0f3; font-size:14px}
-    th{font-weight:600; color:#444}
-    .user-table tbody tr:hover{background:#fbfbff}
-    .role-badge{padding:6px 10px; border-radius:999px; background:#f3f0ff; color:var(--purple); font-weight:700; font-size:13px; display:inline-block}
+  /* tables */
+  table{width:100%; border-collapse:collapse}
+  th,td{padding:12px 10px; text-align:left; border-bottom:1px solid #f0f0f3; font-size:14px}
+  th{font-weight:600; color:#444}
+  .user-table tbody tr:hover{background:#fbfbff}
+  .role-badge{padding:6px 10px; border-radius:999px; background:#f3f0ff; color:var(--purple); font-weight:700; font-size:13px; display:inline-block}
 
-    .btn{padding:9px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:700; transition:all .12s ease}
-    .btn.primary{background:var(--purple); color:#fff}
-    .btn.ghost{background:transparent; border:1px solid #eee; color:#222}
-    .btn.warn{background:var(--teal); color:#042}
-    .btn.icon{display:inline-flex; align-items:center; gap:8px; padding:8px 10px}
-    .actions button{margin-right:6px}
+  .btn{padding:9px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:700; transition:all .12s ease}
+  .btn.primary{background:var(--purple); color:#fff}
+  .btn.ghost{background:transparent; border:1px solid #eee; color:#222}
+  .btn.warn{background:var(--teal); color:#042}
+  .btn.icon{display:inline-flex; align-items:center; gap:8px; padding:8px 10px}
+  .actions button{margin-right:6px}
 
-    /* two column grid */
-    .grid{display:grid; grid-template-columns:1fr 420px; gap:18px}
-    @media (max-width:980px){ .layout{margin:12px} .grid{grid-template-columns:1fr} .sidebar{display:none} }
+  /* two column grid */
+  .grid{display:grid; grid-template-columns:1fr 420px; gap:18px}
+  @media (max-width:980px){ .layout{margin:12px} .grid{grid-template-columns:1fr} .sidebar{display:none} }
 
-    /* modal */
-    .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:all .18s ease}
-    .modal-backdrop.show{opacity:1; pointer-events:auto}
-    .modal{width:760px; max-width:96%; background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 18px 60px rgba(30,12,60,0.18)}
-    .modal h4{margin:0 0 8px; color:var(--purple)}
-    .close-btn{background:#eee; border-radius:8px; padding:6px 8px; border:0; cursor:pointer}
+  /* modal */
+  .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:all .18s ease}
+  .modal-backdrop.show{opacity:1; pointer-events:auto}
+  .modal{width:760px; max-width:96%; background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 18px 60px rgba(30,12,60,0.18)}
+  .modal h4{margin:0 0 8px; color:var(--purple)}
+  .close-btn{background:#eee; border-radius:8px; padding:6px 8px; border:0; cursor:pointer}
 
-    /* permissions grid */
-    .perm-grid{width:100%; border-collapse:collapse; margin-top:12px}
-    .perm-grid th,.perm-grid td{padding:10px; border:1px solid #f0eff6; text-align:center}
-    .perm-grid th{background:#fbf8ff; color:var(--purple); font-weight:700}
-    .chip.yes{background:var(--success); color:white; padding:6px 8px; border-radius:8px}
-    .chip.no{background:var(--danger); color:white; padding:6px 8px; border-radius:8px}
+  /* permissions grid */
+  .perm-grid{width:100%; border-collapse:collapse; margin-top:12px}
+  .perm-grid th,.perm-grid td{padding:10px; border:1px solid #f0eff6; text-align:center}
+  .perm-grid th{background:#fbf8ff; color:var(--purple); font-weight:700}
+  .chip.yes{background:var(--success); color:white; padding:6px 8px; border-radius:8px}
+  .chip.no{background:var(--danger); color:white; padding:6px 8px; border-radius:8px}
 
-    /* toast */
-    #toast{position:fixed; top:22px; left:50%; transform:translateX(-50%) translateY(-26px); background:var(--purple); color:#fff; padding:12px 18px; border-radius:10px; box-shadow:0 10px 30px rgba(102,20,170,0.18); opacity:0; transition:all .28s ease; z-index:1200}
-    #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  /* toast */
+  #toast{position:fixed; top:22px; left:50%; transform:translateX(-50%) translateY(-26px); background:var(--purple); color:#fff; padding:12px 18px; border-radius:10px; box-shadow:0 10px 30px rgba(102,20,170,0.18); opacity:0; transition:all .28s ease; z-index:1200}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
 
-    /* tiny helpers */
-    .muted-block{color:var(--muted); font-size:13px}
-    .search{padding:8px 10px; border-radius:8px; border:1px solid #eee; width:100%}
-    .flex{display:flex; gap:8px; align-items:center}
-    .gap{height:12px}
+  /* tiny helpers */
+  .muted-block{color:var(--muted); font-size:13px}
+  .search{padding:8px 10px; border-radius:8px; border:1px solid #eee; width:100%}
+  .flex{display:flex; gap:8px; align-items:center}
+  .gap{height:12px}
 
-    /* small UI niceties */
-    .hidden { display:none !important; opacity:0; transform:translateY(-6px) }
-    .fade-in { animation: fadeInUp .18s ease both }
-    @keyframes fadeInUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+  /* small UI niceties */
+  .hidden { display:none !important; opacity:0; transform:translateY(-6px) }
+  .fade-in { animation: fadeInUp .18s ease both }
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
 
-    /* logged-in list */
-    .logged-list { margin-top:10px; border-radius:8px; padding:10px; background:#fbfbff; font-size:13px; max-height:160px; overflow:auto; }
-    .logout-btn { background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; cursor:pointer }
-    .logout-btn svg { vertical-align:middle }
+  /* logged-in list */
+  .logged-list { margin-top:10px; border-radius:8px; padding:10px; background:#fbfbff; font-size:13px; max-height:160px; overflow:auto; }
+  .logout-btn { background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; cursor:pointer }
+  .logout-btn svg { vertical-align:middle }
 
-    /* action menu icon */
-    .three-dots { width:28px; height:28px; border-radius:6px; background:#f6f6fb; display:inline-flex; align-items:center; justify-content:center; cursor:pointer }
-  </style>
+  /* action menu icon */
+  .three-dots { width:28px; height:28px; border-radius:6px; background:#f6f6fb; display:inline-flex; align-items:center; justify-content:center; cursor:pointer }
+
+  /* Right-side Reply Drawer */
+  .reply-drawer {
+    width:320px;
+    background:var(--panel);
+    border-radius:12px;
+    padding:14px;
+    box-shadow:0 10px 40px rgba(30,12,60,0.12);
+    position:fixed;
+    right:20px;
+    bottom:24%;
+    z-index:1200;
+    transform: translateX(420px);
+    transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 260ms;
+    opacity:0;
+  }
+  .reply-drawer.open { transform: translateX(0); opacity:1; }
+  .reply-drawer h4 { margin:0 0 8px; color:var(--purple); }
+  .reply-drawer textarea { width:100%; min-height:110px; padding:10px; border-radius:8px; border:1px solid #eee; resize:vertical; }
+
+  /* slide-right + fade animation for rows */
+  .animate-out { animation: slideFadeRight 460ms ease forwards; }
+  @keyframes slideFadeRight {
+    from { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(50px); opacity: 0; height:0; margin:0; padding:0; }
+  }
+
+  /* Floating Request FAB (same as design) */
+  .request-fab{position:fixed;right:22px;bottom:22px;background:var(--purple);color:#fff;padding:12px 16px;border-radius:999px;box-shadow:0 10px 30px rgba(103,58,183,0.2);cursor:pointer;z-index:1200}
+  .drawer{position:fixed;right:22px;bottom:80px;width:360px;background:#fff;border-radius:10px;padding:12px;box-shadow:0 16px 40px rgba(20,10,40,0.12);display:none;z-index:1200}
+  .drawer.open{display:block}
+  .drawer h4{margin:0 0 8px}
+  .drawer textarea{width:100%;height:100px;border:1px solid #eee;border-radius:8px;padding:8px;resize:vertical}
+  .drawer .row{display:flex;gap:8px;margin-top:8px}
+  .drawer select, .drawer input{padding:8px;border-radius:8px;border:1px solid #eee;width:100%}
+
+  /* bottom-left toast (fallback small) */
+  #smallToast { position: fixed; left: 16px; bottom: 16px; min-width:220px; background:#111;color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 8px 26px rgba(0,0,0,0.2); opacity:0; transform: translateY(8px); transition: all 260ms ease; z-index:2000; }
+  #smallToast.show{ opacity:1; transform: translateY(0); }
+
+  .badge { display:inline-block;padding:6px 8px;border-radius:6px;background:#f1f1f1;color:#333;font-weight:700;font-size:12px }
+</style>
 </head>
 <body>
 
@@ -111,7 +152,7 @@
       <div class="brand"><strong style="font-size:18px">SCMXpertLite</strong> <span style="opacity:.85;font-size:13px;margin-left:8px">Admin</span></div>
       <nav class="nav-menu" style="margin-left:18px">
         <a href="/frontend/user.html">My Account</a>
-        <a href="/frontend/device_data.html">Device Data</a>
+        <a href="/frontend/device_data.html">live streaming</a>
         <a href="/frontend/dashboard.html">Dashboard</a>
         <a href="/frontend/shipments.html">Shipments</a>
         <a href="/frontend/shipment_data.html">create Shipments</a>
@@ -167,7 +208,7 @@
 
         <!-- LEFT: Main content area -->
         <div>
-          <!-- USERS PANEL (hidden by quick buttons, initially hidden because request page should be dominant per user) -->
+          <!-- USERS PANEL -->
           <section id="panelUsers" class="panel hidden fade-in">
             <div class="header-row">
               <div>
@@ -236,7 +277,7 @@
           </section>
         </div>
 
-        <!-- RIGHT: Role editor (kept hidden initially, show on demand) -->
+        <!-- RIGHT: Quick tools + (we will show replies area here) -->
         <aside>
           <section class="panel">
             <div class="header-row">
@@ -263,6 +304,19 @@
                   <tr><td>Manage Shipments</td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
                 </tbody>
               </table>
+            </div>
+          </section>
+
+          <!-- REQUEST REPLIES (list of replies sent) -->
+          <section class="panel" id="requestRepliesPanel" aria-live="polite" style="margin-top:14px;">
+            <div class="header-row">
+              <div>
+                <div class="title">Request Replies</div>
+                <div class="small">Recent replies you've sent</div>
+              </div>
+            </div>
+            <div id="repliesList" style="max-height:260px; overflow:auto; font-size:13px;">
+              <div class="muted">No replies yet</div>
             </div>
           </section>
         </aside>
@@ -300,124 +354,101 @@
     </div>
   </div>
 
+  <!-- Floating FAB and Drawer (request sending) -->
+  <button id="fabRequest" class="request-fab">+ Request</button>
+
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <h4>Send request to admin</h4>
+    <label class="small">Type</label>
+    <select id="request-type"><option value="shipments">Shipments</option><option value="users">Users</option><option value="device-data">Device Data</option></select>
+    <label class="small" style="margin-top:8px">Title</label>
+    <input id="request-title" placeholder="Short title"/>
+    <label class="small" style="margin-top:8px">Description</label>
+    <textarea id="request-desc" placeholder="Describe what you need..."></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="sendRequestBtn" class="btn primary" style="flex:1">Send Request</button>
+      <button id="closeDrawer" class="btn ghost" style="flex:1">Close</button>
+    </div>
+  </div>
+
+  <!-- Right-side Reply Drawer (RB1) -->
+  <div id="replyDrawer" class="reply-drawer" aria-hidden="true">
+    <h4>Reply to Request</h4>
+    <div style="font-size:13px;color:#444;margin-bottom:8px">
+      <div><strong id="replyReqTitle">—</strong></div>
+      <div style="color:var(--muted); font-size:12px" id="replyReqMeta">—</div>
+    </div>
+    <textarea id="replyText" placeholder="Write your message to the user..."></textarea>
+    <div style="display:flex; gap:8px; margin-top:10px">
+      <button id="sendReplyBtn" class="btn primary" style="flex:1">Send Reply</button>
+      <button id="closeReplyBtn" class="btn ghost" style="flex:1">Close</button>
+    </div>
+  </div>
+
   <div id="toast"></div>
+  <div id="smallToast"></div>
 
 <script>
-/*
-  admin_dashboard.html
-  - Uses localStorage.token for auth
-  - Reads backend endpoints:
-      GET  /admin/pending
-      GET  /admin/users (preferred)
-      POST /admin/set-role/{username}  with JSON { role: "..." }
-  - Graceful fallback to mock data when endpoints missing
-  - "Logged-in users" stored in localStorage and optionally POSTed to /admin/loggedin
-*/
-
+/* =========================
+   Config + helpers
+   ========================= */
 const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
-const toastEl = document.getElementById("toast");
-function showToast(msg, t=3000){ toastEl.textContent = msg; toastEl.classList.add("show"); setTimeout(()=> toastEl.classList.remove("show"), t); }
 
-// Auth helpers
+const toastEl = document.getElementById("toast");
+const smallToast = document.getElementById("smallToast");
+function showToast(msg, t=3000){ toastEl.textContent = msg; toastEl.classList.add("show"); setTimeout(()=> toastEl.classList.remove("show"), t); }
+function showSmallToast(msg, t=2400){ smallToast.textContent = msg; smallToast.classList.add("show"); setTimeout(()=> smallToast.classList.remove("show"), t); }
+
 function getToken(){ return localStorage.getItem("token") || ""; }
 function authHeaders(){ const t = getToken(); return t ? { "Authorization": "Bearer " + t } : {}; }
 function decodeToken(){ const t = getToken(); if(!t) return null; try{ return JSON.parse(atob(t.split(".")[1])); }catch{return null;} }
 function populateCurrentAdmin(){ const p = decodeToken(); document.getElementById("currentAdmin").textContent = (p && (p.username || p.sub)) || "guest" }
 
-// UI panels
+/* =========================
+   Panel toggles + UI init
+   ========================= */
 const panelUsers = document.getElementById("panelUsers");
 const panelRequests = document.getElementById("panelRequests");
 const panelAudit = document.getElementById("panelAudit");
 
-// Sidebar buttons
 const menuUsers = document.getElementById("menuUsers");
 const menuRequests = document.getElementById("menuRequests");
 const menuRoles = document.getElementById("menuRoles");
 const menuAudit = document.getElementById("menuAudit");
 
-// Quick buttons
 const btnTeamMembers = document.getElementById("btnTeamMembers");
 const btnEditRoles = document.getElementById("btnEditRoles");
 const btnShowPendingFull = document.getElementById("btnShowPendingFull");
 const btnShowRequests = document.getElementById("btnShowRequests");
 
-// modal
+function hideAllPanels(){
+  panelUsers.classList.add("hidden"); panelUsers.classList.remove("fade-in");
+  panelRequests.classList.add("hidden"); panelRequests.classList.remove("fade-in");
+  panelAudit.classList.add("hidden"); panelAudit.classList.remove("fade-in");
+}
+function activateMenuItem(el){ document.querySelectorAll(".menu-item").forEach(x => x.classList.remove("active")); if(el) el.classList.add("active"); }
+function showPendingAsMain(){ hideAllPanels(); panelRequests.classList.remove("hidden"); panelRequests.classList.add("fade-in"); activateMenuItem(menuRequests); }
+
+menuUsers.addEventListener("click", ()=> { hideAllPanels(); panelUsers.classList.remove("hidden"); panelUsers.classList.add("fade-in"); activateMenuItem(menuUsers); });
+menuRequests.addEventListener("click", ()=> { showPendingAsMain(); });
+menuRoles.addEventListener("click", ()=> { const u = prompt("Enter username to edit:"); if(u) openRoleModal(u); });
+menuAudit.addEventListener("click", ()=> { hideAllPanels(); panelAudit.classList.remove("hidden"); panelAudit.classList.add("fade-in"); activateMenuItem(menuAudit); });
+
+btnTeamMembers.addEventListener("click", ()=> { hideAllPanels(); panelUsers.classList.remove("hidden"); panelUsers.classList.add("fade-in"); activateMenuItem(menuUsers); });
+btnEditRoles.addEventListener("click", ()=> { const uname = prompt("Enter username to edit role:"); if(uname) openRoleModal(uname); });
+btnShowPendingFull.addEventListener("click", ()=> showPendingAsMain());
+document.getElementById("btnShowRequests").addEventListener("click", ()=> showPendingAsMain());
+
+document.getElementById("logoutBtn").addEventListener("click", ()=> { localStorage.removeItem("token"); showToast("Logged out"); setTimeout(()=> window.location.href = "/frontend/user.html", 700); });
+
+/* modal */
 const roleModal = document.getElementById("roleModal");
 const modalUsernameEl = document.getElementById("modalUsername");
 const modalRoleSelect = document.getElementById("modalRoleSelect");
 const modalSave = document.getElementById("modalSave");
-
-// logout
-document.getElementById("logoutBtn").addEventListener("click", ()=> {
-  localStorage.removeItem("token");
-  showToast("Logged out");
-  setTimeout(()=> window.location.href = "/frontend/user.html", 700);
-});
-
-// toggle helpers
-function hideAllPanels(){
-  panelUsers.classList.add("hidden");
-  panelUsers.classList.remove("fade-in");
-  panelRequests.classList.add("hidden");
-  panelRequests.classList.remove("fade-in");
-  panelAudit.classList.add("hidden");
-  panelAudit.classList.remove("fade-in");
-}
-function activateMenuItem(el){
-  document.querySelectorAll(".menu-item").forEach(x => x.classList.remove("active"));
-  if(el) el.classList.add("active");
-}
-
-// start with Pending Requests visible (user required this)
-function showPendingAsMain(){
-  hideAllPanels();
-  panelRequests.classList.remove("hidden");
-  panelRequests.classList.add("fade-in");
-  activateMenuItem(menuRequests);
-}
-
-// click handlers for sidebar
-menuUsers.addEventListener("click", ()=> {
-  hideAllPanels();
-  panelUsers.classList.remove("hidden");
-  panelUsers.classList.add("fade-in");
-  activateMenuItem(menuUsers);
-});
-menuRequests.addEventListener("click", ()=> {
-  showPendingAsMain();
-});
-menuRoles.addEventListener("click", ()=> {
-  // show right panel's role tools (open modal to edit or show quick role selector)
-  openRoleModal(prompt("Enter username to edit:") || "");
-});
-menuAudit.addEventListener("click", ()=> {
-  hideAllPanels();
-  panelAudit.classList.remove("hidden");
-  panelAudit.classList.add("fade-in");
-  activateMenuItem(menuAudit);
-});
-
-// quick buttons
-btnTeamMembers.addEventListener("click", ()=> {
-  // reveal users panel
-  hideAllPanels();
-  panelUsers.classList.remove("hidden");
-  panelUsers.classList.add("fade-in");
-  activateMenuItem(menuUsers);
-});
-btnEditRoles.addEventListener("click", ()=> {
-  // open modal (but only if user picks a username)
-  const uname = prompt("Enter username to edit role:");
-  if(uname) openRoleModal(uname);
-});
-btnShowPendingFull.addEventListener("click", ()=> {
-  showPendingAsMain();
-});
-document.getElementById("btnShowRequests").addEventListener("click", ()=> showPendingAsMain());
-
-// modal controls
 document.getElementById("closeModal").addEventListener("click", closeRoleModal);
 document.getElementById("modalCancel").addEventListener("click", closeRoleModal);
+
 function openRoleModal(username, role='', email=''){
   if(!username){ showToast("No username provided"); return; }
   modalUsernameEl.textContent = username;
@@ -426,171 +457,24 @@ function openRoleModal(username, role='', email=''){
   roleModal.classList.add("show");
   roleModal.setAttribute("aria-hidden","false");
 }
-function closeRoleModal(){
-  roleModal.classList.remove("show");
-  roleModal.setAttribute("aria-hidden","true");
-}
+function closeRoleModal(){ roleModal.classList.remove("show"); roleModal.setAttribute("aria-hidden","true"); }
 
-// save role
+/* save role */
 modalSave.addEventListener("click", async ()=>{
   const username = modalUsernameEl.textContent;
   const role = modalRoleSelect.value;
   if(!username || !role){ showToast("Pick a role"); return; }
   try {
     const resp = await setRoleForUser(username, role);
-    // resp may contain email_sent and email_error
     let msg = `Role updated: ${username} → ${role}`;
-    if(resp && typeof resp.email_sent !== 'undefined'){
-      msg += resp.email_sent ? ' — notification sent' : ' — notification failed';
-      if(resp.email_error) msg += ` (${resp.email_error})`;
-    }
+    if(resp && typeof resp.email_sent !== 'undefined'){ msg += resp.email_sent ? ' — notification sent' : ' — notification failed'; }
     showToast(msg);
     closeRoleModal();
-    loadUsers();
-    loadRequests();
+    loadUsers(); loadRequests();
   } catch(e){ console.error(e); showToast("Update failed") }
 });
 
-// --- Data loading & rendering ---
-function fmt(dt){ try { return new Date(dt).toLocaleString(); } catch { return dt } }
-async function loadRequests(){
-  const tbody = document.querySelector("#requestsTable tbody");
-  tbody.innerHTML = "<tr><td colspan='4' class='muted'>Loading...</td></tr>";
-  try {
-    const res = await fetch(`${API_BASE_URL}/admin/pending`, { headers: authHeaders() });
-    if(!res.ok){
-      tbody.innerHTML = "<tr><td colspan='4' class='muted'>No pending requests or cannot reach server</td></tr>";
-      return;
-    }
-    const data = await res.json();
-    const rows = (data.requests || []).map(r => {
-      const id = r.username || Math.random().toString(36).slice(2,8);
-      return `<tr>
-        <td>${r.username}</td>
-        <td>${fmt(r.requested_at)}</td>
-        <td>${r.status}</td>
-        <td class="actions">
-          <button class="btn" data-approve="${r.username}">Approve</button>
-          <button class="btn" data-reject="${r.username}">Reject</button>
-        </td>
-      </tr>`;
-    }).join("");
-    tbody.innerHTML = rows || "<tr><td colspan='4' class='muted'>No pending requests</td></tr>";
-  } catch(err){
-    console.error(err);
-    tbody.innerHTML = "<tr><td colspan='4' class='muted'>Error loading requests</td></tr>";
-  }
-}
-
-async function loadUsers(){
-  const tbody = document.querySelector("#usersTable tbody");
-  tbody.innerHTML = "<tr><td colspan='5' class='muted'>Loading users…</td></tr>";
-  try {
-    // Try loading users from backend. If backend unavailable, fall back to local sessions saved by login page.
-      let users = [];
-      try {
-        const res = await fetch(`${API_BASE_URL}/admin/users`, { headers: authHeaders() });
-        if (res && res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) users = data;
-          else if (Array.isArray(data.users)) users = data.users;
-          else if (Array.isArray(data.data)) users = data.data;
-          else users = data.users || data.items || [];
-        } else {
-          console.warn('Could not fetch /admin/users, falling back to local sessions');
-        }
-      } catch (e) {
-        console.warn('Error fetching users:', e);
-      }
-
-      // Fallback: use local sessions stored by the login flow (scmx_sessions)
-      if (!users || users.length === 0) {
-        const sessions = getSessions();
-        users = sessions.map(s => ({ username: s.username, email: '', role: 'user' }));
-      }
-
-      renderUsers(users);
-  } catch(err){
-    console.error(err);
-    populateUsersMock();
-  }
-}
-// remove mock data wiring — prefer backend /admin/users or local sessions
-function renderUsers(users){
-  const tbody = document.querySelector("#usersTable tbody");
-  const select = document.getElementById("roleQuickSelect");
-  tbody.innerHTML = "";
-    (users || []).forEach(u=>{
-    const isAdmin = (u.role === "admin");
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${u.username || u.name || "-"}</td>
-      <td>${u.email || "(no email)"}</td>
-      <td><span class="role-badge">${u.role || "user"}</span></td>
-      <td>${isAdmin ? "Yes" : "No"}</td>
-      <td class="actions">
-        <button class="btn" data-edit="${u.username}" data-role="${u.role||'user'}" data-email="${u.email||''}">Edit</button>
-        <button class="btn" data-setrole="${u.username}" data-role="user">Set user</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-  // keep logged-in sessions updated view
-  updateLoggedList();
-}
-
-// audit mock
-async function loadAudit(){
-  const tbody = document.querySelector("#auditTable tbody");
-  tbody.innerHTML = "<tr><td colspan='4' class='muted'>Loading...</td></tr>";
-  try {
-    // If you have a backend audit endpoint, call it here
-    // fallback to mock:
-    const mock = [
-      { t: new Date().toISOString(), u: "admin", a: "Approved request", d: "Promoted userX to admin" },
-      { t: new Date().toISOString(), u: "manager1", a: "Created shipment", d: "Shipment #123" }
-    ];
-    tbody.innerHTML = mock.map(m => `<tr><td>${fmt(m.t)}</td><td>${m.u}</td><td>${m.a}</td><td>${m.d}</td></tr>`).join("");
-  } catch(e){
-    tbody.innerHTML = "<tr><td colspan='4' class='muted'>Error loading audit</td></tr>";
-  }
-}
-
-/* Click delegation for table actions */
-document.addEventListener("click", async (e) => {
-    if(e.target && e.target.dataset){
-    if(e.target.dataset.approve){
-      const username = e.target.dataset.approve;
-      try {
-        await setRoleForUser(username, "admin");
-        showToast(`${username} promoted to admin`);
-        loadRequests(); loadUsers(); loadAudit();
-      } catch(err){ showToast("Operation failed") }
-    }
-    if(e.target.dataset.reject){
-      const username = e.target.dataset.reject;
-      try {
-        await fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(username)}/reject`, { method: "POST", headers: authHeaders() }).catch(()=>{});
-        showToast(`${username} rejected`);
-        loadRequests(); loadUsers();
-      } catch(err){ showToast("Operation failed") }
-    }
-    if(e.target.dataset.edit){
-      openRoleModal(e.target.dataset.edit, e.target.dataset.role, e.target.dataset.email);
-    }
-    if(e.target.dataset.setrole){
-      const username = e.target.dataset.setrole;
-      const role = e.target.dataset.role || "user";
-      try {
-        await setRoleForUser(username, role);
-        showToast(`${username} → ${role}`);
-        loadUsers();
-      } catch(err){ showToast("Update failed") }
-    }
-  }
-});
-
-// API to set role
+/* API to set role */
 async function setRoleForUser(username, role){
   const url = `${API_BASE_URL}/admin/set-role/${encodeURIComponent(username)}`;
   const headers = Object.assign({ "Content-Type":"application/json" }, authHeaders());
@@ -602,7 +486,398 @@ async function setRoleForUser(username, role){
   return res.json().catch(()=>({}));
 }
 
-/* Search */
+/* =========================
+   Requests: load + render + actions
+   ========================= */
+function fmt(dt){ try { return new Date(dt).toLocaleString(); } catch { return dt; } }
+
+async function loadRequests(){
+  const tbody = document.querySelector("#requestsTable tbody");
+  tbody.innerHTML = "<tr><td colspan='4' class='muted'>Loading...</td></tr>";
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/pending`, { headers: authHeaders() });
+    if(!res.ok){
+      tbody.innerHTML = "<tr><td colspan='4' class='muted'>No pending requests or cannot reach server</td></tr>";
+      return;
+    }
+    const data = await res.json();
+    const rows = (data.requests || []).map(r => {
+      // prefer r._id or r.id if present
+      const rid = r._id || r.id || r.username || Math.random().toString(36).slice(2,8);
+      return `<tr data-request-id="${rid}" data-raw='${escapeHtml(JSON.stringify(r))}'>
+        <td>${escapeHtml(r.username || r.requester || "-")}</td>
+        <td>${escapeHtml(fmt(r.requested_at || r.created_at || Date.now()))}</td>
+        <td>${escapeHtml(r.status || 'pending')}</td>
+        <td class="actions">
+          <button class="btn" data-approve="${escapeAttr(rid)}">Approve</button>
+          <button class="btn" data-reject="${escapeAttr(rid)}">Reject</button>
+          <button class="btn" data-reply="${escapeAttr(rid)}">Reply</button>
+        </td>
+      </tr>`;
+    }).join("");
+    tbody.innerHTML = rows || "<tr><td colspan='4' class='muted'>No pending requests</td></tr>";
+  } catch(err){
+    console.error(err);
+    tbody.innerHTML = "<tr><td colspan='4' class='muted'>Error loading requests</td></tr>";
+  }
+}
+
+/* Approve / Reject / Reply handlers (delegated) */
+document.addEventListener("click", async (e) => {
+  const target = e.target;
+  if(!target) return;
+
+  // Approve
+  if(target.dataset.approve){
+    const rid = target.dataset.approve;
+    await performApprove(rid, target);
+    return;
+  }
+
+  // Reject
+  if(target.dataset.reject){
+    const rid = target.dataset.reject;
+    await performReject(rid, target);
+    return;
+  }
+
+  // Reply
+  if(target.dataset.reply){
+    const rid = target.dataset.reply;
+    openReplyDrawerById(rid, target);
+    return;
+  }
+
+  // table row click opens reply drawer too
+  const tr = target.closest && target.closest("tr[data-request-id]");
+  if(tr && !target.dataset.approve && !target.dataset.reject && !target.dataset.reply){
+    // open reply drawer using the row data
+    const rid = tr.getAttribute("data-request-id");
+    openReplyDrawerById(rid, tr);
+  }
+
+  // Edit user role button handled below by dataset.edit (if present in users table)
+  if(target.dataset.edit){
+    openRoleModal(target.dataset.edit, target.dataset.role, target.dataset.email);
+  }
+  if(target.dataset.setrole){
+    const username = target.dataset.setrole;
+    const role = target.dataset.role || "user";
+    try {
+      await setRoleForUser(username, role);
+      showToast(`${username} → ${role}`);
+      loadUsers();
+    } catch(err){ showToast("Update failed") }
+  }
+});
+
+/* perform approve */
+async function performApprove(requestId, btn){
+  const tr = btn.closest("tr[data-request-id]");
+  if(tr) tr.classList.add("animate-out");
+  try{
+    const res = await fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(requestId)}/approve`, {
+      method: "POST",
+      headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
+      body: JSON.stringify({}) // backend may accept additional payload
+    });
+    if(!res.ok) {
+      const j = await res.json().catch(()=>({}));
+      throw new Error(j.detail || "approve failed");
+    }
+    showToast("Approved");
+    setTimeout(loadRequests, 420);
+    // optionally refresh replies panel
+    setTimeout(loadReplies, 600);
+  }catch(err){
+    console.error(err);
+    if(tr) tr.classList.remove("animate-out");
+    showToast("Approve failed");
+  }
+}
+
+/* perform reject */
+async function performReject(requestId, btn){
+  const tr = btn.closest("tr[data-request-id]");
+  if(tr) tr.classList.add("animate-out");
+  try{
+    const res = await fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(requestId)}/reject`, {
+      method: "POST",
+      headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
+      body: JSON.stringify({})
+    });
+    if(!res.ok){
+      const j = await res.json().catch(()=>({}));
+      throw new Error(j.detail || "reject failed");
+    }
+    showToast("Rejected");
+    setTimeout(loadRequests, 420);
+    setTimeout(loadReplies, 600);
+  }catch(err){
+    console.error(err);
+    if(tr) tr.classList.remove("animate-out");
+    showToast("Reject failed");
+  }
+}
+
+/* =========================
+   Reply drawer (RB1)
+   ========================= */
+const replyDrawer = document.getElementById("replyDrawer");
+const replyReqTitle = document.getElementById("replyReqTitle");
+const replyReqMeta = document.getElementById("replyReqMeta");
+const replyText = document.getElementById("replyText");
+const closeReplyBtn = document.getElementById("closeReplyBtn");
+const sendReplyBtn = document.getElementById("sendReplyBtn");
+let currentReplyRequest = null; // store object { id, username, ... }
+
+closeReplyBtn.addEventListener("click", ()=> closeReplyDrawer());
+function openReplyDrawerById(requestId, triggerElement){
+  // find full request data: we stored raw JSON in row[data-raw] in loadRequests
+  const tr = document.querySelector(`tr[data-request-id="${CSS.escape(requestId)}"]`);
+  let raw = null;
+  if(tr && tr.dataset.raw){
+    try{ raw = JSON.parse(decodeHtml(tr.dataset.raw)); } catch(e){ raw = null; }
+  }
+
+  // fallback: attempt to fetch single request from backend
+  if(!raw){
+    // attempt API fetch for that request id
+    fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(requestId)}`, { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : Promise.resolve(null))
+      .then(data => {
+        const rObj = data && data.request ? data.request : data;
+        openReplyDrawer(rObj || { id: requestId, username: requestId, title: 'Request' });
+      })
+      .catch(()=> openReplyDrawer({ id: requestId, username: requestId, title: 'Request' }));
+    return;
+  }
+  openReplyDrawer(raw);
+}
+
+function openReplyDrawer(requestObj){
+  currentReplyRequest = requestObj || {};
+  // set UI
+  const title = currentReplyRequest.title || currentReplyRequest.type || `Request from ${currentReplyRequest.username || currentReplyRequest.requester || 'user'}`;
+  replyReqTitle.textContent = title;
+  const metaParts = [];
+  if(currentReplyRequest.username) metaParts.push(currentReplyRequest.username);
+  if(currentReplyRequest.email) metaParts.push(currentReplyRequest.email);
+  if(currentReplyRequest.requested_at) metaParts.push(fmt(currentReplyRequest.requested_at));
+  replyReqMeta.textContent = metaParts.join(' • ') || '';
+  replyText.value = ''; // clear
+  replyDrawer.classList.add("open");
+  replyDrawer.setAttribute("aria-hidden", "false");
+  // focus
+  setTimeout(()=> replyText.focus(), 180);
+}
+
+function closeReplyDrawer(){
+  replyDrawer.classList.remove("open");
+  replyDrawer.setAttribute("aria-hidden", "true");
+  currentReplyRequest = null;
+}
+
+/* send reply */
+sendReplyBtn.addEventListener("click", async ()=>{
+  if(!currentReplyRequest){ showToast("No request selected"); return; }
+  const text = replyText.value.trim();
+  if(!text){ showToast("Write a reply"); replyText.focus(); return; }
+
+  // payload: reply, admin, ts
+  const admin = (decodeToken() && (decodeToken().username || decodeToken().sub)) || "admin";
+  const payload = { reply: text, admin, ts: new Date().toISOString() };
+
+  try{
+    const reqId = currentReplyRequest._id || currentReplyRequest.id || currentReplyRequest.username;
+    const res = await fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(reqId)}/reply`, {
+      method: "POST",
+      headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok){
+      const j = await res.json().catch(()=>({}));
+      throw new Error(j.detail || 'reply failed');
+    }
+    // assume server saved reply and triggered SMTP email
+    showToast("Reply sent");
+    // close & refresh
+    closeReplyDrawer();
+    setTimeout(loadRequests, 420);
+    setTimeout(loadReplies, 600);
+  }catch(err){
+    console.error(err);
+    showToast("Send reply failed");
+  }
+});
+
+/* replies list (right-side panel) */
+async function loadReplies(){
+  // Query backend for recent replies - I assume an endpoint exists /admin/replies or /admin/requests?with_replies
+  try{
+    const res = await fetch(`${API_BASE_URL}/admin/replies`, { headers: authHeaders() });
+    if(!res.ok) {
+      // fallback: don't show error, silently ignore
+      return;
+    }
+    const d = await res.json();
+    const list = d.replies || d.items || [];
+    const container = document.getElementById("repliesList");
+    if(!list.length) { container.innerHTML = "<div class='muted'>No replies yet</div>"; return; }
+    container.innerHTML = list.map(r => `<div style="background:#fbfbff;border-radius:8px;padding:8px;margin-bottom:8px;">
+      <div style="font-weight:700">${escapeHtml(r.request_title || r.request?.title || r.title || r.request_id || r.request)}</div>
+      <div style="font-size:13px;color:#666;margin-top:6px">${escapeHtml(r.reply || r.message || r.text || '')}</div>
+      <div style="font-size:12px;color:#999;margin-top:6px">${escapeHtml(r.admin || r.from || '')} • ${escapeHtml(fmt(r.ts || r.sent_at || r.created_at || ''))}</div>
+    </div>`).join("");
+  }catch(e){
+    console.warn("loadReplies failed", e);
+  }
+}
+
+/* =========================
+   Create request drawer (FAB)
+   ========================= */
+const fab = document.getElementById("fabRequest");
+const drawer = document.getElementById("drawer");
+const closeDrawer = document.getElementById("closeDrawer");
+const sendRequestBtn = document.getElementById("sendRequestBtn");
+
+fab.addEventListener("click", ()=> drawer.classList.toggle("open"));
+closeDrawer.addEventListener("click", ()=> drawer.classList.remove("open"));
+
+sendRequestBtn.addEventListener("click", async ()=>{
+  const type = document.getElementById("request-type").value;
+  const title = document.getElementById("request-title").value.trim();
+  const desc = document.getElementById("request-desc").value.trim();
+  if(!title || !desc){ showToast("Please fill title and description"); return; }
+  try{
+    const res = await fetch(`${API_BASE_URL}/requests`, {
+      method: "POST",
+      headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
+      body: JSON.stringify({ type, title, description: desc })
+    });
+    if(!res.ok){ const j = await res.json().catch(()=>({})); throw new Error(j.detail || 'send failed'); }
+    showToast("Request sent");
+    drawer.classList.remove("open");
+    setTimeout(loadRequests, 400);
+  }catch(e){
+    console.error(e);
+    showToast("Send failed");
+  }
+});
+
+/* =========================
+   Users + Audit loaders (keep as before)
+   ========================= */
+async function loadUsers(){
+  const tbody = document.querySelector("#usersTable tbody");
+  tbody.innerHTML = "<tr><td colspan='5' class='muted'>Loading users…</td></tr>";
+  try {
+    let users = [];
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/users`, { headers: authHeaders() });
+      if (res && res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) users = data;
+        else if (Array.isArray(data.users)) users = data.users;
+        else if (Array.isArray(data.data)) users = data.data;
+        else users = data.users || data.items || [];
+      } else {
+        console.warn('Could not fetch /admin/users, falling back to local sessions');
+      }
+    } catch (e) { console.warn('Error fetching users:', e); }
+    if (!users || users.length === 0) {
+      const sessions = getSessions();
+      users = sessions.map(s => ({ username: s.username, email: '', role: 'user' }));
+    }
+    renderUsers(users);
+  } catch(err){ console.error(err); populateUsersMock(); }
+}
+function renderUsers(users){
+  const tbody = document.querySelector("#usersTable tbody");
+  tbody.innerHTML = "";
+  (users || []).forEach(u=>{
+    const isAdmin = (u.role === "admin");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(u.username || u.name || "-")}</td>
+      <td>${escapeHtml(u.email || "(no email)")}</td>
+      <td><span class="role-badge">${escapeHtml(u.role || "user")}</span></td>
+      <td>${isAdmin ? "Yes" : "No"}</td>
+      <td class="actions">
+        <button class="btn" data-edit="${escapeAttr(u.username)}" data-role="${escapeAttr(u.role||'user')}" data-email="${escapeAttr(u.email||'')}">Edit</button>
+        <button class="btn" data-setrole="${escapeAttr(u.username)}" data-role="user">Set user</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateLoggedList();
+}
+
+/* audit mock loader */
+async function loadAudit(){
+  const tbody = document.querySelector("#auditTable tbody");
+  tbody.innerHTML = "<tr><td colspan='4' class='muted'>Loading...</td></tr>";
+  try {
+    const mock = [
+      { t: new Date().toISOString(), u: "admin", a: "Approved request", d: "Promoted userX to admin" },
+      { t: new Date().toISOString(), u: "manager1", a: "Created shipment", d: "Shipment #123" }
+    ];
+    tbody.innerHTML = mock.map(m => `<tr><td>${fmt(m.t)}</td><td>${escapeHtml(m.u)}</td><td>${escapeHtml(m.a)}</td><td>${escapeHtml(m.d)}</td></tr>`).join("");
+  } catch(e){ tbody.innerHTML = "<tr><td colspan='4' class='muted'>Error loading audit</td></tr>"; }
+}
+
+/* =========================
+   Logged sessions helpers
+   ========================= */
+function getSessions(){ try { return JSON.parse(localStorage.getItem("scmx_sessions")||"[]"); } catch { return []; } }
+function saveSessions(sessions){ localStorage.setItem("scmx_sessions", JSON.stringify(sessions)); }
+function addCurrentSession(){
+  const p = decodeToken();
+  const username = (p && (p.username || p.sub)) || ("guest_" + Math.random().toString(36).slice(2,5));
+  const sessions = getSessions().filter(s => s && s.username !== username);
+  sessions.unshift({ username, ts: new Date().toISOString() });
+  saveSessions(sessions.slice(0,20));
+  fetch(`${API_BASE_URL}/admin/loggedin`, {
+    method: "POST",
+    headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
+    body: JSON.stringify({ username, ts: new Date().toISOString() })
+  }).catch(()=>{});
+  updateLoggedList();
+}
+function updateLoggedList(){
+  const el = document.getElementById("loggedList");
+  const sessions = getSessions();
+  if(!sessions.length){ el.innerHTML = "<div class='muted'>No active sessions recorded</div>"; return; }
+  el.innerHTML = sessions.map(s => `<div style="display:flex; justify-content:space-between; gap:10px; padding:6px 8px; border-radius:6px; margin-bottom:6px; background:#fff;">
+    <div><strong>${escapeHtml(s.username)}</strong><div style="font-size:12px;color:#777">${escapeHtml(new Date(s.ts).toLocaleString())}</div></div>
+    <div style="font-size:12px;color:#999">${Math.max(0, Math.floor((Date.now() - new Date(s.ts))/60000))}m</div>
+  </div>`).join("");
+}
+
+/* call on load */
+populateCurrentAdmin();
+showPendingAsMain();
+loadRequests();
+loadUsers();
+loadAudit();
+loadReplies();
+addCurrentSession();
+
+/* small UI: menu highlight when panels change */
+document.querySelectorAll(".menu-item").forEach(mi=>{
+  mi.addEventListener("click", ()=> {
+    document.querySelectorAll(".menu-item").forEach(x=>x.classList.remove("active"));
+    mi.classList.add("active");
+  });
+});
+
+/* refresh controls */
+document.getElementById("refreshAll").addEventListener("click", ()=>{ loadUsers(); loadRequests(); loadAudit(); loadReplies(); });
+document.getElementById("refreshRequests").addEventListener("click", loadRequests);
+document.getElementById("refreshAudit").addEventListener("click", loadAudit);
+
+/* Search filters */
 document.getElementById("userSearch").addEventListener("input", (e)=>{
   const q = e.target.value.toLowerCase().trim();
   document.querySelectorAll("#usersTable tbody tr").forEach(tr=>{
@@ -617,67 +892,12 @@ document.getElementById("requestsFilter").addEventListener("input", (e)=>{
   });
 });
 
-/* Refresh controls */
-document.getElementById("refreshAll").addEventListener("click", ()=>{ loadUsers(); loadRequests(); loadAudit(); });
-document.getElementById("refreshRequests").addEventListener("click", loadRequests);
-document.getElementById("refreshAudit").addEventListener("click", loadAudit);
-
-/* Initial display rules: show pending requests large per user's instruction */
-populateCurrentAdmin();
-showPendingAsMain();
-loadRequests();
-loadUsers();
-loadAudit();
-
-/* ---- Logged-in users feature (client-side + optional server post) ----
-   We store a small heartbeat object in localStorage.sessions and render it.
-   On each page load, we add current username to sessions with timestamp.
-*/
-function getSessions(){
-  try { return JSON.parse(localStorage.getItem("scmx_sessions")||"[]"); } catch { return []; }
+/* Utility escaping helpers */
+function escapeHtml(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return String(s || '').replace(/"/g,'&quot;'); }
+function decodeHtml(s){ // decode an HTML-escaped string stored in data attribute
+  const txt = document.createElement("textarea"); txt.innerHTML = s; return txt.value;
 }
-function saveSessions(sessions){ localStorage.setItem("scmx_sessions", JSON.stringify(sessions)); }
-function addCurrentSession(){
-  const p = decodeToken();
-  const username = (p && (p.username || p.sub)) || ("guest_" + Math.random().toString(36).slice(2,5));
-  const sessions = getSessions().filter(s => s && s.username !== username); // remove duplicates
-  sessions.unshift({ username, ts: new Date().toISOString() });
-  // keep only 20
-  saveSessions(sessions.slice(0,20));
-  // try to POST to backend endpoint if exists (optional)
-  fetch(`${API_BASE_URL}/admin/loggedin`, {
-    method: "POST",
-    headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
-    body: JSON.stringify({ username, ts: new Date().toISOString() })
-  }).catch(()=>{ /* ignore if endpoint not implemented */ });
-  updateLoggedList();
-}
-function updateLoggedList(){
-  const el = document.getElementById("loggedList");
-  const sessions = getSessions();
-  if(!sessions.length){ el.innerHTML = "<div class='muted'>No active sessions recorded</div>"; return; }
-  el.innerHTML = sessions.map(s => `<div style="display:flex; justify-content:space-between; gap:10px; padding:6px 8px; border-radius:6px; margin-bottom:6px; background:#fff;">
-    <div><strong>${s.username}</strong><div style="font-size:12px;color:#777">${new Date(s.ts).toLocaleString()}</div></div>
-    <div style="font-size:12px;color:#999">${/* show "minutes ago" */ Math.max(0, Math.floor((Date.now() - new Date(s.ts))/60000))}m</div>
-  </div>`).join("");
-}
-
-/* call on load */
-addCurrentSession();
-
-/* Keep sessions refreshed on activity (simple) */
-let lastTouch = Date.now();
-setInterval(()=>{
-  if(Date.now() - lastTouch > 1000*60*5) addCurrentSession(); // every 5 minutes
-}, 1000*60);
-
-/* small UI: menu highlight when panels change */
-document.querySelectorAll(".menu-item").forEach(mi=>{
-  mi.addEventListener("click", ()=> {
-    document.querySelectorAll(".menu-item").forEach(x=>x.classList.remove("active"));
-    mi.classList.add("active");
-  });
-});
 </script>
 </body>
 </html>

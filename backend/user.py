@@ -231,6 +231,7 @@ def debug_verify_recaptcha(token: str = Form(...), action: str = Form(None)):
 # GOOGLE SSO (ID token) - login only (no auto-signup)
 # Frontend: POST JSON { token: "<id_token>", recaptcha_token: "..."}
 # ======================================
+# GOOGLE AUTO-CREATE LOGIN ENDPOINT
 @router.post("/auth/google")
 def auth_google(payload: dict = Body(...)):
     token = payload.get("token")
@@ -239,45 +240,75 @@ def auth_google(payload: dict = Body(...)):
     if not token:
         raise HTTPException(status_code=400, detail="Missing Google token")
 
+    # --- reCAPTCHA check ---
     if not verify_recaptcha(recaptcha_token, "login"):
         raise HTTPException(status_code=401, detail="reCAPTCHA validation failed")
 
+    # --- Validate Google token ---
     try:
-        google_request = GoogleRequest()
-        idinfo = id_token.verify_oauth2_token(token, google_request, GOOGLE_CLIENT_ID)
-    except ValueError as e:
+        google_req = GoogleRequest()
+        idinfo = id_token.verify_oauth2_token(token, google_req, GOOGLE_CLIENT_ID)
+    except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid Google token: {str(e)}")
 
-    if idinfo.get("aud") != GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=400, detail="Invalid audience for Google token")
+    # --- Required Google fields ---
+    email = idinfo.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Google account has no email")
 
     if not idinfo.get("email_verified", False):
-        raise HTTPException(status_code=400, detail="Google account email not verified")
+        raise HTTPException(status_code=400, detail="Google email is not verified")
 
-    email = idinfo.get("email")
-    google_sub = idinfo.get("sub")
-    full_name = idinfo.get("name", "")
+    fullname = idinfo.get("name", "")
     picture = idinfo.get("picture", "")
+    google_sub = idinfo.get("sub")
+    username = email.split("@")[0]
 
+    # ================================
+    #  CHECK IF EXISTS OR AUTO-CREATE
+    # ================================
     user = users.find_one({"email": email})
+
     if not user:
-        # do not auto-create. Let frontend show signup option.
-        raise HTTPException(status_code=401, detail="No local account for this Google user. Please sign up first.")
+        # Auto-create Google user
+        new_user = {
+            "email": email,
+            "username": username,
+            "fullname": fullname,
+            "picture": picture,
+            "google_sub": google_sub,
+            "auth_provider": "google",
+            "password": None,  # Google users do not have password
+            "role": "user",
+            "created_at": datetime.utcnow()
+        }
+        users.insert_one(new_user)
+        user = new_user
+    else:
+        # Update existing user with latest Google info
+        update_data = {}
+        if user.get("auth_provider") != "google":
+            update_data["auth_provider"] = "google"
+        if user.get("google_sub") != google_sub:
+            update_data["google_sub"] = google_sub
+        if fullname and user.get("fullname") != fullname:
+            update_data["fullname"] = fullname
+        if picture and user.get("picture") != picture:
+            update_data["picture"] = picture
 
-    update_fields = {}
-    if user.get("auth_provider") != "google":
-        update_fields["auth_provider"] = "google"
-    if user.get("google_sub") != google_sub:
-        update_fields["google_sub"] = google_sub
-    if full_name and user.get("fullname") != full_name:
-        update_fields["fullname"] = full_name
-    if picture and user.get("picture") != picture:
-        update_fields["picture"] = picture
-    if update_fields:
-        users.update_one({"_id": user["_id"]}, {"$set": update_fields})
-        user = users.find_one({"_id": user["_id"]})
+        if update_data:
+            users.update_one({"_id": user["_id"]}, {"$set": update_data})
+            user = users.find_one({"_id": user["_id"]})
 
-    jwt_token = create_token({"username": user["username"], "role": user.get("role", "user")})
+    # ===============================
+    #  GENERATE JWT TOKEN
+    # ===============================
+    jwt_token = create_token({
+        "username": user["username"],
+        "email": user["email"],
+        "role": user.get("role", "user")
+    })
+
     return {
         "access_token": jwt_token,
         "token_type": "bearer",
@@ -287,6 +318,3 @@ def auth_google(payload: dict = Body(...)):
         "fullname": user.get("fullname", ""),
         "picture": user.get("picture", "")
     }
-
-# Export router for inclusion in main app
-# e.g. app.include_router(router, prefix="/api")

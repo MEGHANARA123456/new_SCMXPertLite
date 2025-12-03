@@ -103,3 +103,9 @@ async def device_data_page():
 @app.get("/logout")
 async def logout_page():
     return RedirectResponse("/frontend/logout.html")
+
+
+# Simple health endpoint for connectivity checks
+@app.get("/ping")
+async def ping():
+    return {"status": "ok", "service": "SCMXpertLite Backend"}
