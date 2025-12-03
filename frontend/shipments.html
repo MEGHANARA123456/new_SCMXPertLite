@@ -1,155 +1,403 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SCMXPertLite — Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>SCMXPertLite — Shipments</title>
+
+  <link rel="stylesheet" href="/frontend/style.css">
+
+  <!-- Flatpickr Library -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
   <style>
+    body { background:#f5f7fb; font-family:Roboto, sans-serif; }
 
-/* Top bar */
-.topbar {
-  width: 100%;
-  background:  #6C27D9;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e2e2e2;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
+    .page-container {
+      max-width: 1250px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
 
-.nav-menu {
-  display: flex;
-  gap: 35px;
-  justify-content: center;
-  font-size: 18px;
-}
+    h1 {
+      color:#6C27D9;
+      font-weight:700;
+      text-align:center;
+      margin-bottom:25px;
+    }
 
-.nav-menu a {
-  text-decoration: none;
-  color: white;
-  font-weight: 500;
-}
+    /* Search */
+    .search-bar {
+      display:flex;
+      justify-content:flex-end;
+      margin-bottom:18px;
+      align-items:center;
+    }
 
-.nav-menu a:hover {
-  color: #0288d1;
-}
+    .search-input {
+      padding:10px 14px;
+      width:260px;
+      border-radius:8px;
+      border:1px solid #ddd;
+    }
 
+    /* Main tables */
+    table {
+      width:100%;
+      border-collapse:collapse;
+      background:white;
+      border-radius:10px;
+      overflow:hidden;
+      box-shadow:0 3px 14px rgba(0,0,0,0.1);
+    }
 
-/* Page container spacing */
-.container {
-  max-width: 1200px;
-  margin: 30px auto;
-  padding: 0 20px;
-}
+    th, td {
+      padding:12px;
+      font-size:15px;
+      border-bottom:1px solid #eee;
+    }
 
-/* Header brand */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
+    th {
+      background:#f4f0ff;
+      color:#6C27D9;
+      font-weight:700;
+    }
 
-.logo {
-  background: #6C27D9;
-  color: white;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: 700;
-  font-size: 20px;
-}
+    tr:hover { background:#faf8ff; cursor:pointer; }
 
-.brand div div.small {
-  color: #777;
-}
+    /* Recent Activity */
+    .activity-box {
+      margin-top:35px;
+      background:white;
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 3px 14px rgba(0,0,0,0.1);
+    }
 
-/* Cards same as shipment page */
-.card {
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 14px;
-  box-shadow: 0 3px 15px rgba(0,0,0,0.10);
-  margin-bottom: 25px;
-}
+    .activity-title {
+      font-size:20px;
+      font-weight:700;
+      color:#6C27D9;
+      margin-bottom:15px;
+    }
 
-.card h3 {
-  color: #6C27D9;
-  font-weight: 700;
-}
+    .activity-item {
+      padding:10px 0;
+      border-bottom:1px solid #eee;
+      font-size:15px;
+    }
 
-.small {
-  color: #555;
-}
+    .activity-item:last-child {
+      border-bottom:none;
+    }
 
-/* Grid columns (2 equal boxes) */
-.grid {
-  display: grid;
-  gap: 20px;
-}
-
-.cols-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-/* Stream box styling */
-.stream-box {
-  background: #f4f0ff;
-  padding: 14px;
-  border-radius: 8px;
-}
-
-.stream-item {
-  font-size: 15px;
-  padding: 6px 0;
-}
-
-.footer-note {
-  margin-top: 12px;
-  font-size: 13px;
-  color: #666;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .cols-2 {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+    .timestamp {
+      font-size:13px;
+      color:#777;
+    }
+  </style>
 </head>
+
 <body>
 
-  
-   <header class="topbar" role="navigation" aria-label="Main navigation">
-      <nav class="nav-menu" role="menubar" aria-label="Primary">
-        <a href="/frontend/dashboard.html" role="menuitem"><i class="fa fa-home"></i> Dashboard</a>
-        <a href="/frontend/user.html" role="menuitem"><i class="fa fa-user"></i> My Account</a>
-        <a href="/frontend/device.html" role="menuitem"><i class="fa fa-microchip"></i> Device Data</a>
-         <a href="/frontend/shipment_data.html" role="menuitem"><i class="fa fa-microchip"></i> create_shipment</a>
-      </nav>
-    </header>
-    <div class="container">
-    <div class="header">
-      <div class="brand"><div class="logo">S</div><div><div style="font-weight:700">SCMXPertLite</div><div class="small">Overview</div></div></div>
+<header class="topbar">
+  <nav class="nav-menu">
+    <a href="/frontend/dashboard.html">Dashboard</a>
+    <a href="/frontend/shipments.html" style="color:#fff;font-weight:600;">Shipments</a>
+    <a href="/frontend/user.html">My Account</a>
+    <a href="/frontend/logout.html">Logout</a>
+  </nav>
+</header>
+
+<div class="page-container">
+
+  <h1>All Shipments</h1>
+
+  <!-- Search Bar -->
+  <div class="search-bar">
+    <input id="searchBox" type="text" class="search-input" placeholder="Search shipments...">
+
+    <select id="statusFilter" style="margin-left:10px;padding:10px;border-radius:8px;border:1px solid #ddd;">
+      <option value="">All Statuses</option>
+      <option value="pending">Pending</option>
+      <option value="in_transit">In Transit</option>
+      <option value="delivered">Delivered</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+
+    <!-- Single Date Range Picker -->
+    <div style="margin-left:10px;">
+      <input id="dateRange" placeholder="Select Date Range"
+             style="padding:10px;border-radius:8px;border:1px solid #ddd;width:230px;">
     </div>
 
-    <div class="grid cols-2">
-      <div class="card">
-        <h3>Active Shipments</h3>
-        <p class="small">Quick snapshot of latest shipments</p>
-        <div class="small footer-note">(UI only — connect to API to populate)</div>
-      </div>
-      <div class="card" style="margin-top:16px">
-      <h3>Recent Activity (Live)</h3>
-      <div class="stream-box">
-        <div class="stream-item">No live data — UI-only</div>
-      </div>
-      <div class="small footer-note">JSON API: <a href="shipments" target="_blank">/api/shipments/</a>
+    <!-- Hidden Inputs for Filtering -->
+    <input type="hidden" id="fromDate">
+    <input type="hidden" id="toDate">
+
+    <button id="exportCsvBtn" class="btn-blue" style="margin-left:10px;">Export CSV</button>
+  </div>
+
+  <!-- SHIPMENTS TABLE -->
+  <table id="shipmentTable">
+    <thead>
+      <tr>
+        <th>Shipment #</th>
+        <th>Container</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Goods</th>
+        <th>Delivery Date</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Pagination & Controls -->
+  <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <label>Page size: 
+        <select id="pageSizeSelect">
+          <option>10</option><option>25</option><option>50</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <button id="prevPage" class="btn-small">Prev</button>
+      <span id="pageInfo" style="margin:0 8px"></span>
+      <button id="nextPage" class="btn-small">Next</button>
+    </div>
+  </div>
+
+  <!-- Shipment Detail Modal -->
+  <div id="detailModal" style="display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:60;">
+    <div style="background:#fff;padding:20px;border-radius:10px;max-width:700px;width:95%;box-shadow:0 6px 30px rgba(0,0,0,0.2);">
+      <h3 id="modalTitle">Shipment</h3>
+      <div id="modalBody" style="margin-top:8px;line-height:1.5"></div>
+      <div style="text-align:right;margin-top:12px;">
+        <button id="closeModal" class="btn-small">Close</button>
       </div>
     </div>
   </div>
+
+  <!-- RECENT ACTIVITY -->
+  <div class="activity-box">
+    <div class="activity-title">Recent Activity (Live)</div>
+    <div id="activityList">Loading...</div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
+let shipmentData = [];
+let currentPage = 1;
+let pageSize = 10;
+
+/* --------------------------------
+   SINGLE DATE RANGE (FLATPICKR)
+---------------------------------- */
+flatpickr("#dateRange", {
+  mode: "range",
+  dateFormat: "Y-m-d",
+  onChange: function(selectedDates) {
+    if (selectedDates.length === 2) {
+      document.getElementById("fromDate").value =
+        selectedDates[0].toISOString().split('T')[0];
+      document.getElementById("toDate").value =
+        selectedDates[1].toISOString().split('T')[0];
+
+      currentPage = 1;
+      renderShipmentTable();
+    }
+  }
+});
+
+/* ----------------------------
+   LOAD SHIPMENTS TABLE
+----------------------------- */
+async function loadShipments() {
+  const token = localStorage.getItem("token") || "";
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/shipments`, {
+      headers: { "Authorization": "Bearer " + token }
+    });
+
+    const data = await res.json();
+    shipmentData = data.shipments || [];
+
+    renderShipmentTable();
+    renderActivity();
+  } catch (err) {
+    console.error("Error loading shipments:", err);
+  }
+}
+
+/* ----------------------------
+   Filtering & Pagination
+----------------------------- */
+function applyFilters() {
+  const q = (document.querySelector('#searchBox').value || '').toLowerCase();
+  const status = (document.querySelector('#statusFilter').value || '').toLowerCase();
+  const from = document.querySelector('#fromDate').value;
+  const to = document.querySelector('#toDate').value;
+
+  return shipmentData.filter(s => {
+    const hay = `${s.shipment_number||''} ${s.container_number||''} ${s.route_from||s.route_details||''} ${s.route_to||''} ${s.goods_type||''}`.toLowerCase();
+
+    if (q && !hay.includes(q)) return false;
+
+    const sStatus = (s.status || s.shipment_status || '').toLowerCase();
+    if (status && sStatus !== status) return false;
+
+    const dateField = s.created_at || s.expected_delivery_date;
+    if (dateField) {
+      const d = new Date(dateField);
+      if (from && d < new Date(from)) return false;
+
+      if (to) {
+        const t = new Date(to);
+        t.setHours(23,59,59,999);
+        if (d > t) return false;
+      }
+    }
+
+    return true;
+  });
+}
+
+function renderShipmentTable() {
+  const tbody = document.querySelector('#shipmentTable tbody');
+  tbody.innerHTML = '';
+
+  const filtered = applyFilters();
+  const total = filtered.length;
+
+  pageSize = parseInt(document.querySelector('#pageSizeSelect').value || '10', 10);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * pageSize;
+  const pageData = filtered.slice(start, start + pageSize);
+
+  pageData.forEach((s, idx) => {
+    const tr = document.createElement('tr');
+    tr.dataset.index = start + idx;
+    tr.innerHTML = `
+      <td>${s.shipment_number || ''}</td>
+      <td>${s.container_number || ''}</td>
+      <td>${s.route_from || s.route_details || '-'}</td>
+      <td>${s.route_to || '-'}</td>
+      <td>${s.goods_type || ''}</td>
+      <td>${s.expected_delivery_date || ''}</td>
+    `;
+    tr.addEventListener('click', () => openDetailModal(s));
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('pageInfo').innerText =
+    `Page ${currentPage} of ${totalPages} (${total} items)`;
+}
+
+/* ----------------------------
+   CSV Export
+----------------------------- */
+function exportToCsv(rows, filename = 'shipments.csv') {
+  if (!rows || !rows.length) return;
+  const header = Object.keys(rows[0]);
+  const csv = [header.join(',')]
+    .concat(rows.map(r => header.map(h => `"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(',')))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+  const filtered = applyFilters();
+  const rows = filtered.map(s => ({
+    shipment_number: s.shipment_number || '',
+    container_number: s.container_number || '',
+    from: s.route_from || s.route_details || '',
+    to: s.route_to || '',
+    goods_type: s.goods_type || '',
+    expected_delivery_date: s.expected_delivery_date || '',
+    status: s.status || s.shipment_status || ''
+  }));
+  exportToCsv(rows, 'shipments_export.csv');
+});
+
+/* ----------------------------
+   MODAL
+----------------------------- */
+function openDetailModal(shipment) {
+  document.getElementById('modalTitle').innerText =
+    `Shipment ${shipment.shipment_number || ''}`;
+
+  let html = '<table style="width:100%;border-collapse:collapse">';
+  for (const k of Object.keys(shipment)) {
+    html += `<tr>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-weight:600;width:40%">${k}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee">${shipment[k] ?? ''}</td>
+    </tr>`;
+  }
+  html += '</table>';
+
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('detailModal').style.display = 'flex';
+}
+
+document.getElementById('closeModal').addEventListener('click', () =>
+  document.getElementById('detailModal').style.display = 'none'
+);
+
+document.getElementById('detailModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('detailModal'))
+    document.getElementById('detailModal').style.display = 'none';
+});
+
+/* ----------------------------
+   LIVE ACTIVITY
+----------------------------- */
+function renderActivity() {
+  const list = document.querySelector('#activityList');
+
+  if (!shipmentData.length) {
+    list.innerHTML = '<p>No recent activity.</p>';
+    return;
+  }
+
+  let recent = shipmentData
+    .filter(s => s.created_at)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5);
+
+  let html = '';
+  recent.forEach(s => {
+    html += `
+      <div class="activity-item">
+        <strong>Shipment ${s.shipment_number}</strong> — ${s.goods_type}
+        <div class="timestamp">${new Date(s.created_at).toLocaleString()}</div>
+      </div>
+    `;
+  });
+
+  list.innerHTML = html;
+}
+
+setInterval(loadShipments, 10000);
+
+/* ----------------------------
+   INIT
+----------------------------- */
+document.addEventListener('DOMContentLoaded', loadShipments);
+
+</script>
+
 </body>
 </html>

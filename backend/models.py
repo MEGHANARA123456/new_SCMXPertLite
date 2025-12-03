@@ -19,7 +19,17 @@ class Signup(BaseModel):
 class login(BaseModel):
   email: EmailStr
   password: str
-  
+
+class ForgotPass(BaseModel):
+    email: str
+
+class VerifyOTP(BaseModel):
+    email: str
+    otp: str
+
+class ResetPassword(BaseModel):
+    email: str
+    new_password: str  
 
 class Shipment(BaseModel):
   shipment_number: str
@@ -34,7 +44,9 @@ class Shipment(BaseModel):
   batch_id: str
   shipment_description: str
   device: str
-
+ # NEW FIELDS
+  shipment_priority: str = Field(..., pattern="^(high|medium|low)$")
+  health_score: str = Field(..., pattern="^(low|medium|high)$")
 
 class DeviceData(BaseModel):
   device_id: str

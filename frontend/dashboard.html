@@ -7,6 +7,10 @@
 
   <!-- Your existing shared stylesheet -->
   <link rel="stylesheet" href="/frontend/style.css">
+  <style>
+    /* small helpers used by script */
+    .hidden { display:none !important; }
+  </style>
 </head>
 
 <body>
@@ -14,20 +18,13 @@
   <nav class="nav-menu">
     <a href="/frontend/user.html">My Account</a>
     <a href="/frontend/shipments.html">My Shipments</a>
-    <a href="/frontend/device_data.html">Device Data</a>
-    <a href="/frontend/shipment_data.html" id="createShipmentLink">Create Shipment</a>
-    <button id="logoutBtn" class="logout-btn" title="Logout">
-          <!-- logout icon -->
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right:6px" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 17L21 12L16 7" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 12H9" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M13 19H6C5.44772 19 5 18.5523 5 18V6C5 5.44772 5.44772 5 6 5H13" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Logout
-        </button>
+    <a href="/frontend/shipment_data.html">create Shipments</a>
+    <a href="/frontend/device_data.html">live streaming</a>
+    <a href="/frontend/logout.html">logout</a>
+    <a href="/frontend/admin_dashboard.html">admin roles</a>
     <!-- ROLE BADGE -->
     <span id="roleBadge" class="hidden"
-      style="padding:6px 12px; background:#6C27D9; color:white;
+      style="padding:6px 12px; background:#6C27D9; color:rgba(38, 13, 180, 0.8);
       border-radius:10px; font-weight:600;">
     </span>
 
@@ -63,21 +60,10 @@
     </div>
   </div>
 
-  <!-- MANAGER-ONLY TILE -->
-  <div id="managerTile" class="right-side hidden">
-    <div class="box-content">
-      <h2>Pending Shipment Approvals</h2>
-      <p>Managers can approve shipments waiting for clearance.</p>
-      <a href="/frontend/manager_approvals.html" class="btn-purple">REVIEW REQUESTS</a>
-    </div>
-  </div>
-
-</div>
-
 <div id="toast"></div>
 
 <script>
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
 
 /* Helpers */
 function getToken() {

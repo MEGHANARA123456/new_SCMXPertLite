@@ -15,18 +15,23 @@ load_dotenv()
 router = APIRouter()
 
 # ====== CONFIG ======
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
 RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-MONGO_DB_APP = os.getenv("MONGO_DB_APP", "scmxpertlite")
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB_APP = os.getenv("MONGO_DB_APP")
+# Email config
+MAIL_FROM = os.getenv("MAIL_FROM")
+MAIL_SERVER = os.getenv("MAIL_SERVER")
+MAIL_PORT = int(os.getenv("MAIL_PORT"))
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB_APP]
 users = db["user"]
-
+otp_col = db["otp_store"]
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 
 # ====== PASSWORD HELPERS ======
@@ -137,7 +142,7 @@ def validate_password(p: str):
     )
 
 # ======================================
-# SIGNUP
+# SIGNUP  
 # ======================================
 @router.post("/signup")
 def signup(
@@ -145,27 +150,32 @@ def signup(
     email: EmailStr = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
-    recaptcha_token: str = Form(...)
 ):
-    if not verify_recaptcha(recaptcha_token, "signup"):
-        raise HTTPException(status_code=400, detail="reCAPTCHA validation failed")
+    # 1. Remove reCAPTCHA check (DELETED)
+    # if not verify_recaptcha("signup"):
+    #     raise HTTPException(status_code=400, detail="reCAPTCHA validation failed")
 
+    # 2. Validate password match
     if password != confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
 
+    # 3. Validate password strength
     if not validate_password(password):
         raise HTTPException(status_code=400, detail="Weak password")
 
+    # 4. Check existing user
     if users.find_one({"$or": [{"username": username}, {"email": email}]}):
         raise HTTPException(status_code=400, detail="User already exists")
 
+    # 5. Insert user
     users.insert_one({
         "username": username,
-        "email": email,
+        "email": email.lower(),
         "password": pbkdf2_hash(password),
         "role": "user",
         "created_at": datetime.utcnow()
     })
+
     return {"message": "Signup successful"}
 
 # ======================================

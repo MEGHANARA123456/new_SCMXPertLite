@@ -281,13 +281,12 @@
 
       <div style="margin-top:12px">
         <div class="muted-block">User: <strong id="modalUsername">—</strong></div>
+        <div class="muted-block">Email: <span id="modalUserEmail">—</span></div>
 
         <div style="margin-top:12px">
           <label style="display:block;margin-bottom:8px">Role</label>
           <select id="modalRoleSelect" class="search">
             <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-            <option value="editor">Editor</option>
             <option value="viewer">Viewer</option>
             <option value="user">User</option>
           </select>
@@ -315,7 +314,7 @@
   - "Logged-in users" stored in localStorage and optionally POSTed to /admin/loggedin
 */
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
 const toastEl = document.getElementById("toast");
 function showToast(msg, t=3000){ toastEl.textContent = msg; toastEl.classList.add("show"); setTimeout(()=> toastEl.classList.remove("show"), t); }
 
@@ -419,10 +418,11 @@ document.getElementById("btnShowRequests").addEventListener("click", ()=> showPe
 // modal controls
 document.getElementById("closeModal").addEventListener("click", closeRoleModal);
 document.getElementById("modalCancel").addEventListener("click", closeRoleModal);
-function openRoleModal(username){
+function openRoleModal(username, role='', email=''){
   if(!username){ showToast("No username provided"); return; }
   modalUsernameEl.textContent = username;
-  modalRoleSelect.value = "";
+  document.getElementById('modalUserEmail').textContent = email || '(no email)';
+  modalRoleSelect.value = role || '';
   roleModal.classList.add("show");
   roleModal.setAttribute("aria-hidden","false");
 }
@@ -437,8 +437,14 @@ modalSave.addEventListener("click", async ()=>{
   const role = modalRoleSelect.value;
   if(!username || !role){ showToast("Pick a role"); return; }
   try {
-    await setRoleForUser(username, role);
-    showToast(`Role updated: ${username} → ${role}`);
+    const resp = await setRoleForUser(username, role);
+    // resp may contain email_sent and email_error
+    let msg = `Role updated: ${username} → ${role}`;
+    if(resp && typeof resp.email_sent !== 'undefined'){
+      msg += resp.email_sent ? ' — notification sent' : ' — notification failed';
+      if(resp.email_error) msg += ` (${resp.email_error})`;
+    }
+    showToast(msg);
     closeRoleModal();
     loadUsers();
     loadRequests();
@@ -480,69 +486,50 @@ async function loadUsers(){
   const tbody = document.querySelector("#usersTable tbody");
   tbody.innerHTML = "<tr><td colspan='5' class='muted'>Loading users…</td></tr>";
   try {
-    // First, check if users were pre-loaded from login page (stored in localStorage)
-    let users = [];
-    const cachedUsers = localStorage.getItem('adminUsers');
-    if (cachedUsers) {
+    // Try loading users from backend. If backend unavailable, fall back to local sessions saved by login page.
+      let users = [];
       try {
-        users = JSON.parse(cachedUsers);
-        console.log('Loaded ' + users.length + ' users from login cache');
+        const res = await fetch(`${API_BASE_URL}/admin/users`, { headers: authHeaders() });
+        if (res && res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) users = data;
+          else if (Array.isArray(data.users)) users = data.users;
+          else if (Array.isArray(data.data)) users = data.data;
+          else users = data.users || data.items || [];
+        } else {
+          console.warn('Could not fetch /admin/users, falling back to local sessions');
+        }
       } catch (e) {
-        console.error('Failed to parse cached users:', e);
+        console.warn('Error fetching users:', e);
       }
-    }
 
-    // If no cached users, fetch from backend
-    if (users.length === 0) {
-      let res = await fetch(`${API_BASE_URL}/admin/users`, { headers: authHeaders() });
-      if(!res.ok){
-        // try commons
-        res = await fetch(`${API_BASE_URL}/users`, { headers: authHeaders() });
-        if(!res.ok) res = await fetch(`${API_BASE_URL}/user/list`, { headers: authHeaders() });
+      // Fallback: use local sessions stored by the login flow (scmx_sessions)
+      if (!users || users.length === 0) {
+        const sessions = getSessions();
+        users = sessions.map(s => ({ username: s.username, email: '', role: 'user' }));
       }
-      if(!res.ok){
-        populateUsersMock();
-        return;
-      }
-      const data = await res.json();
-      if(Array.isArray(data)) users = data;
-      else if(Array.isArray(data.users)) users = data.users;
-      else if(Array.isArray(data.data)) users = data.data;
-      else users = data.users || data.items || [];
-    }
-    
-    // Clear the cached users after rendering (optional, can keep for refresh)
-    // localStorage.removeItem('adminUsers');
-    
-    renderUsers(users);
+
+      renderUsers(users);
   } catch(err){
     console.error(err);
     populateUsersMock();
   }
 }
-function populateUsersMock(){
-  const mock = [
-    { username: "meghana", email: "meghana.ramki@143gmail.com", role: "admin" },
-    { username: "kamatammeghana", email: "kamatammeghana.143@gmail.com", role: "manager" },
-    { username: "raji", email: "meghana.mokshi143@gmail.com", role: "user1" },
-    { username: "raji", email: "muvvalarajeswari69@gmail.com", role: "user2" }
-  ];
-  renderUsers(mock);
-}
+// remove mock data wiring — prefer backend /admin/users or local sessions
 function renderUsers(users){
   const tbody = document.querySelector("#usersTable tbody");
   const select = document.getElementById("roleQuickSelect");
   tbody.innerHTML = "";
-  (users || []).forEach(u=>{
+    (users || []).forEach(u=>{
     const isAdmin = (u.role === "admin");
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${u.username || u.name || "-"}</td>
-      <td>${u.email || "-"}</td>
+      <td>${u.email || "(no email)"}</td>
       <td><span class="role-badge">${u.role || "user"}</span></td>
       <td>${isAdmin ? "Yes" : "No"}</td>
       <td class="actions">
-        <button class="btn" data-edit="${u.username}">Edit</button>
+        <button class="btn" data-edit="${u.username}" data-role="${u.role||'user'}" data-email="${u.email||''}">Edit</button>
         <button class="btn" data-setrole="${u.username}" data-role="user">Set user</button>
       </td>
     `;
@@ -571,7 +558,7 @@ async function loadAudit(){
 
 /* Click delegation for table actions */
 document.addEventListener("click", async (e) => {
-  if(e.target && e.target.dataset){
+    if(e.target && e.target.dataset){
     if(e.target.dataset.approve){
       const username = e.target.dataset.approve;
       try {
@@ -589,7 +576,7 @@ document.addEventListener("click", async (e) => {
       } catch(err){ showToast("Operation failed") }
     }
     if(e.target.dataset.edit){
-      openRoleModal(e.target.dataset.edit);
+      openRoleModal(e.target.dataset.edit, e.target.dataset.role, e.target.dataset.email);
     }
     if(e.target.dataset.setrole){
       const username = e.target.dataset.setrole;

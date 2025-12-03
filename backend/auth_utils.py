@@ -5,6 +5,11 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
+import asyncio
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 
 load_dotenv()
@@ -47,27 +52,41 @@ def require_role(user, allowed_roles: list):
 
 # ================= EMAIL CONFIG ================= #
 # Gmail SMTP (Correct)
-conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("MAIL_USERNAME"),
-    MAIL_PASSWORD=os.getenv("MAIL_PASSWORD"),
-    MAIL_FROM=os.getenv("MAIL_FROM"),
-    MAIL_PORT=int(os.getenv("MAIL_PORT")),
-    MAIL_SERVER=os.getenv("MAIL_SERVER"),
+MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+MAIL_PORT = int(os.getenv("MAIL_PORT", "587"))
+MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+MAIL_FROM = os.getenv("MAIL_FROM") or MAIL_USERNAME
+MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True").lower() in ("1", "true", "yes")
 
-    MAIL_STARTTLS=os.getenv("MAIL_STARTTLS") == "True",
-    MAIL_SSL_TLS=os.getenv("MAIL_SSL_TLS") == "True",
 
-    USE_CREDENTIALS=True
-)
+def _sync_send_email(subject: str, recipients: list, body: str):
+    if not MAIL_USERNAME or not MAIL_PASSWORD or not MAIL_FROM:
+        raise RuntimeError("SMTP credentials not configured (MAIL_USERNAME/MAIL_PASSWORD/MAIL_FROM)")
 
-# ================= SEND EMAIL HELPERS ================= #
+    msg = MIMEMultipart()
+    msg["From"] = MAIL_FROM
+    msg["To"] = ", ".join(recipients)
+    msg["Subject"] = Header(subject, 'utf-8')
+    msg.attach(MIMEText(body, "html", "utf-8"))
+
+    # connect and send
+    server = smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=10)
+    try:
+        if MAIL_USE_TLS:
+            server.starttls()
+        server.login(MAIL_USERNAME, MAIL_PASSWORD)
+        server.sendmail(MAIL_FROM, recipients, msg.as_string())
+    finally:
+        try:
+            server.quit()
+        except Exception:
+            pass
+
+
 async def send_email(subject: str, recipients: list, body: str):
-    message = MessageSchema(
-        subject=subject,
-        recipients=recipients,
-        body=body,
-        subtype="html"
-    )
-
-    fm = FastMail(conf)
-    await fm.send_message(message)
+    """
+    Send an HTML email using configured SMTP. This runs the blocking SMTP call in a thread.
+    Raises RuntimeError on missing config or smtplib.SMTPException on send errors.
+    """
+    return await asyncio.to_thread(_sync_send_email, subject, recipients, body)
