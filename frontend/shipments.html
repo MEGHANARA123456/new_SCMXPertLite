@@ -227,7 +227,7 @@ async function loadShipments() {
     });
 
     const data = await res.json();
-    shipmentData = data.shipments || [];
+   shipmentData = data.records || data.shipments || [];
 
     renderShipmentTable();
     renderActivity();

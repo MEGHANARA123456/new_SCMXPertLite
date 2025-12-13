@@ -2,8 +2,12 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY producer.py .
 
-RUN pip install --no-cache-dir kafka-python
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY producer.py .
 
 CMD ["python", "producer.py"]

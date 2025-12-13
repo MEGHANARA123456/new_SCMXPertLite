@@ -6,12 +6,13 @@
 <title>SCMXpertLite — Admin Dashboard</title>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,600" rel="stylesheet">
 <style>
-  /* ===== Palette & base (matches your UI) ===== */
+  /* ===== Palette & base (matches your UI, updated visuals) ===== */
   :root{
     --purple:#673AB7;
     --purple-dark:#4A1CA0;
+    --purple-soft:#7c52d0;
     --teal:#03C2E0;
-    --bg:#f7f7fb;
+    --bg:#f3f1fb;
     --panel:#ffffff;
     --muted:#666;
     --success:#2ecc71;
@@ -19,27 +20,72 @@
     --accent:#6ac4ee;
     --shadow: 0 8px 28px rgba(46,17,84,0.06);
   }
+
   *{box-sizing:border-box}
-  body{font-family:Roboto,system-ui,Arial; margin:0; background:var(--bg); color:#222; -webkit-font-smoothing:antialiased}
+  html,body{height:100%}
+  body{
+    font-family:Roboto,system-ui,Arial;
+    margin:0;
+    background: linear-gradient(135deg, rgba(124,82,208,0.04), rgba(230,226,245,0.04)), #f8f6fb;
+    color:#222;
+    -webkit-font-smoothing:antialiased;
+  }
+
   a{color:inherit}
 
   /* topbar */
-  .topbar{width:100%; background:var(--purple); padding:14px 20px; box-shadow:0 3px 12px rgba(0,0,0,0.08); position:sticky; top:0; z-index:40}
+  .topbar{
+    width:100%;
+    background:var(--purple);
+    padding:12px 20px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+    position:sticky; top:0; z-index:40;
+  }
   .nav-menu{display:flex; gap:18px; align-items:center; justify-content:flex-start}
   .nav-menu a{color:#fff; text-decoration:none; font-weight:600; font-size:14px}
   .brand{display:flex;align-items:center;gap:12px;color:#fff}
 
   /* layout */
-  .layout{display:flex; max-width:1200px; margin:28px auto; gap:24px; padding:0 16px}
-  .sidebar{width:260px; background:linear-gradient(180deg,#2c2a45, #3a2d66); color:#fff; border-radius:12px; padding:10px; box-shadow:var(--shadow)}
-  .sidebar h3{margin:0 0 12px; font-size:16px}
-  .menu-item{display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; padding:12px 10px; border-radius:8px; cursor:pointer; color:#f1f1fb; margin-bottom:8px; transition:all .14s ease}
-  .menu-item:hover{transform:translateX(4px)}
-  .menu-item.active{background:rgba(255,255,255,0.04)}
-  .menu-item small{color:#dcd6ff; font-weight:400; margin-top:6px; display:block}
+  .layout{
+    display:flex;
+    max-width:1200px;
+    margin:28px auto;
+    gap:24px;
+    padding:0 16px;
+  }
+
+  /* Glass sidebar (purple-tinted) */
+  .sidebar{
+    width:260px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04));
+    border-radius:14px;
+    padding:14px;
+    color:#111;
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    box-shadow: 0 18px 40px rgba(88,40,160,0.08);
+    border:1px solid rgba(255,255,255,0.12);
+  }
+  .sidebar h3{margin:0 0 12px; font-size:16px; color:#111(255,255,255,0.95)}
+  .menu-item{
+    display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start;
+    padding:12px 10px; border-radius:8px; cursor:pointer;
+    color:#111(255,255,255,0.88); margin-bottom:8px; transition:all .14s ease;
+    background: linear-gradient(180deg, rgba(124,82,208,0.06), rgba(255,255,255,0.01));
+  }
+  .menu-item:hover{ transform:translateX(4px); }
+  .menu-item.active{ background: rgba(255,255,255,0.12); }
+  .menu-item small{ color: #111(255,255,255,0.7); font-weight:400; margin-top:6px; display:block }
 
   .main{flex:1}
-  .panel{background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 6px 22px rgba(0,0,0,0.06); margin-bottom:18px; transition:all .12s ease}
+  .panel{
+    background:var(--panel);
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 6px 22px rgba(0,0,0,0.06);
+    margin-bottom:18px;
+    transition:all .12s ease;
+  }
 
   .header-row{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
   .title{font-size:20px; color:var(--purple); font-weight:700}
@@ -81,7 +127,11 @@
   .chip.no{background:var(--danger); color:white; padding:6px 8px; border-radius:8px}
 
   /* toast */
-  #toast{position:fixed; top:22px; left:50%; transform:translateX(-50%) translateY(-26px); background:var(--purple); color:#fff; padding:12px 18px; border-radius:10px; box-shadow:0 10px 30px rgba(102,20,170,0.18); opacity:0; transition:all .28s ease; z-index:1200}
+  #toast{
+    position:fixed; top:22px; left:50%; transform:translateX(-50%) translateY(-26px);
+    background:var(--purple); color:#fff; padding:12px 18px; border-radius:10px; box-shadow:0 10px 30px rgba(102,20,170,0.18);
+    opacity:0; transition:all .28s ease; z-index:1200;
+  }
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
 
   /* tiny helpers */
@@ -96,7 +146,7 @@
   @keyframes fadeInUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
 
   /* logged-in list */
-  .logged-list { margin-top:10px; border-radius:8px; padding:10px; background:#fbfbff; font-size:13px; max-height:160px; overflow:auto; }
+  .logged-list { margin-top:10px; border-radius:8px; padding:10px; background:rgba(255,255,255,0.06); font-size:13px; max-height:160px; overflow:auto; color:#111(255,255,255,0.95) }
   .logout-btn { background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; cursor:pointer }
   .logout-btn svg { vertical-align:middle }
 
@@ -228,7 +278,7 @@
                 <thead>
                   <tr><th>Username</th><th>Email</th><th>Role</th><th>Admin</th><th>Actions</th></tr>
                 </thead>
-                <tbody>
+                <tbody id="usersList">
                   <!-- filled by JS -->
                 </tbody>
               </table>
@@ -236,6 +286,7 @@
           </section>
 
           <!-- PENDING REQUESTS PANEL (prominent on load) -->
+          <!-- NOTE: Title column was added per your request (1.b) -->
           <section id="panelRequests" class="panel fade-in">
             <div class="header-row">
               <div>
@@ -243,14 +294,22 @@
                 <div class="small">Users requesting elevated access</div>
               </div>
               <div class="controls">
-                <input id="requestsFilter" class="search" placeholder="Filter username..." />
+                <input id="requestsFilter" class="search" placeholder="Filter username or title..." />
                 <button class="btn ghost" id="refreshRequests">Refresh</button>
               </div>
             </div>
 
             <div style="overflow:auto">
               <table id="requestsTable">
-                <thead><tr><th>Username</th><th>Requested At</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Username</th>
+                    <th>Requested At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
                 <tbody><!-- filled by JS --></tbody>
               </table>
             </div>
@@ -271,13 +330,13 @@
             <div style="overflow:auto">
               <table id="auditTable">
                 <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
-                <tbody><!-- filled by JS with either real audit logs or mock data --></tbody>
+                <tbody><!-- filled by JS with either real audit logs or fallback --></tbody>
               </table>
             </div>
           </section>
         </div>
 
-        <!-- RIGHT: Quick tools + (we will show replies area here) -->
+        <!-- RIGHT: Quick tools + replies -->
         <aside>
           <section class="panel">
             <div class="header-row">
@@ -340,7 +399,10 @@
         <div style="margin-top:12px">
           <label style="display:block;margin-bottom:8px">Role</label>
           <select id="modalRoleSelect" class="search">
+            <option value="">-- choose role --</option>
             <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="editor">Editor</option>
             <option value="viewer">Viewer</option>
             <option value="user">User</option>
           </select>
@@ -389,515 +451,557 @@
   <div id="smallToast"></div>
 
 <script>
-/* =========================
-   Config + helpers
-   ========================= */
-const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
+/* ============================================================
+   BASE HELPERS & CONSTANTS
+   - small changes: requests table uses request._id (string)
+============================================================ */
+const API = `${location.protocol}//${location.hostname}:8000`;
 
-const toastEl = document.getElementById("toast");
-const smallToast = document.getElementById("smallToast");
-function showToast(msg, t=3000){ toastEl.textContent = msg; toastEl.classList.add("show"); setTimeout(()=> toastEl.classList.remove("show"), t); }
-function showSmallToast(msg, t=2400){ smallToast.textContent = msg; smallToast.classList.add("show"); setTimeout(()=> smallToast.classList.remove("show"), t); }
+function getToken() { return localStorage.getItem("token") || ""; }
 
-function getToken(){ return localStorage.getItem("token") || ""; }
-function authHeaders(){ const t = getToken(); return t ? { "Authorization": "Bearer " + t } : {}; }
-function decodeToken(){ const t = getToken(); if(!t) return null; try{ return JSON.parse(atob(t.split(".")[1])); }catch{return null;} }
-function populateCurrentAdmin(){ const p = decodeToken(); document.getElementById("currentAdmin").textContent = (p && (p.username || p.sub)) || "guest" }
+function authHeaders() {
+  const t = getToken();
+  return t ? { "Authorization": "Bearer " + t } : {};
+}
 
-/* =========================
-   Panel toggles + UI init
-   ========================= */
+function decodeToken() {
+  const t = getToken();
+  if (!t) return null;
+  try { return JSON.parse(atob(t.split(".")[1])); }
+  catch { return null; }
+}
+
+function fmt(dt) {
+  try { return new Date(dt).toLocaleString(); }
+  catch { return dt; }
+}
+
+const toast = document.getElementById("toast");
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+function escapeHtml(s) {
+  if (!s) return "";
+  return String(s).replace(/[&<>"']/g, t => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[t]));
+}
+
+/* ============================================================
+   POPULATE CURRENT ADMIN
+============================================================ */
+const decoded = decodeToken();
+document.getElementById("currentAdmin").textContent =
+  (decoded && (decoded.username || decoded.sub)) || "admin";
+
+/* ============================================================
+   PANEL TOGGLING (unchanged)
+============================================================ */
 const panelUsers = document.getElementById("panelUsers");
 const panelRequests = document.getElementById("panelRequests");
 const panelAudit = document.getElementById("panelAudit");
 
-const menuUsers = document.getElementById("menuUsers");
-const menuRequests = document.getElementById("menuRequests");
-const menuRoles = document.getElementById("menuRoles");
-const menuAudit = document.getElementById("menuAudit");
-
-const btnTeamMembers = document.getElementById("btnTeamMembers");
-const btnEditRoles = document.getElementById("btnEditRoles");
-const btnShowPendingFull = document.getElementById("btnShowPendingFull");
-const btnShowRequests = document.getElementById("btnShowRequests");
-
-function hideAllPanels(){
-  panelUsers.classList.add("hidden"); panelUsers.classList.remove("fade-in");
-  panelRequests.classList.add("hidden"); panelRequests.classList.remove("fade-in");
-  panelAudit.classList.add("hidden"); panelAudit.classList.remove("fade-in");
-}
-function activateMenuItem(el){ document.querySelectorAll(".menu-item").forEach(x => x.classList.remove("active")); if(el) el.classList.add("active"); }
-function showPendingAsMain(){ hideAllPanels(); panelRequests.classList.remove("hidden"); panelRequests.classList.add("fade-in"); activateMenuItem(menuRequests); }
-
-menuUsers.addEventListener("click", ()=> { hideAllPanels(); panelUsers.classList.remove("hidden"); panelUsers.classList.add("fade-in"); activateMenuItem(menuUsers); });
-menuRequests.addEventListener("click", ()=> { showPendingAsMain(); });
-menuRoles.addEventListener("click", ()=> { const u = prompt("Enter username to edit:"); if(u) openRoleModal(u); });
-menuAudit.addEventListener("click", ()=> { hideAllPanels(); panelAudit.classList.remove("hidden"); panelAudit.classList.add("fade-in"); activateMenuItem(menuAudit); });
-
-btnTeamMembers.addEventListener("click", ()=> { hideAllPanels(); panelUsers.classList.remove("hidden"); panelUsers.classList.add("fade-in"); activateMenuItem(menuUsers); });
-btnEditRoles.addEventListener("click", ()=> { const uname = prompt("Enter username to edit role:"); if(uname) openRoleModal(uname); });
-btnShowPendingFull.addEventListener("click", ()=> showPendingAsMain());
-document.getElementById("btnShowRequests").addEventListener("click", ()=> showPendingAsMain());
-
-document.getElementById("logoutBtn").addEventListener("click", ()=> { localStorage.removeItem("token"); showToast("Logged out"); setTimeout(()=> window.location.href = "/frontend/user.html", 700); });
-
-/* modal */
-const roleModal = document.getElementById("roleModal");
-const modalUsernameEl = document.getElementById("modalUsername");
-const modalRoleSelect = document.getElementById("modalRoleSelect");
-const modalSave = document.getElementById("modalSave");
-document.getElementById("closeModal").addEventListener("click", closeRoleModal);
-document.getElementById("modalCancel").addEventListener("click", closeRoleModal);
-
-function openRoleModal(username, role='', email=''){
-  if(!username){ showToast("No username provided"); return; }
-  modalUsernameEl.textContent = username;
-  document.getElementById('modalUserEmail').textContent = email || '(no email)';
-  modalRoleSelect.value = role || '';
-  roleModal.classList.add("show");
-  roleModal.setAttribute("aria-hidden","false");
-}
-function closeRoleModal(){ roleModal.classList.remove("show"); roleModal.setAttribute("aria-hidden","true"); }
-
-/* save role */
-modalSave.addEventListener("click", async ()=>{
-  const username = modalUsernameEl.textContent;
-  const role = modalRoleSelect.value;
-  if(!username || !role){ showToast("Pick a role"); return; }
-  try {
-    const resp = await setRoleForUser(username, role);
-    let msg = `Role updated: ${username} → ${role}`;
-    if(resp && typeof resp.email_sent !== 'undefined'){ msg += resp.email_sent ? ' — notification sent' : ' — notification failed'; }
-    showToast(msg);
-    closeRoleModal();
-    loadUsers(); loadRequests();
-  } catch(e){ console.error(e); showToast("Update failed") }
-});
-
-/* API to set role */
-async function setRoleForUser(username, role){
-  const url = `${API_BASE_URL}/admin/set-role/${encodeURIComponent(username)}`;
-  const headers = Object.assign({ "Content-Type":"application/json" }, authHeaders());
-  const res = await fetch(url, { method: "POST", headers, body: JSON.stringify({ role }) });
-  if(!res.ok){
-    const txt = await res.text().catch(()=>null);
-    throw new Error(txt || "failed");
-  }
-  return res.json().catch(()=>({}));
+function hidePanels() {
+  panelUsers.classList.add("hidden");
+  panelRequests.classList.add("hidden");
+  panelAudit.classList.add("hidden");
 }
 
-/* =========================
-   Requests: load + render + actions
-   ========================= */
-function fmt(dt){ try { return new Date(dt).toLocaleString(); } catch { return dt; } }
+document.getElementById("menuUsers").onclick = () => {
+  hidePanels();
+  panelUsers.classList.remove("hidden");
+};
 
-async function loadRequests(){
+document.getElementById("menuRequests").onclick = () => {
+  hidePanels();
+  panelRequests.classList.remove("hidden");
+};
+
+document.getElementById("menuAudit").onclick = () => {
+  hidePanels();
+  panelAudit.classList.remove("hidden");
+};
+
+document.getElementById("btnTeamMembers").onclick = () => {
+  hidePanels();
+  panelUsers.classList.remove("hidden");
+};
+
+document.getElementById("btnShowPendingFull").onclick = () => {
+  hidePanels();
+  panelRequests.classList.remove("hidden");
+};
+
+document.getElementById("btnShowRequests").onclick = () => {
+  hidePanels();
+  panelRequests.classList.remove("hidden");
+};
+
+/* ============================================================
+   LOGOUT
+============================================================ */
+document.getElementById("logoutBtn").onclick = () => {
+  localStorage.removeItem("token");
+  showToast("Logged out");
+  setTimeout(() => (window.location.href = "/frontend/user.html"), 700);
+};
+
+/* ============================================================
+   LOAD PENDING REQUESTS (updated to include Title column
+   and to render dataset attributes: data-id and data-json)
+============================================================ */
+async function loadRequests() {
   const tbody = document.querySelector("#requestsTable tbody");
-  tbody.innerHTML = "<tr><td colspan='4' class='muted'>Loading...</td></tr>";
+  tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
+
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/pending`, { headers: authHeaders() });
-    if(!res.ok){
-      tbody.innerHTML = "<tr><td colspan='4' class='muted'>No pending requests or cannot reach server</td></tr>";
+    const res = await fetch(`${API}/admin/pending`, { headers: authHeaders() });
+    if (!res.ok) {
+      tbody.innerHTML = `<tr><td colspan="5">Failed to load</td></tr>`;
       return;
     }
     const data = await res.json();
-    const rows = (data.requests || []).map(r => {
-      // prefer r._id or r.id if present
-      const rid = r._id || r.id || r.username || Math.random().toString(36).slice(2,8);
-      return `<tr data-request-id="${rid}" data-raw='${escapeHtml(JSON.stringify(r))}'>
-        <td>${escapeHtml(r.username || r.requester || "-")}</td>
-        <td>${escapeHtml(fmt(r.requested_at || r.created_at || Date.now()))}</td>
-        <td>${escapeHtml(r.status || 'pending')}</td>
-        <td class="actions">
-          <button class="btn" data-approve="${escapeAttr(rid)}">Approve</button>
-          <button class="btn" data-reject="${escapeAttr(rid)}">Reject</button>
-          <button class="btn" data-reply="${escapeAttr(rid)}">Reply</button>
-        </td>
-      </tr>`;
-    }).join("");
-    tbody.innerHTML = rows || "<tr><td colspan='4' class='muted'>No pending requests</td></tr>";
-  } catch(err){
+    let arr = data.requests || data || [];
+
+    if (!Array.isArray(arr)) arr = [];
+
+    if (arr.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5">No pending requests</td></tr>`;
+      return;
+    }
+
+    // Render rows: add data-id (request id string) and include title column
+    tbody.innerHTML = arr
+      .map(r => {
+        const rid = r._id || r.request_id || "";
+        const title = r.title || r.type || "(no title)";
+        const status = r.status || "pending";
+        // escape JSON safely for dataset usage
+        const jsonSafe = JSON.stringify(r).replace(/'/g,"&#39;").replace(/</g,"&lt;");
+        return `
+        <tr data-id="${escapeHtml(String(rid))}" data-json='${jsonSafe}'>
+          <td>${escapeHtml(title)}</td>
+          <td>${escapeHtml(r.username || '')}</td>
+          <td>${fmt(r.requested_at)}</td>
+          <td class="status-cell">${escapeHtml(status)}</td>
+          <td>
+            <button class="btn primary" data-approve="${escapeHtml(String(rid))}">Approve</button>
+            <button class="btn ghost" data-reject="${escapeHtml(String(rid))}">Reject</button>
+            <button class="btn ghost" data-reply="${escapeHtml(String(rid))}">Reply</button>
+          </td>
+        </tr>`;
+      })
+      .join("");
+  } catch (err) {
     console.error(err);
-    tbody.innerHTML = "<tr><td colspan='4' class='muted'>Error loading requests</td></tr>";
+    tbody.innerHTML = `<tr><td colspan="5">Error loading requests</td></tr>`;
   }
 }
 
-/* Approve / Reject / Reply handlers (delegated) */
-document.addEventListener("click", async (e) => {
-  const target = e.target;
-  if(!target) return;
+/* ============================================================
+   APPROVE / REJECT / OPEN REPLY — updated to use request_id
+============================================================ */
+document.addEventListener("click", async e => {
+  const approveId = e.target.dataset.approve;
+  if (approveId) return approveRequest(approveId);
 
-  // Approve
-  if(target.dataset.approve){
-    const rid = target.dataset.approve;
-    await performApprove(rid, target);
-    return;
-  }
+  const rejectId = e.target.dataset.reject;
+  if (rejectId) return rejectRequest(rejectId);
 
-  // Reject
-  if(target.dataset.reject){
-    const rid = target.dataset.reject;
-    await performReject(rid, target);
-    return;
-  }
+  const replyId = e.target.dataset.reply;
+  if (replyId) return openReplyDrawer(replyId);
 
-  // Reply
-  if(target.dataset.reply){
-    const rid = target.dataset.reply;
-    openReplyDrawerById(rid, target);
-    return;
-  }
-
-  // table row click opens reply drawer too
-  const tr = target.closest && target.closest("tr[data-request-id]");
-  if(tr && !target.dataset.approve && !target.dataset.reject && !target.dataset.reply){
-    // open reply drawer using the row data
-    const rid = tr.getAttribute("data-request-id");
-    openReplyDrawerById(rid, tr);
-  }
-
-  // Edit user role button handled below by dataset.edit (if present in users table)
-  if(target.dataset.edit){
-    openRoleModal(target.dataset.edit, target.dataset.role, target.dataset.email);
-  }
-  if(target.dataset.setrole){
-    const username = target.dataset.setrole;
-    const role = target.dataset.role || "user";
-    try {
-      await setRoleForUser(username, role);
-      showToast(`${username} → ${role}`);
-      loadUsers();
-    } catch(err){ showToast("Update failed") }
-  }
+  // edit buttons etc handled below as before
 });
 
-/* perform approve */
-async function performApprove(requestId, btn){
-  const tr = btn.closest("tr[data-request-id]");
-  if(tr) tr.classList.add("animate-out");
-  try{
-    const res = await fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(requestId)}/approve`, {
+async function approveRequest(request_id) {
+  try {
+    const res = await fetch(`${API}/admin/requests/${encodeURIComponent(request_id)}/approve`, {
       method: "POST",
-      headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
-      body: JSON.stringify({}) // backend may accept additional payload
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: "{}"
     });
-    if(!res.ok) {
-      const j = await res.json().catch(()=>({}));
-      throw new Error(j.detail || "approve failed");
-    }
+    if (!res.ok) { showToast("Approve failed"); return; }
     showToast("Approved");
-    setTimeout(loadRequests, 420);
-    // optionally refresh replies panel
-    setTimeout(loadReplies, 600);
-  }catch(err){
+    await loadRequests();
+    await loadReplies();
+  } catch (err) {
     console.error(err);
-    if(tr) tr.classList.remove("animate-out");
     showToast("Approve failed");
   }
 }
 
-/* perform reject */
-async function performReject(requestId, btn){
-  const tr = btn.closest("tr[data-request-id]");
-  if(tr) tr.classList.add("animate-out");
-  try{
-    const res = await fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(requestId)}/reject`, {
+async function rejectRequest(request_id) {
+  try {
+    const res = await fetch(`${API}/admin/requests/${encodeURIComponent(request_id)}/reject`, {
       method: "POST",
-      headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
-      body: JSON.stringify({})
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: "{}"
     });
-    if(!res.ok){
-      const j = await res.json().catch(()=>({}));
-      throw new Error(j.detail || "reject failed");
-    }
+    if (!res.ok) { showToast("Reject failed"); return; }
     showToast("Rejected");
-    setTimeout(loadRequests, 420);
-    setTimeout(loadReplies, 600);
-  }catch(err){
+    await loadRequests();
+    await loadReplies();
+  } catch (err) {
     console.error(err);
-    if(tr) tr.classList.remove("animate-out");
     showToast("Reject failed");
   }
 }
 
-/* =========================
-   Reply drawer (RB1)
-   ========================= */
+/* ============================================================
+   REPLY DRAWER + SEND REPLY
+   - uses POST /admin/requests/{request_id}/reply
+   - on success: mark row status = "resolved" in UI, refresh lists
+   - replies panel refreshed (formatted as requested)
+============================================================ */
 const replyDrawer = document.getElementById("replyDrawer");
-const replyReqTitle = document.getElementById("replyReqTitle");
-const replyReqMeta = document.getElementById("replyReqMeta");
-const replyText = document.getElementById("replyText");
-const closeReplyBtn = document.getElementById("closeReplyBtn");
-const sendReplyBtn = document.getElementById("sendReplyBtn");
-let currentReplyRequest = null; // store object { id, username, ... }
+const replyTitle = document.getElementById("replyReqTitle");
+const replyMeta = document.getElementById("replyReqMeta");
+const replyMsg = document.getElementById("replyText");
+let currentReplyRequestId = null;
 
-closeReplyBtn.addEventListener("click", ()=> closeReplyDrawer());
-function openReplyDrawerById(requestId, triggerElement){
-  // find full request data: we stored raw JSON in row[data-raw] in loadRequests
-  const tr = document.querySelector(`tr[data-request-id="${CSS.escape(requestId)}"]`);
-  let raw = null;
-  if(tr && tr.dataset.raw){
-    try{ raw = JSON.parse(decodeHtml(tr.dataset.raw)); } catch(e){ raw = null; }
-  }
+function openReplyDrawer(request_id) {
+  const tr = document.querySelector(`tr[data-id="${CSS.escape(request_id)}"]`);
+  if (!tr) return showToast("Request not found");
 
-  // fallback: attempt to fetch single request from backend
-  if(!raw){
-    // attempt API fetch for that request id
-    fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(requestId)}`, { headers: authHeaders() })
-      .then(r => r.ok ? r.json() : Promise.resolve(null))
-      .then(data => {
-        const rObj = data && data.request ? data.request : data;
-        openReplyDrawer(rObj || { id: requestId, username: requestId, title: 'Request' });
-      })
-      .catch(()=> openReplyDrawer({ id: requestId, username: requestId, title: 'Request' }));
-    return;
-  }
-  openReplyDrawer(raw);
-}
+  const data = JSON.parse(tr.dataset.json || "{}");
+  currentReplyRequestId = request_id;
 
-function openReplyDrawer(requestObj){
-  currentReplyRequest = requestObj || {};
-  // set UI
-  const title = currentReplyRequest.title || currentReplyRequest.type || `Request from ${currentReplyRequest.username || currentReplyRequest.requester || 'user'}`;
-  replyReqTitle.textContent = title;
-  const metaParts = [];
-  if(currentReplyRequest.username) metaParts.push(currentReplyRequest.username);
-  if(currentReplyRequest.email) metaParts.push(currentReplyRequest.email);
-  if(currentReplyRequest.requested_at) metaParts.push(fmt(currentReplyRequest.requested_at));
-  replyReqMeta.textContent = metaParts.join(' • ') || '';
-  replyText.value = ''; // clear
+  replyTitle.textContent = data.title || data.type || "User Request";
+  replyMeta.textContent = `${data.username || "user"} • ${fmt(data.requested_at)}`;
+
+  replyMsg.value = "";
   replyDrawer.classList.add("open");
-  replyDrawer.setAttribute("aria-hidden", "false");
-  // focus
-  setTimeout(()=> replyText.focus(), 180);
 }
 
-function closeReplyDrawer(){
+document.getElementById("closeReplyBtn").onclick = () =>
   replyDrawer.classList.remove("open");
-  replyDrawer.setAttribute("aria-hidden", "true");
-  currentReplyRequest = null;
-}
 
-/* send reply */
-sendReplyBtn.addEventListener("click", async ()=>{
-  if(!currentReplyRequest){ showToast("No request selected"); return; }
-  const text = replyText.value.trim();
-  if(!text){ showToast("Write a reply"); replyText.focus(); return; }
+document.getElementById("sendReplyBtn").onclick = async () => {
+  const text = replyMsg.value.trim();
+  if (!text) return showToast("Write a reply");
 
-  // payload: reply, admin, ts
-  const admin = (decodeToken() && (decodeToken().username || decodeToken().sub)) || "admin";
-  const payload = { reply: text, admin, ts: new Date().toISOString() };
+  if (!currentReplyRequestId) return showToast("No request selected");
 
-  try{
-    const reqId = currentReplyRequest._id || currentReplyRequest.id || currentReplyRequest.username;
-    const res = await fetch(`${API_BASE_URL}/admin/requests/${encodeURIComponent(reqId)}/reply`, {
+  const payload = { reply: text };
+
+  try {
+    const res = await fetch(`${API}/admin/requests/${encodeURIComponent(currentReplyRequestId)}/reply`, {
       method: "POST",
-      headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    if(!res.ok){
-      const j = await res.json().catch(()=>({}));
-      throw new Error(j.detail || 'reply failed');
+
+    if (!res.ok) {
+      const txt = await res.text().catch(()=>"");
+      console.error("Reply failed:", res.status, txt);
+      return showToast("Reply failed");
     }
-    // assume server saved reply and triggered SMTP email
+
     showToast("Reply sent");
-    // close & refresh
-    closeReplyDrawer();
-    setTimeout(loadRequests, 420);
-    setTimeout(loadReplies, 600);
-  }catch(err){
+
+    // Mark the row status 'resolved' in the UI immediately
+    const tr = document.querySelector(`tr[data-id="${CSS.escape(currentReplyRequestId)}"]`);
+    if (tr) {
+      const statusCell = tr.querySelector(".status-cell");
+      if (statusCell) statusCell.textContent = "resolved";
+    }
+
+    // Optionally attempt to persist status change server-side if endpoint exists.
+    // NOTE: backend currently doesn't have /admin/requests/{id}/resolve — below call is safe to attempt and ignored if 404.
+    fetch(`${API}/admin/requests/${encodeURIComponent(currentReplyRequestId)}/resolve`, {
+      method: "POST",
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }).catch(()=>{}); // ignore error if not implemented
+
+    replyDrawer.classList.remove("open");
+    replyMsg.value = "";
+
+    await loadReplies();
+    await loadRequests();
+  } catch (err) {
     console.error(err);
-    showToast("Send reply failed");
+    showToast("Reply failed");
+  }
+};
+/* ============================================================
+   FIXED LOAD REPLIES (right-side panel)
+============================================================ */
+async function loadReplies() {
+  const box = document.getElementById("repliesList");
+  box.innerHTML = `<div>Loading...</div>`;
+
+  try {
+    const res = await fetch(`${API}/admin/replies`, { headers: authHeaders() });
+    const data = await res.json();
+
+    console.log("Replies from backend:", JSON.stringify(data, null, 2));
+
+    const list = data.replies || [];
+
+    if (!list.length) {
+      box.innerHTML = `<div>No replies yet</div>`;
+      return;
+    }
+
+    box.innerHTML = list.map(r => {
+      const title = r.request_title || "(no title)";
+      const replyText = r.reply || "";
+      const admin = r.admin || "admin";
+      const sentAt = r.sent_at ? fmt(r.sent_at) : "";
+
+      return `
+        <div style="padding:10px 0; border-bottom:1px solid #f0f0f3">
+          <div style="font-weight:700; color:var(--purple)">
+            Title: ${escapeHtml(title)}
+          </div>
+
+          <div style="margin-top:6px">
+            Reply: ${escapeHtml(replyText)}
+          </div>
+
+          <div style="font-size:12px; color:#666; margin-top:6px">
+            Sent by ${escapeHtml(admin)} at ${sentAt}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    console.error("Replies load error:", err);
+    box.innerHTML = `<div>Error loading replies</div>`;
+  }
+}
+
+
+/* ============================================================
+   LOAD USERS  (uses /admin/users)
+============================================================ */
+async function loadUsers() {
+  const tbody = document.getElementById("usersList");
+  tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
+
+  try {
+    const res = await fetch(`${API}/admin/users`, { headers: authHeaders() });
+    if (!res.ok) {
+      tbody.innerHTML = `<tr><td colspan="5">Error loading users</td></tr>`;
+      return;
+    }
+
+    const data = await res.json();
+    const users = data.users || [];
+
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5">No users found</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>${escapeHtml(u.username)}</td>
+        <td>${escapeHtml(u.email || "(no email)")}</td>
+        <td><span class="role-badge">${escapeHtml(u.role)}</span></td>
+        <td>${u.role === "admin" ? "Yes" : "No"}</td>
+        <td>
+          <button class="btn ghost"
+            data-edit="${escapeHtml(u.username)}"
+            data-role="${escapeHtml(u.role)}"
+            data-email="${escapeHtml(u.email || "")}">
+            Edit
+          </button>
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5">Error loading users</td></tr>`;
+  }
+}
+/* ============================================================
+   ROLE MODAL + /admin/set-role/{username}
+============================================================ */
+const roleModal = document.getElementById("roleModal");
+const modalUsername = document.getElementById("modalUsername");
+const modalUserEmail = document.getElementById("modalUserEmail");
+const modalRoleSelect = document.getElementById("modalRoleSelect");
+
+document.getElementById("modalCancel").onclick =
+document.getElementById("closeModal").onclick = () =>
+  roleModal.classList.remove("show");
+
+document.addEventListener("click", e => {
+  if (e.target.dataset.edit) {
+    const user = e.target.dataset.edit;
+    const role = e.target.dataset.role;
+    const email = e.target.dataset.email;
+
+    modalUsername.textContent = user;
+    modalUserEmail.textContent = email || "(no email)";
+    modalRoleSelect.value = role;
+
+    roleModal.classList.add("show");
   }
 });
 
-/* replies list (right-side panel) */
-async function loadReplies(){
-  // Query backend for recent replies - I assume an endpoint exists /admin/replies or /admin/requests?with_replies
-  try{
-    const res = await fetch(`${API_BASE_URL}/admin/replies`, { headers: authHeaders() });
-    if(!res.ok) {
-      // fallback: don't show error, silently ignore
-      return;
-    }
-    const d = await res.json();
-    const list = d.replies || d.items || [];
-    const container = document.getElementById("repliesList");
-    if(!list.length) { container.innerHTML = "<div class='muted'>No replies yet</div>"; return; }
-    container.innerHTML = list.map(r => `<div style="background:#fbfbff;border-radius:8px;padding:8px;margin-bottom:8px;">
-      <div style="font-weight:700">${escapeHtml(r.request_title || r.request?.title || r.title || r.request_id || r.request)}</div>
-      <div style="font-size:13px;color:#666;margin-top:6px">${escapeHtml(r.reply || r.message || r.text || '')}</div>
-      <div style="font-size:12px;color:#999;margin-top:6px">${escapeHtml(r.admin || r.from || '')} • ${escapeHtml(fmt(r.ts || r.sent_at || r.created_at || ''))}</div>
-    </div>`).join("");
-  }catch(e){
-    console.warn("loadReplies failed", e);
+document.getElementById("modalSave").onclick = async () => {
+  const username = modalUsername.textContent;
+  const role = modalRoleSelect.value;
+
+  if (!role) return showToast("Choose a role");
+
+  try {
+    const res = await fetch(`${API}/admin/set-role/${encodeURIComponent(username)}`, {
+      method: "POST",
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ role })
+    });
+
+    if (!res.ok) return showToast("Update failed");
+
+    showToast("Role updated");
+    roleModal.classList.remove("show");
+    loadUsers();
+    document.getElementById("panelUsers").classList.remove("hidden");
+
+  } catch {
+    showToast("Update failed");
+  }
+};
+
+/* ============================================================
+   AUDIT LOGS (fallback mock for now)
+============================================================ */
+async function loadAudit() {
+  const tbody = document.querySelector("#auditTable tbody");
+  tbody.innerHTML = `<tr><td colspan="4">Loading...</td></tr>`;
+
+  try {
+    const mock = [
+      { time: Date.now(), user: "admin", action: "Approved", details: "User promoted" }
+    ];
+    tbody.innerHTML = mock
+      .map(m => `
+        <tr>
+          <td>${fmt(m.time)}</td>
+          <td>${m.user}</td>
+          <td>${m.action}</td>
+          <td>${m.details}</td>
+        </tr>`)
+      .join("");
+  } catch {
+    tbody.innerHTML = `<tr><td colspan="4">Error</td></tr>`;
   }
 }
 
-/* =========================
-   Create request drawer (FAB)
-   ========================= */
-const fab = document.getElementById("fabRequest");
+/* ============================================================
+   REQUEST DRAWER + /requests
+============================================================ */
+const fabRequest = document.getElementById("fabRequest");
 const drawer = document.getElementById("drawer");
 const closeDrawer = document.getElementById("closeDrawer");
 const sendRequestBtn = document.getElementById("sendRequestBtn");
 
-fab.addEventListener("click", ()=> drawer.classList.toggle("open"));
-closeDrawer.addEventListener("click", ()=> drawer.classList.remove("open"));
+fabRequest.onclick = () => drawer.classList.toggle("open");
+closeDrawer.onclick = () => drawer.classList.remove("open");
 
-sendRequestBtn.addEventListener("click", async ()=>{
+sendRequestBtn.onclick = async () => {
   const type = document.getElementById("request-type").value;
   const title = document.getElementById("request-title").value.trim();
   const desc = document.getElementById("request-desc").value.trim();
-  if(!title || !desc){ showToast("Please fill title and description"); return; }
-  try{
-    const res = await fetch(`${API_BASE_URL}/requests`, {
+
+  if (!title || !desc) return showToast("Fill all fields");
+
+  try {
+    const res = await fetch(`${API}/requests`, {
       method: "POST",
-      headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({ type, title, description: desc })
     });
-    if(!res.ok){ const j = await res.json().catch(()=>({})); throw new Error(j.detail || 'send failed'); }
+
+    if (!res.ok) return showToast("Failed");
+
     showToast("Request sent");
     drawer.classList.remove("open");
-    setTimeout(loadRequests, 400);
-  }catch(e){
-    console.error(e);
-    showToast("Send failed");
+    loadRequests();
+  } catch {
+    showToast("Failed");
   }
-});
+};
 
-/* =========================
-   Users + Audit loaders (keep as before)
-   ========================= */
-async function loadUsers(){
-  const tbody = document.querySelector("#usersTable tbody");
-  tbody.innerHTML = "<tr><td colspan='5' class='muted'>Loading users…</td></tr>";
-  try {
-    let users = [];
-    try {
-      const res = await fetch(`${API_BASE_URL}/admin/users`, { headers: authHeaders() });
-      if (res && res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) users = data;
-        else if (Array.isArray(data.users)) users = data.users;
-        else if (Array.isArray(data.data)) users = data.data;
-        else users = data.users || data.items || [];
-      } else {
-        console.warn('Could not fetch /admin/users, falling back to local sessions');
-      }
-    } catch (e) { console.warn('Error fetching users:', e); }
-    if (!users || users.length === 0) {
-      const sessions = getSessions();
-      users = sessions.map(s => ({ username: s.username, email: '', role: 'user' }));
-    }
-    renderUsers(users);
-  } catch(err){ console.error(err); populateUsersMock(); }
+/* ============================================================
+   LOGGED SESSION HANDLING
+============================================================ */
+function getSessions() {
+  try { return JSON.parse(localStorage.getItem("scmx_sessions") || "[]"); }
+  catch { return []; }
 }
-function renderUsers(users){
-  const tbody = document.querySelector("#usersTable tbody");
-  tbody.innerHTML = "";
-  (users || []).forEach(u=>{
-    const isAdmin = (u.role === "admin");
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${escapeHtml(u.username || u.name || "-")}</td>
-      <td>${escapeHtml(u.email || "(no email)")}</td>
-      <td><span class="role-badge">${escapeHtml(u.role || "user")}</span></td>
-      <td>${isAdmin ? "Yes" : "No"}</td>
-      <td class="actions">
-        <button class="btn" data-edit="${escapeAttr(u.username)}" data-role="${escapeAttr(u.role||'user')}" data-email="${escapeAttr(u.email||'')}">Edit</button>
-        <button class="btn" data-setrole="${escapeAttr(u.username)}" data-role="user">Set user</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+function saveSessions(arr) {
+  localStorage.setItem("scmx_sessions", JSON.stringify(arr));
+}
+
+function updateLoggedList() {
+  const list = document.getElementById("loggedList");
+  const arr = getSessions();
+  if (!arr.length) {
+    list.innerHTML = "<div>No sessions</div>";
+    return;
+  }
+  list.innerHTML = arr
+    .map(s => `
+      <div style="padding:6px 8px;background:rgba(255,255,255,0.12);border-radius:8px;margin-bottom:8px;">
+        <div><strong>${escapeHtml(s.username)}</strong></div>
+        <div style="font-size:12px">${fmt(s.ts)}</div>
+      </div>`)
+    .join("");
+}
+function addSession() {
+  const u = (decodeToken() && (decodeToken().username || decodeToken().sub)) || "guest";
+  const arr = getSessions().filter(s => s.username !== u);
+  arr.unshift({ username: u, ts: new Date().toISOString() });
+  saveSessions(arr.slice(0, 20));
   updateLoggedList();
-}
 
-/* audit mock loader */
-async function loadAudit(){
-  const tbody = document.querySelector("#auditTable tbody");
-  tbody.innerHTML = "<tr><td colspan='4' class='muted'>Loading...</td></tr>";
-  try {
-    const mock = [
-      { t: new Date().toISOString(), u: "admin", a: "Approved request", d: "Promoted userX to admin" },
-      { t: new Date().toISOString(), u: "manager1", a: "Created shipment", d: "Shipment #123" }
-    ];
-    tbody.innerHTML = mock.map(m => `<tr><td>${fmt(m.t)}</td><td>${escapeHtml(m.u)}</td><td>${escapeHtml(m.a)}</td><td>${escapeHtml(m.d)}</td></tr>`).join("");
-  } catch(e){ tbody.innerHTML = "<tr><td colspan='4' class='muted'>Error loading audit</td></tr>"; }
-}
-
-/* =========================
-   Logged sessions helpers
-   ========================= */
-function getSessions(){ try { return JSON.parse(localStorage.getItem("scmx_sessions")||"[]"); } catch { return []; } }
-function saveSessions(sessions){ localStorage.setItem("scmx_sessions", JSON.stringify(sessions)); }
-function addCurrentSession(){
-  const p = decodeToken();
-  const username = (p && (p.username || p.sub)) || ("guest_" + Math.random().toString(36).slice(2,5));
-  const sessions = getSessions().filter(s => s && s.username !== username);
-  sessions.unshift({ username, ts: new Date().toISOString() });
-  saveSessions(sessions.slice(0,20));
-  fetch(`${API_BASE_URL}/admin/loggedin`, {
+  fetch(`${API}/admin/loggedin`, {
     method: "POST",
-    headers: Object.assign({ "Content-Type":"application/json" }, authHeaders()),
-    body: JSON.stringify({ username, ts: new Date().toISOString() })
-  }).catch(()=>{});
-  updateLoggedList();
-}
-function updateLoggedList(){
-  const el = document.getElementById("loggedList");
-  const sessions = getSessions();
-  if(!sessions.length){ el.innerHTML = "<div class='muted'>No active sessions recorded</div>"; return; }
-  el.innerHTML = sessions.map(s => `<div style="display:flex; justify-content:space-between; gap:10px; padding:6px 8px; border-radius:6px; margin-bottom:6px; background:#fff;">
-    <div><strong>${escapeHtml(s.username)}</strong><div style="font-size:12px;color:#777">${escapeHtml(new Date(s.ts).toLocaleString())}</div></div>
-    <div style="font-size:12px;color:#999">${Math.max(0, Math.floor((Date.now() - new Date(s.ts))/60000))}m</div>
-  </div>`).join("");
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ username: u, ts: new Date().toISOString() })
+  }).catch(() => {});
 }
 
-/* call on load */
-populateCurrentAdmin();
-showPendingAsMain();
+/* ============================================================
+   INIT LOAD
+============================================================ */
 loadRequests();
 loadUsers();
 loadAudit();
 loadReplies();
-addCurrentSession();
+addSession();
 
-/* small UI: menu highlight when panels change */
-document.querySelectorAll(".menu-item").forEach(mi=>{
-  mi.addEventListener("click", ()=> {
-    document.querySelectorAll(".menu-item").forEach(x=>x.classList.remove("active"));
-    mi.classList.add("active");
-  });
-});
+document.getElementById("refreshAll").onclick = () => {
+  loadRequests();
+  loadUsers();
+  loadAudit();
+  loadReplies();
+};
+document.getElementById("refreshRequests").onclick = loadRequests;
+document.getElementById("refreshAudit").onclick = loadAudit;
 
-/* refresh controls */
-document.getElementById("refreshAll").addEventListener("click", ()=>{ loadUsers(); loadRequests(); loadAudit(); loadReplies(); });
-document.getElementById("refreshRequests").addEventListener("click", loadRequests);
-document.getElementById("refreshAudit").addEventListener("click", loadAudit);
-
-/* Search filters */
-document.getElementById("userSearch").addEventListener("input", (e)=>{
-  const q = e.target.value.toLowerCase().trim();
-  document.querySelectorAll("#usersTable tbody tr").forEach(tr=>{
-    const txt = tr.innerText.toLowerCase();
-    tr.style.display = txt.includes(q) ? "" : "none";
-  });
-});
-document.getElementById("requestsFilter").addEventListener("input", (e)=>{
-  const q = e.target.value.toLowerCase().trim();
-  document.querySelectorAll("#requestsTable tbody tr").forEach(tr=>{
+document.getElementById("userSearch").oninput = e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll("#usersTable tbody tr").forEach(tr => {
     tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
   });
-});
-
-/* Utility escaping helpers */
-function escapeHtml(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function escapeAttr(s){ return String(s || '').replace(/"/g,'&quot;'); }
-function decodeHtml(s){ // decode an HTML-escaped string stored in data attribute
-  const txt = document.createElement("textarea"); txt.innerHTML = s; return txt.value;
-}
+};
+document.getElementById("requestsFilter").oninput = e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll("#requestsTable tbody tr").forEach(tr => {
+    tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
+  });
+};
 </script>
 </body>
 </html>

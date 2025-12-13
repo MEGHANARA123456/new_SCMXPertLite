@@ -1,8 +1,8 @@
-version: "3.9"
-
 services:
   backend:
-    image: meghana143/scmxpertlite-backend:latest
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: scmxpertlite-backend
     ports:
       - "8000:8000"
@@ -12,30 +12,37 @@ services:
     networks:
       - scmxpertlite-network
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ping || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   producer:
-    image: meghana143/scmxpertlite-producer:latest
+    build:
+      context: .
+      dockerfile: kafka/producer/Dockerfile
     container_name: scmxpertlite-producer
     env_file:
       - .env
     restart: unless-stopped
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka
     networks:
       - scmxpertlite-network
 
   consumer:
-    image: meghana143/scmxpertlite-consumer:latest
+    build:
+      context: .
+      dockerfile: kafka/consumer/Dockerfile
     container_name: scmxpertlite-consumer
     env_file:
       - .env
     restart: unless-stopped
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka
     networks:
       - scmxpertlite-network
 
@@ -56,11 +63,13 @@ services:
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CREATE_TOPICS="test_topic:1:1"
+
       - KAFKA_HEAP_OPTS=-Xms256m -Xmx256m
     volumes:
       - kafka_data:/bitnami/kafka
     healthcheck:
-      test: ["CMD", "bash", "-c", "/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      test: ["CMD-SHELL", "/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
       interval: 10s
       timeout: 5s
       retries: 10

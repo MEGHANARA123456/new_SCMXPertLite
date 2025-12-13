@@ -5,70 +5,311 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,600' rel='stylesheet'>
   <title>Create Shipment — SCMXPertLite</title>
-
-  <style>
-/* ORIGINAL CSS  */
+<style>
+/* ------------------------------------------
+   GLOBAL THEME + VARIABLES
+-------------------------------------------*/
 :root {
-    --blue-bg: #9EDAF3;
+    --blue-bg: #b7e7ff;
     --purple: #6C27D9;
-    --purple-dark: #4A1CA0;
-    --teal: #03C2E0;
+    --purple-dark: #5118a5;
+    --neon-blue: #45e4ff;
+    --soft-glass: rgba(255, 255, 255, 0.35);
+    --glass-border: rgba(255, 255, 255, 0.45);
     --text-dark: #222;
-    --text-light: #666;
-    --border-light: #ccc;
-    --card-bg: #ffffff;
-}
-body { margin:0; padding:0; font-family:"Roboto"; background:var(--blue-bg); min-height:100vh; }
-.container { max-width:1200px; margin:40px auto; padding:20px; }
-.topbar { background:var(--purple); padding:12px 20px; box-shadow:0 2px 5px rgba(0,0,0,0.15); }
-.nav-menu a { color:white; margin-right:20px; text-decoration:none; font-weight:500; }
-.nav-menu a:hover { text-decoration:underline; }
-.header { display:flex; justify-content:space-between; align-items:center; color:var(--text-dark); margin-bottom:20px; }
-.brand { display:flex; align-items:center; gap:10px; }
-.logo { background:var(--purple); color:white; font-weight:bold; width:38px; height:38px; border-radius:50%; display:flex; justify-content:center; align-items:center; }
-.small { font-size:13px; color:var(--text-light); }
-.card { background:var(--card-bg); padding:10px; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-.center { text-align:center; }
-.text-muted { color:var(--text-light); }
-.form-container h3 { color:var(--purple); font-weight:600; margin-bottom:10px; }
-.field { margin-bottom:18px; }
-.input { width:100%; padding:10px; border:none; border-bottom:2px solid var(--border-light); font-size:15px; background:transparent; }
-.input:focus { border-bottom:2px solid var(--purple); }
-textarea.input { min-height:100px; resize:vertical; }
-.split-wrapper { display:flex; gap:30px; }
-.split-box { flex:1; }
-.required { color:var(--purple); font-weight:bold; }
-.button-group { display:flex; justify-content:center; gap:20px; margin-top:15px; }
-.btn-main { background:var(--purple); color:white; padding:12px 30px; border:none; border-radius:6px; font-size:15px; cursor:pointer; }
-.btn-main:hover { background:var(--purple-dark); }
-.btn-clear { background:var(--teal); color:white; padding:12px 30px; border:none; border-radius:6px; }
-.btn-clear:hover { background:#019fb8; }
-@media (max-width:768px) {
-  .split-wrapper { flex-direction:column; }
-  .button-group { flex-direction:column; }
-  .btn-main, .btn-clear { width:100%; }
+    --text-light: #777;
+    --card-bg: rgba(255,255,255,0.4);
 }
 
-/*  NEW POPUP TOAST */
+body {
+    margin:0;
+    padding:0;
+    font-family:"Roboto", sans-serif;
+    background: linear-gradient(135deg, #9fd9ff, #d0f1ff);
+    min-height:100vh;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.9s ease;
+}
+
+/* Page Fade Animation */
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(10px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.container {
+    max-width:1200px;
+    margin:40px auto;
+    padding:20px;
+    animation: fadeIn 1.2s ease;
+}
+
+/* ------------------------------------------
+   TOP NAV BAR
+-------------------------------------------*/
+.topbar {
+    background: rgba(108, 39, 217, 0.85);
+    padding:12px 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.nav-menu a {
+    color:white;
+    margin-right:20px;
+    font-weight:500;
+    position:relative;
+    transition:0.3s ease;
+}
+
+.nav-menu a:hover {
+    color: var(--neon-blue);
+}
+
+.nav-menu a::after {
+    content:"";
+    width:0;
+    height:2px;
+    background: var(--neon-blue);
+    position:absolute;
+    left:0;
+    bottom:-3px;
+    transition:0.3s;
+}
+
+.nav-menu a:hover::after {
+    width:100%;
+}
+
+/* ------------------------------------------
+   LOGO + HEADER
+-------------------------------------------*/
+.header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:#000;
+}
+
+.logo {
+    background:var(--purple);
+    color:white;
+    font-weight:bold;
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:18px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.25);
+    animation: popIn 0.6s ease;
+}
+
+@keyframes popIn {
+  from { transform:scale(0.4); opacity:0; }
+  to { transform:scale(1); opacity:1; }
+}
+
+.small { font-size:13px; color:var(--text-light); }
+
+/* ------------------------------------------
+   CARD (GLASSMORPHISM UPGRADE)
+-------------------------------------------*/
+.card {
+    background: var(--card-bg);
+    padding:20px;
+    border-radius:16px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--glass-border);
+    animation: slideIn 0.9s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(14px); opacity:0; }
+  to { transform: translateY(0); opacity:1; }
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(0,0,0,0.22);
+}
+
+/* ------------------------------------------
+   TITLES
+-------------------------------------------*/
+.form-container h3 {
+    color:var(--purple);
+    font-weight:700;
+    text-align:center;
+    letter-spacing:0.4px;
+}
+
+/* ------------------------------------------
+   INPUTS (Material UI Style)
+-------------------------------------------*/
+.field { margin-bottom:20px; }
+
+.input {
+    width:100%;
+    padding:10px;
+    background: transparent;
+    border:none;
+    border-bottom:2px solid rgba(0,0,0,0.3);
+    font-size:15px;
+    transition:0.25s ease;
+}
+
+.input:focus {
+    border-bottom:2px solid var(--purple);
+    transform:scale(1.03);
+}
+
+textarea.input {
+    min-height:100px;
+    resize:vertical;
+}
+
+/* Two-column wrapper */
+.split-wrapper {
+    display:flex;
+    gap:30px;
+}
+
+@media(max-width:768px){
+  .split-wrapper { flex-direction:column; }
+}
+
+/* ------------------------------------------
+   BUTTONS (Material Neon Style)
+-------------------------------------------*/
+.button-group {
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:20px;
+}
+
+.btn-main {
+    background: var(--purple);
+    color:white;
+    padding:12px 32px;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.25s ease;
+    box-shadow: 0 4px 12px rgba(108,39,217,0.4);
+}
+
+.btn-main:hover {
+    background: var(--purple-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(108,39,217,0.55);
+}
+
+.btn-clear {
+    background: var(--neon-blue);
+    color:black;
+    padding:12px 32px;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+    cursor:pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+
+.btn-clear:hover {
+    background:#39bfd6;
+    transform:translateY(-3px);
+}
+
+/* ------------------------------------------
+   TOAST
+-------------------------------------------*/
 #toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-40px);
-  background: #4caf50;
-  color: white;
-  padding: 14px 24px;
-  border-radius: 8px;
-  font-size: 1rem;
-  opacity: 0;
-  transition: all 0.4s ease;
-  z-index: 9999;
+    position: fixed;
+    top:22px;
+    left:50%;
+    transform: translateX(-50%) translateY(-40px);
+    background: #4caf50;
+    color:white;
+    padding:14px 26px;
+    font-size:1rem;
+    border-radius:10px;
+    opacity:0;
+    transition:0.4s ease;
+    box-shadow:0 6px 14px rgba(0,0,0,0.25);
 }
+
 #toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+    opacity:1;
+    transform: translateX(-50%) translateY(0);
 }
-  </style>
+/* --------------------------------------------------
+   FIX: Center the shipment form card properly
+--------------------------------------------------*/
+.card {
+    max-width: 950px;              /* Prevents card from stretching too wide */
+    margin: 40px auto !important;  /* Centers the form horizontally */
+    padding: 40px !important;      /* Better spacing inside the card */
+}
+
+/* --------------------------------------------------
+   FIX: Make the split-wrapper balanced and aligned
+--------------------------------------------------*/
+.split-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 35px;
+}
+
+/* Mobile responsiveness */
+@media(max-width: 768px) {
+    .split-wrapper {
+        grid-template-columns: 1fr;   /* stack columns */
+    }
+
+    .card {
+        padding: 20px !important;
+        margin: 20px !important;
+    }
+}
+
+/* --------------------------------------------------
+   FIX: Improve form fields spacing + alignment
+--------------------------------------------------*/
+.field {
+    width: 100%;
+}
+
+.input {
+    width: 100%;
+    background: rgba(255,255,255,0.4);
+    border-radius: 6px;
+    padding: 12px;
+    border: 1px solid rgba(0,0,0,0.2);
+    transition: 0.2s ease;
+}
+
+.input:focus {
+    border-color: var(--purple);
+    background: rgba(255,255,255,0.7);
+    transform: scale(1.02);
+}
+
+/* --------------------------------------------------
+   Make the title look centered & spaced
+--------------------------------------------------*/
+.form-container h3 {
+    margin-bottom: 25px;
+    font-size: 24px;
+}
+
+</style>
+
 </head>
 
 <body>
@@ -77,8 +318,8 @@ textarea.input { min-height:100px; resize:vertical; }
   <nav class="nav-menu">
     <a href="/frontend/dashboard.html">Dashboard</a>
     <a href="/frontend/user.html">My Account</a>
-    <a href="/frontend/device_data.html">live streaming</a>
-    <a href="/frontend/shipments.html">Create Shipment</a>
+    <a href="/frontend/device_data.html">Live Streaming</a>
+    <a href="/frontend/shipments.html">Shipment</a>
     <a href="/frontend/logout.html">Logout</a>
   </nav>
 </header>
@@ -105,6 +346,7 @@ textarea.input { min-height:100px; resize:vertical; }
 
       <div class="split-wrapper">
 
+        <!-- LEFT SIDE -->
         <div class="split-box">
           <h4>Shipment Details</h4>
 
@@ -123,7 +365,7 @@ textarea.input { min-height:100px; resize:vertical; }
 
           <div class="field">
             <label>Device<span class="required">*</span></label>
-            <input type="text" id="device_data" class="input" placeholder="e.g., 4587434500" required>
+            <input type="text" id="device_data" class="input" required>
           </div>
 
           <div class="field">
@@ -140,24 +382,27 @@ textarea.input { min-height:100px; resize:vertical; }
             <label>Serial Number of Goods<span class="required">*</span></label>
             <input type="text" id="serial_number_goods" class="input" required>
           </div>
-        </div>
-        <div style="margin-top:12px">
-           <label style="display:block;margin-bottom:8px">Shipment Priority</label>
-           <select id="shipmentPrioritySelect" class="search">
-             <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-           </select>
-          </div>
-          <div style="margin-top:12px">
-          <label style="display:block;margin-bottom:8px">Shipment Health Score</label>
-           <select id="shipmentHealthSelect" class="search">
-           <option value="low">🟢 Low Risk</option>
-           <option value="medium">🟡 Medium Risk</option>
-           <option value="high">🔴 High Risk</option>
-           </select>
+
+          <div class="field">
+            <label>Shipment Priority</label>
+            <select id="shipmentPrioritySelect" class="input">
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
           </div>
 
+          <div class="field">
+            <label>Shipment Health Score</label>
+            <select id="shipmentHealthSelect" class="input">
+              <option value="low">🟢 Low Risk</option>
+              <option value="medium">🟡 Medium Risk</option>
+              <option value="high">🔴 High Risk</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
         <div class="split-box">
           <h4>Additional Details</h4>
 
@@ -168,7 +413,7 @@ textarea.input { min-height:100px; resize:vertical; }
 
           <div class="field">
             <label>Goods Type<span class="required">*</span></label>
-            <input type="text" id="goods_type" class="input" placeholder="e.g., Pharma" required>
+            <input type="text" id="goods_type" class="input" required>
           </div>
 
           <div class="field">
@@ -185,10 +430,10 @@ textarea.input { min-height:100px; resize:vertical; }
             <label>Batch ID<span class="required">*</span></label>
             <input type="text" id="batch_id" class="input" required>
           </div>
-          
+
           <div class="field">
-            <label>Shipment Description<span class="required"></span></label>
-            <textarea id="shipment_description" class="input" required></textarea>
+            <label>Shipment Description</label>
+            <textarea id="shipment_description" class="input"></textarea>
           </div>
         </div>
 
@@ -204,7 +449,7 @@ textarea.input { min-height:100px; resize:vertical; }
 </div>
 
 <script>
-const API_BASE_URL = "http://127.0.0.1:8000";   // your backend
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -223,6 +468,11 @@ document.getElementById("createShipmentBtn").addEventListener("click", async () 
     po_number: document.getElementById("po_number").value,
     ndc_number: document.getElementById("ndc_number").value,
     serial_number_goods: document.getElementById("serial_number_goods").value,
+
+    // ⭐ NEW FIELDS
+    shipment_priority: document.getElementById("shipmentPrioritySelect").value,
+    shipment_health: document.getElementById("shipmentHealthSelect").value,
+
     container_number: document.getElementById("container_number").value,
     goods_type: document.getElementById("goods_type").value,
     expected_delivery_date: document.getElementById("expected_delivery_date").value,
@@ -242,13 +492,11 @@ document.getElementById("createShipmentBtn").addEventListener("click", async () 
     });
 
     if (!res.ok) {
-      const err = await res.text();
-      console.error(err);
+      console.error(await res.text());
       showToast("Error: Shipment not created");
       return;
     }
 
-    const data = await res.json();
     showToast("Shipment Created Successfully!");
 
   } catch (err) {

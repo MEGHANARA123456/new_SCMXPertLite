@@ -4,11 +4,28 @@ import json
 import time
 import random
 
-# Create Kafka producer
-producer = KafkaProducer(
-    bootstrap_servers='localhost:9092',  
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
-)
+import os
+from kafka.errors import NoBrokersAvailable
+
+# Bootstrap servers: use environment variable or default to the compose service name
+BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092')
+
+# Create Kafka producer with a retry loop while broker is starting
+producer = None
+attempt = 0
+while True:
+    try:
+        producer = KafkaProducer(
+            bootstrap_servers=BOOTSTRAP_SERVERS,
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+        )
+        print(f"Connected to Kafka brokers at {BOOTSTRAP_SERVERS}")
+        break
+    except NoBrokersAvailable:
+        attempt += 1
+        wait = min(2 * attempt, 30)
+        print(f"Kafka brokers not available yet (attempt {attempt}). Retrying in {wait}s...")
+        time.sleep(wait)
 
 route = ['Newyork,USA', 'Chennai, India', 'Bengaluru, India', 'London,UK']
 

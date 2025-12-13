@@ -9,11 +9,12 @@ from fastapi import HTTPException
 import os
 import logging
 import sys
+import uvicorn
 # Add backend directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import user
-import shipment_data
+import shipments_da
 import device_data
 import admin_privileges
 import role_management
@@ -30,7 +31,7 @@ app = FastAPI(title="SCMXpertLite Backend", version="1.0.0")
 # -------------------- ROUTERS ------------------------
 app.include_router(forgetpassword.router)
 app.include_router(user.router)
-app.include_router(shipment_data.router)
+app.include_router(shipments_da.router)
 app.include_router(device_data.router)
 app.include_router(admin_privileges.router)
 app.include_router(role_management.router)
@@ -106,6 +107,15 @@ async def logout_page():
 
 
 # Simple health endpoint for connectivity checks
-@app.get("/ping")
-async def ping():
-    return {"status": "ok", "service": "SCMXpertLite Backend"}
+@app.get("/")
+def home():
+    return {"status": "OK", "message": "Backend Running Successfully"}
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "backend.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
+        reload_excludes=["backend/shipment_data.py"]     # ⬅ ignore this file
+    )

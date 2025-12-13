@@ -77,7 +77,7 @@ def add_device_data(
 
 
 # ============================================================
-# 3️  FETCH STREAM DATA FOR A DEVICE (REPLACED WITH YOUR VERSION)
+# 3️  FETCH STREAM DATA FOR A DEVICE 
 # ============================================================
 @router.get("/device-data/recent")
 def get_recent_data():
@@ -110,3 +110,33 @@ def get_recent_data():
     except Exception as e:
         print(" ERROR in /device-data/recent:", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/device-data/{device_id}")
+def get_device_by_id(device_id: str):
+
+    # Convert to int if possible (Mongo stores numbers, not strings)
+    try:
+        device_id = int(device_id)
+    except ValueError:
+        pass
+
+    records = list(
+        device_data_collection
+        .find({"Device_ID": device_id})
+        .sort("timestamp", -1)
+    )
+
+    final = []
+    for r in records:
+        final.append({
+            "Device_ID": r.get("Device_ID", ""),
+            "Battery_Level": r.get("Battery_Level", ""),
+            "First_Sensor_temperature": r.get("First_Sensor_temperature", ""),
+            "Route_From": r.get("Route_From", ""),
+            "Route_To": r.get("Route_To", ""),
+            "timestamp": r.get("timestamp", ""),
+        })
+
+    return {"records": final}
+
+

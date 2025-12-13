@@ -22,6 +22,7 @@ RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY")
 RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB_APP = os.getenv("MONGO_DB_APP")
+
 # Email config
 MAIL_FROM = os.getenv("MAIL_FROM")
 MAIL_SERVER = os.getenv("MAIL_SERVER")
@@ -34,14 +35,19 @@ users = db["user"]
 otp_col = db["otp_store"]
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 
-# ====== PASSWORD HELPERS ======
+
+# ============================================================
+# PASSWORD HELPERS
+# ============================================================
 def hash_password(p: str) -> str:
     return hashlib.sha256(p.encode()).hexdigest()
+
 
 def pbkdf2_hash(password: str, iterations: int = 200_000) -> str:
     salt = os.urandom(16)
     dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, iterations)
     return f"pbkdf2_sha256${iterations}${base64.b64encode(salt).decode()}${base64.b64encode(dk).decode()}"
+
 
 def pbkdf2_verify(stored: str, password: str) -> bool:
     try:
@@ -56,12 +62,15 @@ def pbkdf2_verify(stored: str, password: str) -> bool:
     except Exception:
         return False
 
+
 def verify_and_migrate_password(user: dict, plain: str) -> bool:
     hashed = user.get("password", "")
+
+    # Already PBKDF2
     if isinstance(hashed, str) and hashed.startswith("pbkdf2_sha256$"):
         return pbkdf2_verify(hashed, plain)
 
-    # legacy sha256 -> upgrade to pbkdf2
+    # Legacy SHA256 → upgrade
     if isinstance(hashed, str) and re.fullmatch(r"[0-9a-fA-F]{64}", hashed):
         if hash_password(plain) == hashed:
             new_hash = pbkdf2_hash(plain)
@@ -70,16 +79,25 @@ def verify_and_migrate_password(user: dict, plain: str) -> bool:
 
     return False
 
-# ====== JWT ======
+
+# ============================================================
+# JWT TOKEN FIXED (FULL ROLE SUPPORT)
+# ============================================================
 def create_token(data: dict):
     payload = data.copy()
+
+    # required for admin dashboard
+    payload["role"] = data.get("role", "user")
+    payload["sub"] = data.get("username")  # identity
+
     payload["exp"] = datetime.utcnow() + timedelta(hours=10)
-    # set subject for compatibility
-    if "username" in data:
-        payload["sub"] = data["username"]
+
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-# ====== CURRENT USER DEPENDENCY (for other modules) ======
+
+# ============================================================
+# CURRENT USER FIX (returns role always)
+# ============================================================
 def get_current_user(token: str = Depends(oauth2)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -90,48 +108,51 @@ def get_current_user(token: str = Depends(oauth2)):
     user = users.find_one({"username": username})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+
+    user["_id"] = str(user["_id"])
+    user["role"] = user.get("role", "user")  # ensure role exists
+
     return user
 
-# ====== reCAPTCHA Verification (standard v2 / v3) ======
+
+# ============================================================
+# reCAPTCHA Verification
+# ============================================================
 def verify_recaptcha(token: str, action: str = None) -> bool:
-    """
-    Verify using standard siteverify endpoint (v2 checkbox or v3).
-    Empty tokens are allowed for development/fallback when reCAPTCHA fails to load.
-    """
-    # Allow empty tokens - fallback for reCAPTCHA loading issues in development
+
     if not token:
-        print("[reCAPTCHA] Empty token accepted (fallback mode - reCAPTCHA may not have loaded on frontend)")
+        print("[reCAPTCHA] Empty token accepted (fallback mode)")
         return True
 
     if not RECAPTCHA_SECRET_KEY:
-        # local/dev fallback with valid token
-        print("[reCAPTCHA] Valid token accepted (no SECRET_KEY configured)")
+        print("[reCAPTCHA] No secret key → auto-pass")
         return True
 
     try:
         url = "https://www.google.com/recaptcha/api/siteverify"
         res = requests.post(url, data={"secret": RECAPTCHA_SECRET_KEY, "response": token}, timeout=6)
         data = res.json()
+
         if not data.get("success"):
-            print(f"[reCAPTCHA] Verification failed: {data}")
+            print("[reCAPTCHA] Failed", data)
             return False
-        # v3 may include score; if action provided and mismatch -> reject
+
         if action and data.get("action") and data.get("action") != action:
-            print(f"[reCAPTCHA] Action mismatch: expected {action}, got {data.get('action')}")
             return False
-        # allow v2 (no score) or v3 with score threshold 0.5
-        if "score" in data:
-            score = float(data.get("score", 0))
-            if score < 0.5:
-                print(f"[reCAPTCHA] Score too low: {score}")
-                return False
-        print(f"[reCAPTCHA] Token verified successfully")
+
+        if "score" in data and float(data.get("score", 0)) < 0.5:
+            return False
+
         return True
+
     except Exception as e:
-        print(f"[reCAPTCHA] Exception during verification: {str(e)}")
+        print("[reCAPTCHA] exception:", e)
         return False
 
-# ====== VALIDATION HELPERS ======
+
+# ============================================================
+# Validation Helpers
+# ============================================================
 def validate_password(p: str):
     return (
         len(p) >= 8 and
@@ -141,9 +162,10 @@ def validate_password(p: str):
         re.search(r"[!@#$%^&*]", p)
     )
 
-# ======================================
-# SIGNUP  
-# ======================================
+
+# ============================================================
+# SIGNUP
+# ============================================================
 @router.post("/signup")
 def signup(
     username: str = Form(...),
@@ -151,23 +173,16 @@ def signup(
     password: str = Form(...),
     confirm_password: str = Form(...),
 ):
-    # 1. Remove reCAPTCHA check (DELETED)
-    # if not verify_recaptcha("signup"):
-    #     raise HTTPException(status_code=400, detail="reCAPTCHA validation failed")
 
-    # 2. Validate password match
     if password != confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
 
-    # 3. Validate password strength
     if not validate_password(password):
         raise HTTPException(status_code=400, detail="Weak password")
 
-    # 4. Check existing user
     if users.find_one({"$or": [{"username": username}, {"email": email}]}):
         raise HTTPException(status_code=400, detail="User already exists")
 
-    # 5. Insert user
     users.insert_one({
         "username": username,
         "email": email.lower(),
@@ -178,99 +193,96 @@ def signup(
 
     return {"message": "Signup successful"}
 
-# ======================================
-# LOGIN (username/password)
-# ======================================
+
+# ============================================================
+# LOGIN  (FIXED with role + email)
+# ============================================================
 @router.post("/login")
 def login(
     username: str = Form(...),
     password: str = Form(...),
     recaptcha_token: str = Form(...)
 ):
-    print(f"[LOGIN] Received request - username: {username}, password_len: {len(password)}, recaptcha_token: {recaptcha_token[:20] if recaptcha_token else 'EMPTY'}")
-    
+
     if not verify_recaptcha(recaptcha_token, "login"):
-        print(f"[LOGIN] reCAPTCHA verification failed for token: {recaptcha_token[:20] if recaptcha_token else 'EMPTY'}")
         raise HTTPException(status_code=401, detail="reCAPTCHA validation failed")
 
-    user = users.find_one({"$or":[{"username": username},{"email": username}]})
+    user = users.find_one({"$or": [{"username": username}, {"email": username}]} )
     if not user:
-        print(f"[LOGIN] User not found: {username}")
         raise HTTPException(status_code=401, detail="Invalid username/email")
 
-    print(f"[LOGIN] User found: {user.get('username')}, verifying password...")
     if not verify_and_migrate_password(user, password):
-        print(f"[LOGIN] Password verification failed for user: {username}")
         raise HTTPException(status_code=401, detail="Invalid password")
 
-    print(f"[LOGIN] Login successful for {username}, creating token...")
-    token = create_token({"username": user["username"], "role": user.get("role", "user")})
-    return {"access_token": token, "token_type": "bearer", "role": user.get("role", "user"), "username": user["username"]}
+    token = create_token({
+        "username": user["username"],
+        "email": user.get("email"),
+        "role": user.get("role", "user")
+    })
 
-# ======================================
-# LOGOUT ENDPOINT
-# ======================================
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "username": user["username"],
+        "email": user.get("email"),
+        "role": user.get("role", "user")
+    }
+
+
+# ============================================================
+# LOGOUT
+# ============================================================
 @router.post("/logout")
 def logout(current_user: dict = Depends(get_current_user)):
-    """
-    Logout endpoint - clears session on backend side
-    Frontend should also clear localStorage
-    """
-    print(f"[LOGOUT] User {current_user.get('username')} logged out")
-    return {"message": "Logged out successfully", "detail": "Your session has been closed"}
+    print(f"[LOGOUT] {current_user.get('username')} logged out")
+    return {"message": "Logged out"}
 
-# ======================================
-# PUBLIC recaptcha debug
-# ======================================
+
+# ============================================================
+# reCAPTCHA DEBUG
+# ============================================================
 @router.post("/public/recaptcha-verify")
 def debug_verify_recaptcha(token: str = Form(...), action: str = Form(None)):
     ok = verify_recaptcha(token, action)
     return {"verified": bool(ok)}
 
-# ======================================
-# GOOGLE SSO (ID token) - login only (no auto-signup)
-# Frontend: POST JSON { token: "<id_token>", recaptcha_token: "..."}
-# ======================================
-# GOOGLE AUTO-CREATE LOGIN ENDPOINT
+
+# ============================================================
+# GOOGLE LOGIN (Auto-create)
+# ============================================================
 @router.post("/auth/google")
 def auth_google(payload: dict = Body(...)):
+
     token = payload.get("token")
     recaptcha_token = payload.get("recaptcha_token", "")
 
     if not token:
-        raise HTTPException(status_code=400, detail="Missing Google token")
+        raise HTTPException(400, "Missing Google token")
 
-    # --- reCAPTCHA check ---
     if not verify_recaptcha(recaptcha_token, "login"):
-        raise HTTPException(status_code=401, detail="reCAPTCHA validation failed")
+        raise HTTPException(401, "reCAPTCHA validation failed")
 
-    # --- Validate Google token ---
     try:
         google_req = GoogleRequest()
         idinfo = id_token.verify_oauth2_token(token, google_req, GOOGLE_CLIENT_ID)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Google token: {str(e)}")
+        raise HTTPException(400, f"Invalid Google token: {str(e)}")
 
-    # --- Required Google fields ---
     email = idinfo.get("email")
     if not email:
-        raise HTTPException(status_code=400, detail="Google account has no email")
+        raise HTTPException(400, "Google account has no email")
 
     if not idinfo.get("email_verified", False):
-        raise HTTPException(status_code=400, detail="Google email is not verified")
+        raise HTTPException(400, "Google email not verified")
 
     fullname = idinfo.get("name", "")
     picture = idinfo.get("picture", "")
     google_sub = idinfo.get("sub")
     username = email.split("@")[0]
 
-    # ================================
-    #  CHECK IF EXISTS OR AUTO-CREATE
-    # ================================
     user = users.find_one({"email": email})
 
     if not user:
-        # Auto-create Google user
         new_user = {
             "email": email,
             "username": username,
@@ -278,14 +290,13 @@ def auth_google(payload: dict = Body(...)):
             "picture": picture,
             "google_sub": google_sub,
             "auth_provider": "google",
-            "password": None,  # Google users do not have password
+            "password": None,
             "role": "user",
             "created_at": datetime.utcnow()
         }
         users.insert_one(new_user)
         user = new_user
     else:
-        # Update existing user with latest Google info
         update_data = {}
         if user.get("auth_provider") != "google":
             update_data["auth_provider"] = "google"
@@ -300,9 +311,6 @@ def auth_google(payload: dict = Body(...)):
             users.update_one({"_id": user["_id"]}, {"$set": update_data})
             user = users.find_one({"_id": user["_id"]})
 
-    # ===============================
-    #  GENERATE JWT TOKEN
-    # ===============================
     jwt_token = create_token({
         "username": user["username"],
         "email": user["email"],

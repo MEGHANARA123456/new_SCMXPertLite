@@ -5,25 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Device Data Stream</title>
 
-  <!-- ⭐ YOUR ORIGINAL CSS (unchanged) -->
-  <style>
-/* Beige top card */
-.card[style*="background:#fdeedb"] {
-    background:  #a7dfff !important;
-    border-radius: 18px;
-    box-shadow: 0px 6px 20px rgba(0,0,0,0.08);
-    border: 1px solid #a7dfff;
+<style>
+/* ===== GLOBAL SMOOTH ANIMATION ===== */
+* {
+  transition: all 0.25s ease;
+}
+
+/* Fade-in effect for cards & table rows */
+.card, .table tr {
+  animation: fadeIn 0.6s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hover lift animation for cards */
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 10px 28px rgba(0,0,0,0.12);
 }
 
 /* ===== TOP NAVIGATION ===== */
 .topbar {
   width: 100%;
-  background:  #6C27D9;
+  background: linear-gradient(90deg, #6C27D9, #9c4dff);
   padding: 16px 20px;
-  border-bottom: 1px solid #e2e2e2;
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
 }
 
 .nav-menu {
@@ -37,99 +48,122 @@
   text-decoration: none;
   color: white;
   font-weight: 500;
+  position: relative;
 }
 
-.nav-menu a:hover {
-  color: #0288d1;
+.nav-menu a::after {
+  content: '';
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  background: #ffffff;
+  left: 0;
+  bottom: -4px;
+  transition: 0.3s;
 }
 
-/* Inputs */
+.nav-menu a:hover::after {
+  width: 100%;
+}
+
+/* ===== INPUT FIELDS ===== */
 #deviceForm .input,
 #deviceForm select {
-    border: 2px solid #b9b9b9;
-    border-radius: 8px;
-    padding: 10px;
-    transition: 0.3s;
-    font-size: 15px;
+  border: 2px solid #b9b9b9;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 15px;
+  background: #f8faff;
 }
 
 #deviceForm .input:focus,
 #deviceForm select:focus {
-    border-color: #03A9F4;
-    box-shadow: 0 0 6px rgba(3,169,244,0.3);
+  border-color: #00aaff;
+  box-shadow: 0 0 8px rgba(0,170,255,0.4);
+  transform: scale(1.03);
 }
 
-/* Button style match */
+/* ===== BUTTON ===== */
 #deviceForm .btn-primary {
-    background: #03A9F4 !important;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: 0.25s;
+  background: linear-gradient(90deg, #03A9F4, #0288D1);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 26px;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  cursor: pointer;
 }
 
 #deviceForm .btn-primary:hover {
-    background: #0288D1 !important;
-    transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0px 8px 18px rgba(3,169,244,0.4);
 }
 
-/* Table styling */
+/* ===== TABLE STYLING ===== */
 .table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 15px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
 }
 
 .table th {
-    background: #f0f5ff;
-    padding: 12px;
-    text-align: left;
-    font-weight: 700;
-    border-bottom: 2px solid #d7d7d7;
-    color: #333;
+  background: linear-gradient(90deg, #e8f1ff, #f0f7ff);
+  padding: 12px;
+  text-align: left;
+  font-weight: 700;
+  border-bottom: 2px solid #d7d7d7;
+  color: #333;
 }
 
 .table td {
-    padding: 12px;
-    border-bottom: 1px solid #ececec;
-    color: #444;
+  padding: 12px;
+  border-bottom: 1px solid #ececec;
+  color: #444;
 }
 
+/* row hover glow */
 .table tr:hover {
-    background: #f7faff;
+  background: #f0f6ff;
+  box-shadow: inset 0 0 8px rgba(0,150,255,0.1);
+  transform: scale(1.01);
 }
 
-/* Card styling */
+/* ===== CARDS ===== */
 .card {
-    border-radius: 16px !important;
-    padding: 22px;
-    background: #ffffff;
-    box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
+  border-radius: 18px;
+  padding: 24px;
+  background: #ffffff;
+  box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
 }
 
-/* small helper */
-.small { font-size: 14px; color: #666; }
+/* top card styling */
+.card[style*="background: #a7dfff"] {
+  background: linear-gradient(180deg, #a7dfff, #d5f0ff) !important;
+  border-radius: 18px;
+  box-shadow: 0px 8px 22px rgba(0,0,0,0.1);
+}
 
-/* Title */
+/* Titles */
 .container h2 {
-    color: #333;
-    font-weight: 700;
+  color: #222;
+  font-weight: 700;
+  animation: fadeIn 0.8s ease;
 }
 
-/* Responsive Fix */
+/* Responsive */
 @media (max-width: 768px) {
-    #deviceForm .grid {
-        grid-template-columns: 1fr !important;
-        text-align: center;
-    }
+  #deviceForm .grid {
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
 
-    #deviceForm .field {
-        width: 100% !important;
-    }
+  #deviceForm .field {
+    width: 100% !important;
+  }
 }
-  </style>
+</style>
+
 </head>
 
 <body>
@@ -198,7 +232,6 @@
 
 </div>
 
-<!-- ==================== UPDATED LIVE STREAM JS ==================== -->
 <script>
 const API_URL = `${location.protocol}//${location.hostname}:8000`;
 let selectedDevice = null;
@@ -219,21 +252,27 @@ function formatTimestamp(ts) {
     } catch { return ts || ""; }
 }
 
-// Load records: if selectedDevice is null/empty -> fetch recent (last 50)
+// ------------------------
+// FIXED WORKING loadStream()
+// ------------------------
 async function loadStream() {
     const tbody = document.getElementById("streamData");
     tbody.innerHTML = "";
     showMessage("Loading...");
 
-    // choose endpoint - always fetch recent 50 records
-    const endpoint = `${API_URL}/device-data/recent`;
+    // SELECT ENDPOINT CORRECTLY
+    let endpoint;
+    if (selectedDevice) {
+        endpoint = `${API_URL}/device-data/${selectedDevice}`;
+    } else {
+        endpoint = `${API_URL}/device-data/recent`;
+    }
 
     console.log("[Device Data] Fetching from:", endpoint);
 
     try {
         const res = await fetch(endpoint);
         if (!res.ok) {
-            // if 404 -> show no data
             if (res.status === 404) {
                 showMessage("No data found");
                 return;
@@ -255,8 +294,7 @@ async function loadStream() {
 
         console.log("[Device Data] Got", records.length, "records");
 
-        // build rows
-        tbody.innerHTML = ""; // clear
+        tbody.innerHTML = "";
         records.forEach(row => {
             const deviceId = row.Device_ID ?? row.device_id ?? "N/A";
             const battery = row.Battery_Level ?? row.battery_level ?? "N/A";
@@ -283,34 +321,31 @@ async function loadStream() {
     }
 }
 
-// Handle input submit (optional - search by device ID)
+// Handle input submit
 document.getElementById("deviceForm").addEventListener("submit", (e) => {
     e.preventDefault();
     selectedDevice = document.getElementById("device_id").value.trim();
 
     console.log("[Device Data] Device ID entered:", selectedDevice);
 
-    // reload immediately
     loadStream();
 
-    // reset auto-refresh timer
     if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-    autoRefreshTimer = setInterval(loadStream, 3000);
+    autoRefreshTimer = setInterval(loadStream, 20000);  // 20 seconds
 });
 
-// Auto load last 50 records on page load
+// Auto load last 50 on page load
 window.addEventListener("load", () => {
     console.log("[Device Data] Page loaded, fetching initial data...");
     
-    // start with recent (no device entered)
     selectedDevice = "";
     loadStream();
 
-    // auto refresh every 3 seconds
     if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-    autoRefreshTimer = setInterval(loadStream, 3000);
+    autoRefreshTimer = setInterval(loadStream, 20000); // 20 seconds
 });
 </script>
+
 
 </body>
 </html>
