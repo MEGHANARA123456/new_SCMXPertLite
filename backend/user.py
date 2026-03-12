@@ -26,11 +26,11 @@ MONGO_DB_APP = os.getenv("MONGO_DB_APP")
 # Email config
 MAIL_FROM = os.getenv("MAIL_FROM")
 MAIL_SERVER = os.getenv("MAIL_SERVER")
-MAIL_PORT = int(os.getenv("MAIL_PORT"))
+MAIL_PORT = int(os.getenv("MAIL_PORT")) # type: ignore
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
 client = MongoClient(MONGO_URI)
-db = client[MONGO_DB_APP]
+db = client[MONGO_DB_APP] # type: ignore
 users = db["user"]
 otp_col = db["otp_store"]
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
@@ -92,7 +92,7 @@ def create_token(data: dict):
 
     payload["exp"] = datetime.utcnow() + timedelta(hours=10)
 
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM) # type: ignore
 
 
 # ============================================================
@@ -100,7 +100,7 @@ def create_token(data: dict):
 # ============================================================
 def get_current_user(token: str = Depends(oauth2)):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
         username = payload.get("sub") or payload.get("username")
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
@@ -118,7 +118,7 @@ def get_current_user(token: str = Depends(oauth2)):
 # ============================================================
 # reCAPTCHA Verification
 # ============================================================
-def verify_recaptcha(token: str, action: str = None) -> bool:
+def verify_recaptcha(token: str, action: str = None) -> bool: # type: ignore
 
     if not token:
         print("[reCAPTCHA] Empty token accepted (fallback mode)")
@@ -312,17 +312,17 @@ def auth_google(payload: dict = Body(...)):
             user = users.find_one({"_id": user["_id"]})
 
     jwt_token = create_token({
-        "username": user["username"],
-        "email": user["email"],
-        "role": user.get("role", "user")
+        "username": user["username"], # type: ignore
+        "email": user["email"], # type: ignore
+        "role": user.get("role", "user") # type: ignore
     })
 
     return {
         "access_token": jwt_token,
         "token_type": "bearer",
-        "username": user["username"],
-        "email": user.get("email"),
-        "role": user.get("role", "user"),
-        "fullname": user.get("fullname", ""),
-        "picture": user.get("picture", "")
+        "username": user["username"], # type: ignore
+        "email": user.get("email"), # type: ignore
+        "role": user.get("role", "user"), # type: ignore
+        "fullname": user.get("fullname", ""), # type: ignore
+        "picture": user.get("picture", "") # type: ignore
     }

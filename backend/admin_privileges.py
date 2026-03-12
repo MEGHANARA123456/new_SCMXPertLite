@@ -15,7 +15,7 @@ router = APIRouter()
 #  DATABASE CONNECTION
 # ======================================================
 client = MongoClient(os.getenv("MONGO_URI"))
-db = client[os.getenv("MONGO_DB_APP")]
+db = client[os.getenv("MONGO_DB_APP")] # type: ignore
 
 requests_col = db["admin_requests"]
 users_col = db["user"]
@@ -29,7 +29,7 @@ MAIL_USERNAME = os.getenv("MAIL_USERNAME")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_FROM = os.getenv("MAIL_FROM")
 MAIL_SERVER = os.getenv("MAIL_SERVER")
-MAIL_PORT = int(os.getenv("MAIL_PORT"))
+MAIL_PORT = int(os.getenv("MAIL_PORT")) # type: ignore
 
 # ======================================================
 #  SMTP SENDER
@@ -37,14 +37,14 @@ MAIL_PORT = int(os.getenv("MAIL_PORT"))
 def send_email(to_email: str, subject: str, body: str):
     msg = MIMEText(body)
     msg["Subject"] = subject
-    msg["From"] = MAIL_FROM
+    msg["From"] = MAIL_FROM # type: ignore
     msg["To"] = to_email
 
     try:
-        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as server:
+        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as server: # type: ignore
             server.starttls()
-            server.login(MAIL_USERNAME, MAIL_PASSWORD)
-            server.sendmail(MAIL_FROM, to_email, msg.as_string())
+            server.login(MAIL_USERNAME, MAIL_PASSWORD) # type: ignore
+            server.sendmail(MAIL_FROM, to_email, msg.as_string()) # type: ignore
         return True, None
     except Exception as e:
         return False, str(e)
@@ -64,7 +64,7 @@ def find_request_by_id(request_id: str):
         return requests_col.find_one({"_id": request_id})
 
 # ======================================================
-# 1️⃣ USER CREATES REQUEST
+#  USER CREATES REQUEST
 # ======================================================
 @router.post("/requests")
 def create_request(data: dict, user=Depends(get_current_user)):
@@ -85,7 +85,7 @@ def create_request(data: dict, user=Depends(get_current_user)):
 
 
 # ======================================================
-# 2️⃣ ADMIN — GET ALL REQUESTS
+#  ADMIN — GET ALL REQUESTS
 # ======================================================
 @router.get("/admin/requests")
 def get_all_requests(current_user=Depends(get_current_user)):
@@ -100,7 +100,7 @@ def get_all_requests(current_user=Depends(get_current_user)):
 
 
 # ======================================================
-# 3️⃣ ADMIN — GET ONLY PENDING REQUESTS
+#  ADMIN — GET ONLY PENDING REQUESTS
 # ======================================================
 @router.get("/admin/pending")
 def get_pending(current_user=Depends(get_current_user)):
@@ -125,7 +125,7 @@ def get_users(current_user=Depends(get_current_user)):
 
 
 # ======================================================
-# 4️⃣ ADMIN — APPROVE REQUEST (string ID)
+#  ADMIN — APPROVE REQUEST (string ID)
 # ======================================================
 @router.post("/admin/requests/{request_id}/approve")
 def approve_request(request_id: str, current_user=Depends(get_current_user)):
@@ -154,7 +154,7 @@ def approve_request(request_id: str, current_user=Depends(get_current_user)):
 
 
 # ======================================================
-# 5️⃣ ADMIN — REJECT REQUEST (string ID)
+#  ADMIN — REJECT REQUEST (string ID)
 # ======================================================
 @router.post("/admin/requests/{request_id}/reject")
 def reject_request(request_id: str, current_user=Depends(get_current_user)):
@@ -178,7 +178,7 @@ def reject_request(request_id: str, current_user=Depends(get_current_user)):
 
 
 # ======================================================
-# 6️⃣ ADMIN — SEND REPLY (string ID)
+#  ADMIN — SEND REPLY (string ID)
 # ======================================================
 @router.post("/admin/requests/{request_id}/reply")
 def reply_to_request(request_id: str, payload: dict,
@@ -214,7 +214,7 @@ def reply_to_request(request_id: str, payload: dict,
 
 
 # ======================================================
-# 7️⃣ ADMIN — GET ALL REPLIES
+#  ADMIN — GET ALL REPLIES
 # ======================================================
 @router.get("/admin/replies")
 def get_replies(current_user=Depends(get_current_user)):
@@ -229,7 +229,7 @@ def get_replies(current_user=Depends(get_current_user)):
 
 
 # ======================================================
-# 8️⃣ USER — GET THEIR REPLIES
+#  USER — GET THEIR REPLIES
 # ======================================================
 @router.get("/user/replies")
 def get_user_replies(current_user=Depends(get_current_user)):
@@ -241,7 +241,7 @@ def get_user_replies(current_user=Depends(get_current_user)):
 
 
 # ======================================================
-# 9️⃣ ADMIN — UPDATE USER ROLE
+#  ADMIN — UPDATE USER ROLE
 # ======================================================
 @router.post("/admin/set-role/{username}")
 def set_role(username: str, payload: dict, current_user=Depends(get_current_user)):
@@ -265,7 +265,7 @@ def set_role(username: str, payload: dict, current_user=Depends(get_current_user
 
 
 # ======================================================
-# 🔟 ADMIN — RECORD LOGGED SESSIONS
+# ADMIN — RECORD LOGGED SESSIONS
 # ======================================================
 @router.post("/admin/loggedin")
 def record_logged_in(payload: dict, current_user=Depends(get_current_user)):
@@ -283,7 +283,7 @@ def record_logged_in(payload: dict, current_user=Depends(get_current_user)):
 
 
 # ======================================================
-# 🔥 STRING-ID RESOLVE ENDPOINT FIXED
+#  STRING-ID RESOLVE ENDPOINT FIXED
 # ======================================================
 @router.post("/admin/requests/{request_id}/resolve")
 def resolve_request(request_id: str, current_user=Depends(get_current_user)):
