@@ -178,24 +178,33 @@ uvicorn main:app --reload
 http://127.0.0.1:8000
 ```
 ## 🔐 Role Permissions Matrix
-Feature	User	Manager	Admin
-Create Shipment	✅	❌	❌
-View Shipments	✅	✅	✅
-Approve Requests	❌	✅	✅
-Manage Users	❌	❌	✅
-View Logs	❌	❌	✅
+
+Feature|	User	|Manager	|Admin|
+|-------------|----------|---------|--------|
+|Create Shipment|	✅|        ❌|         ❌|
+|View Shipments|	✅|	✅|	✅|
+|Approve Requests|	❌|	✅|	✅|
+|Manage Users|	❌|	❌|	✅|
+|View Logs|	            ❌|	❌|	✅|
 ## 📊 Why This Project Stands Out
 
 ❌ Not just CRUD
+
 ✅ Real-world workflow simulation
+
 ✅ System-level thinking
+
 ✅ Role-based architecture
+
 ✅ Extendable to IoT
 
 ## 🧠 Key Learnings
 Designing scalable backend systems
+
 Implementing RBAC properly
+
 Building workflow-driven applications
+
 Thinking like a system designer, not just a coder
 
 ## 🚀 Future Enhancements
