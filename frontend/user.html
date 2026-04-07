@@ -230,6 +230,27 @@
       border-radius:10px;
       box-shadow:0 8px 32px rgba(0,0,0,0.2);
     }
+    /* OTP digit boxes */
+.otp-digit {
+  width: 38px !important;
+  height: 44px !important;
+  text-align: center;
+  font-size: 18px !important;
+  font-weight: 700;
+  border-radius: 8px !important;
+  border: 2px solid #e6e6ee !important;
+  padding: 0 !important;
+  transition: border-color 0.2s;
+}
+.otp-digit:focus {
+  border-color: var(--purple) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(103,58,183,0.15);
+}
+.otp-digit.filled {
+  border-color: var(--purple) !important;
+  background: rgba(103,58,183,0.04);
+}
   </style>
 </head>
 
@@ -320,40 +341,85 @@
       </form>
 
       <!-- SIGNUP FORM -->
-      <form id="form-signup" style="display:none;">
-        <div class="form-group">
-          <label>Email</label>
-          <input id="email-signup" type="email" required>
-        </div>
+<form id="form-signup" style="display:none;">
 
-        <div class="form-group">
-          <label>Username</label>
-          <input id="username-signup" type="text" required>
-        </div>
+  <!-- STEP 1: Details -->
+  <div id="signup-step-1">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <div class="form-group">
+        <label>First Name</label>
+        <input id="firstname-signup" type="text" required>
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input id="lastname-signup" type="text" required>
+      </div>
+    </div>
 
-        <div class="form-group">
-          <label>Password</label>
-          <div style="position:relative;">
-            <input id="password-signup" type="password" required>
-            <span onclick="togglePassword('password-signup', this)"
-              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">👁️</span>
-          </div>
-        </div>
+    <div class="form-group">
+      <label>Username</label>
+      <input id="username-signup" type="text" required>
+    </div>
 
-        <div class="form-group">
-          <label>Confirm Password</label>
-          <div style="position:relative;">
-            <input id="confirm-password-signup" type="password" required>
-            <span onclick="togglePassword('confirm-password-signup', this)"
-              style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">👁️</span>
-          </div>
-        </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input id="email-signup" type="email" required>
+    </div>
 
-        <div class="actions">
-          <button class="btn" id="btn-signup" type="button">Sign up</button>
-          <div class="small">No reCAPTCHA on signup</div>
-        </div>
-      </form>
+    <div class="form-group">
+      <label>Password</label>
+      <div style="position:relative;">
+        <input id="password-signup" type="password" required>
+        <span onclick="togglePassword('password-signup', this)"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">👁️</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <div style="position:relative;">
+        <input id="confirm-password-signup" type="password" required>
+        <span onclick="togglePassword('confirm-password-signup', this)"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">👁️</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="btn-send-signup-otp" type="button">Send OTP</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: OTP Verification -->
+  <div id="signup-step-2" style="display:none;">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">
+      A 6-digit OTP was sent to <strong id="otp-email-display"></strong>
+    </p>
+
+    <div class="form-group">
+      <label>Enter OTP</label>
+      <div style="display:flex;gap:6px;justify-content:center;margin-top:4px;">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+      </div>
+    </div>
+
+    <div id="signup-otp-timer" style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px;">
+      Resend in <span id="signup-otp-countdown">60</span>s
+    </div>
+    <button class="btn ghost" id="btn-resend-signup-otp" type="button"
+      style="display:none;width:100%;margin-bottom:8px;">Resend OTP</button>
+
+    <div class="actions">
+      <button class="btn ghost" id="btn-signup-back" type="button">← Back</button>
+      <button class="btn" id="btn-verify-signup-otp" type="button">Verify & Create Account</button>
+    </div>
+  </div>
+
+</form>
 
     </div>
   </div>
@@ -460,33 +526,144 @@ $("#btn-login").on("click", async function(){
     alert("Login failed: " + err.message);
   }
 });
-
 /* ==========================
-        SIGNUP
+      SIGNUP WITH OTP
 ========================== */
-$("#btn-signup").on("click", async function(){
-  const email = $("#email-signup").val().trim();
-  const username = $("#username-signup").val().trim();
-  const password = $("#password-signup").val();
-  const confirm = $("#confirm-password-signup").val();
+let signupOtpTimer = null;
 
-  if(password !== confirm){ alert("Passwords do not match"); return; }
+function getSignupOtp(){
+  return [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
+}
 
-  const body = new URLSearchParams({ email, username, password, confirm_password:confirm });
+function startSignupOtpTimer(){
+  let sec = 60;
+  document.getElementById('signup-otp-countdown').textContent = sec;
+  document.getElementById('signup-otp-timer').style.display = 'block';
+  document.getElementById('btn-resend-signup-otp').style.display = 'none';
+  clearInterval(signupOtpTimer);
+  signupOtpTimer = setInterval(() => {
+    sec--;
+    document.getElementById('signup-otp-countdown').textContent = sec;
+    if(sec <= 0){
+      clearInterval(signupOtpTimer);
+      document.getElementById('signup-otp-timer').style.display = 'none';
+      document.getElementById('btn-resend-signup-otp').style.display = 'block';
+    }
+  }, 1000);
+}
 
-  try{
-    const res = await fetch(`${API_BASE_URL}/signup`, { method:"POST", body });
-    const json = await res.json();
-    if(!res.ok) throw new Error(json.detail);
-
-    alert("Signup successful. Please login.");
-    showLogin();
-  }
-  catch(err){
-    alert("Signup failed: " + err.message);
-  }
+/* OTP box auto-advance */
+document.querySelectorAll('.otp-digit').forEach((box, idx, all) => {
+  box.addEventListener('input', () => {
+    box.value = box.value.replace(/\D/g,'').slice(-1);
+    box.classList.toggle('filled', box.value !== '');
+    if(box.value && idx < all.length - 1) all[idx+1].focus();
+  });
+  box.addEventListener('keydown', e => {
+    if(e.key === 'Backspace' && !box.value && idx > 0) all[idx-1].focus();
+  });
+  box.addEventListener('paste', e => {
+    e.preventDefault();
+    const digits = e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6).split('');
+    digits.forEach((d,i) => { if(all[idx+i]){ all[idx+i].value=d; all[idx+i].classList.add('filled'); } });
+    const next = all[Math.min(idx+digits.length, all.length-1)];
+    if(next) next.focus();
+  });
 });
 
+/* STEP 1 → Send OTP */
+document.getElementById('btn-send-signup-otp').addEventListener('click', async function(){
+  const firstname = document.getElementById('firstname-signup').value.trim();
+  const lastname  = document.getElementById('lastname-signup').value.trim();
+  const username  = document.getElementById('username-signup').value.trim();
+  const email     = document.getElementById('email-signup').value.trim();
+  const password  = document.getElementById('password-signup').value;
+  const confirm   = document.getElementById('confirm-password-signup').value;
+
+  if(!firstname || !lastname || !username || !email || !password){ alert('Please fill all fields.'); return; }
+  if(password !== confirm){ alert('Passwords do not match.'); return; }
+
+  this.disabled = true; this.textContent = 'Sending…';
+  try{
+    const res  = await fetch(`${API_BASE_URL}/signup/send-otp`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ firstname, lastname, username, email, password })
+    });
+    const json = await res.json();
+    if(!res.ok) throw new Error(json.detail || 'Failed to send OTP');
+
+    document.getElementById('signup-step-1').style.display = 'none';
+    document.getElementById('signup-step-2').style.display = 'block';
+    document.getElementById('otp-email-display').textContent = email;
+    document.querySelectorAll('.otp-digit').forEach(b => { b.value=''; b.classList.remove('filled'); });
+    document.querySelector('.otp-digit').focus();
+    startSignupOtpTimer();
+  }
+  catch(err){ alert('Error: ' + err.message); }
+  finally{ this.disabled=false; this.textContent='Send OTP'; }
+});
+
+/* Back to step 1 */
+document.getElementById('btn-signup-back').addEventListener('click', () => {
+  clearInterval(signupOtpTimer);
+  document.getElementById('signup-step-2').style.display = 'none';
+  document.getElementById('signup-step-1').style.display = 'block';
+});
+
+/* Resend OTP */
+document.getElementById('btn-resend-signup-otp').addEventListener('click', async function(){
+  this.disabled = true;
+  try{
+    const res = await fetch(`${API_BASE_URL}/signup/send-otp`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        firstname: document.getElementById('firstname-signup').value.trim(),
+        lastname:  document.getElementById('lastname-signup').value.trim(),
+        username:  document.getElementById('username-signup').value.trim(),
+        email:     document.getElementById('email-signup').value.trim(),
+        password:  document.getElementById('password-signup').value
+      })
+    });
+    const json = await res.json();
+    if(!res.ok) throw new Error(json.detail);
+    document.querySelectorAll('.otp-digit').forEach(b => { b.value=''; b.classList.remove('filled'); });
+    startSignupOtpTimer();
+  }
+  catch(err){ alert('Resend failed: ' + err.message); }
+  finally{ this.disabled=false; }
+});
+
+/* Verify OTP → Create Account */
+document.getElementById('btn-verify-signup-otp').addEventListener('click', async function(){
+  const otp = getSignupOtp();
+  if(otp.length < 6){ alert('Please enter the full 6-digit OTP.'); return; }
+
+  const email = document.getElementById('email-signup').value.trim();
+  this.disabled=true; this.textContent='Verifying…';
+  try{
+    const res  = await fetch(`${API_BASE_URL}/signup/verify-otp`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, otp })
+    });
+    const json = await res.json();
+    if(!res.ok) throw new Error(json.detail || 'Invalid OTP');
+
+    clearInterval(signupOtpTimer);
+    alert('Account created! Please log in.');
+
+    /* Reset and go to login */
+    document.getElementById('signup-step-2').style.display='none';
+    document.getElementById('signup-step-1').style.display='block';
+    document.getElementById('form-signup').reset();
+    document.querySelectorAll('.otp-digit').forEach(b => { b.value=''; b.classList.remove('filled'); });
+    showLogin();
+  }
+  catch(err){ alert('Error: ' + err.message); }
+  finally{ this.disabled=false; this.textContent='Verify & Create Account'; }
+});
 /* ==========================
       GOOGLE SSO CLEAN BLOCK
 ========================== */

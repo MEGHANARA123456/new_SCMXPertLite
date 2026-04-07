@@ -5,13 +5,11 @@ import os
 import sys
 
 sys.path.insert(0, 'd:\\scmxpertlite')
-
 from backend.user import pbkdf2_hash
-
 load_dotenv()
 
 client = MongoClient(os.getenv('MONGO_URI'))
-db = client[os.getenv('MONGO_DB_APP')]
+db = client[os.getenv('MONGO_DB_APP')] # type: ignore
 users = db['user']
 
 # Create hash for password "Meghan@123"
@@ -27,5 +25,5 @@ print(f"Updated {result.modified_count} meghana user(s)")
 
 # Verify
 user = users.find_one({'username': 'meghana'})
-print(f"Verification - Password set: {bool(user.get('password'))}")
-print(f"Role: {user.get('role', 'user')}")
+print(f"Verification - Password set: {bool(user.get('password'))}") # type: ignore
+print(f"Role: {user.get('role', 'user')}") # type: ignore

@@ -14,7 +14,7 @@ router = APIRouter()
 
 # Mongo
 client = MongoClient(os.getenv("MONGO_URI"))
-db = client[os.getenv("MONGO_DB_APP")]  # use your app DB
+db = client[os.getenv("MONGO_DB_APP")]  # type: ignore # use your app DB
 users_col = db["user"]
 otp_col = db["otp_store"]
 
@@ -23,7 +23,7 @@ MAIL_FROM = os.getenv("MAIL_FROM")
 MAIL_USERNAME = os.getenv("MAIL_USERNAME")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_SERVER = os.getenv("MAIL_SERVER")
-MAIL_PORT = int(os.getenv("MAIL_PORT"))
+MAIL_PORT = int(os.getenv("MAIL_PORT")) # type: ignore
 
 # Payload models
 class ForgotPass(BaseModel):
@@ -43,14 +43,14 @@ def send_email(to_email: str, subject: str, body: str):
 
     msg = MIMEText(body)
     msg["Subject"] = subject
-    msg["From"] = MAIL_FROM
+    msg["From"] = MAIL_FROM # type: ignore
     msg["To"] = to_email
 
     try:
-        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as server:
+        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as server: # type: ignore
             server.starttls()
-            server.login(MAIL_USERNAME, MAIL_PASSWORD)
-            server.sendmail(MAIL_FROM, to_email, msg.as_string())
+            server.login(MAIL_USERNAME, MAIL_PASSWORD) # type: ignore
+            server.sendmail(MAIL_FROM, to_email, msg.as_string()) # type: ignore
     except Exception as e:
         print("EMAIL ERROR:", e)
         raise HTTPException(status_code=500, detail="Failed to send email")
@@ -59,7 +59,7 @@ def send_email(to_email: str, subject: str, body: str):
 
 # 1 SEND OTP
 @router.post("/forgot-password")
-def forgot_password(data: ForgotPass):
+def forgot_password(data: ForgotPass): # type: ignore
     email = data.email.lower()
 
     # case-insensitive search
@@ -92,7 +92,7 @@ def forgot_password(data: ForgotPass):
 
 # 2 VERIFY OTP
 @router.post("/verify-otp")
-def verify_otp(data: VerifyOTP):
+def verify_otp(data: VerifyOTP): # type: ignore
     entry = otp_col.find_one({"email": data.email.lower()})
     if not entry:
         raise HTTPException(status_code=400, detail="OTP not found")
@@ -108,7 +108,7 @@ def verify_otp(data: VerifyOTP):
 
 # 3 RESET PASSWORD
 @router.post("/reset-password")
-def reset_password(data: ResetPassword):
+def reset_password(data: ResetPassword): # type: ignore
     email = data.email.lower()
 
     # hash new password before saving

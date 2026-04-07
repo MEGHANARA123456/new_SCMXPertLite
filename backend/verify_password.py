@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
@@ -10,7 +9,7 @@ from backend.user import pbkdf2_verify, verify_and_migrate_password
 load_dotenv()
 
 client = MongoClient(os.getenv('MONGO_URI'))
-db = client[os.getenv('MONGO_DB_APP')]
+db = client[os.getenv('MONGO_DB_APP')] # type: ignore
 users = db['user']
 
 user = users.find_one({'username': 'meghana'})

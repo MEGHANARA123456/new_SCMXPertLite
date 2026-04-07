@@ -15,12 +15,12 @@ router = APIRouter()
 #  DATABASE CONNECTION
 # ======================================================
 client = MongoClient(os.getenv("MONGO_URI"))
-db = client[os.getenv("MONGO_DB_APP")] # type: ignore
+db = client[os.getenv("MONGO_DB_APP")]  # type: ignore
 
 requests_col = db["admin_requests"]
 users_col = db["user"]
 sessions_col = db["logged_sessions"]
-replies_col = db["admin_replies"]
+replies_col = db["adminreplies"]   # ✅ FIXED: matches actual MongoDB collection name
 
 # ======================================================
 #  SMTP CONFIG
@@ -29,7 +29,7 @@ MAIL_USERNAME = os.getenv("MAIL_USERNAME")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_FROM = os.getenv("MAIL_FROM")
 MAIL_SERVER = os.getenv("MAIL_SERVER")
-MAIL_PORT = int(os.getenv("MAIL_PORT")) # type: ignore
+MAIL_PORT = int(os.getenv("MAIL_PORT"))  # type: ignore
 
 # ======================================================
 #  SMTP SENDER
@@ -37,40 +37,42 @@ MAIL_PORT = int(os.getenv("MAIL_PORT")) # type: ignore
 def send_email(to_email: str, subject: str, body: str):
     msg = MIMEText(body)
     msg["Subject"] = subject
-    msg["From"] = MAIL_FROM # type: ignore
+    msg["From"] = MAIL_FROM  # type: ignore
     msg["To"] = to_email
 
     try:
-        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as server: # type: ignore
+        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as server:  # type: ignore
             server.starttls()
-            server.login(MAIL_USERNAME, MAIL_PASSWORD) # type: ignore
-            server.sendmail(MAIL_FROM, to_email, msg.as_string()) # type: ignore
+            server.login(MAIL_USERNAME, MAIL_PASSWORD)  # type: ignore
+            server.sendmail(MAIL_FROM, to_email, msg.as_string())  # type: ignore
         return True, None
     except Exception as e:
         return False, str(e)
+
+
 # ======================================================
-#  FIX: UNIVERSAL FIND FUNCTION (string ID + old ObjectId)
+#  UNIVERSAL FIND FUNCTION (string ID + old ObjectId)
 # ======================================================
 def find_request_by_id(request_id: str):
     """Match both string IDs and old ObjectIds."""
     if ObjectId.is_valid(request_id):
         return requests_col.find_one({
             "$or": [
-                {"_id": request_id},                      # string ID
-                {"_id": ObjectId(request_id)}             # old ObjectId
+                {"_id": request_id},           # string ID
+                {"_id": ObjectId(request_id)}  # old ObjectId
             ]
         })
     else:
         return requests_col.find_one({"_id": request_id})
+
 
 # ======================================================
 #  USER CREATES REQUEST
 # ======================================================
 @router.post("/requests")
 def create_request(data: dict, user=Depends(get_current_user)):
-
     payload = {
-        "_id": str(datetime.utcnow().timestamp()).replace(".", ""),  # ← string ID
+        "_id": str(datetime.utcnow().timestamp()).replace(".", ""),  # string ID
         "username": user["username"],
         "email": user.get("email"),
         "type": data.get("type"),
@@ -79,7 +81,6 @@ def create_request(data: dict, user=Depends(get_current_user)):
         "requested_at": datetime.utcnow(),
         "status": "pending"
     }
-
     requests_col.insert_one(payload)
     return {"success": True, "message": "Request submitted"}
 
@@ -90,12 +91,10 @@ def create_request(data: dict, user=Depends(get_current_user)):
 @router.get("/admin/requests")
 def get_all_requests(current_user=Depends(get_current_user)):
     require_role(current_user, ["admin"])
-
     reqs = []
     for r in requests_col.find({}):
         r["_id"] = str(r["_id"])
         reqs.append(r)
-
     return {"requests": reqs}
 
 
@@ -105,17 +104,15 @@ def get_all_requests(current_user=Depends(get_current_user)):
 @router.get("/admin/pending")
 def get_pending(current_user=Depends(get_current_user)):
     require_role(current_user, ["admin"])
-
     data = []
     for r in requests_col.find({"status": "pending"}):
         r["_id"] = str(r["_id"])
         data.append(r)
-
     return {"requests": data}
 
 
 # ======================================================
-# ADMIN — GET ALL USERS
+#  ADMIN — GET ALL USERS
 # ======================================================
 @router.get("/admin/users")
 def get_users(current_user=Depends(get_current_user)):
@@ -125,13 +122,13 @@ def get_users(current_user=Depends(get_current_user)):
 
 
 # ======================================================
-#  ADMIN — APPROVE REQUEST (string ID)
+#  ADMIN — APPROVE REQUEST
 # ======================================================
 @router.post("/admin/requests/{request_id}/approve")
 def approve_request(request_id: str, current_user=Depends(get_current_user)):
     require_role(current_user, ["admin"])
 
-    req = requests_col.find_one({"_id": request_id})  # <-- NO OBJECTID
+    req = requests_col.find_one({"_id": request_id})
     if not req:
         raise HTTPException(404, "Request not found")
 
@@ -139,7 +136,6 @@ def approve_request(request_id: str, current_user=Depends(get_current_user)):
         {"_id": request_id},
         {"$set": {"status": "approved", "admin_action_at": datetime.utcnow()}}
     )
-
     users_col.update_one(
         {"username": req["username"]},
         {"$set": {"role": "admin"}}
@@ -154,7 +150,7 @@ def approve_request(request_id: str, current_user=Depends(get_current_user)):
 
 
 # ======================================================
-#  ADMIN — REJECT REQUEST (string ID)
+#  ADMIN — REJECT REQUEST
 # ======================================================
 @router.post("/admin/requests/{request_id}/reject")
 def reject_request(request_id: str, current_user=Depends(get_current_user)):
@@ -178,12 +174,11 @@ def reject_request(request_id: str, current_user=Depends(get_current_user)):
 
 
 # ======================================================
-#  ADMIN — SEND REPLY (string ID)
+#  ADMIN — SEND REPLY  ✅ stores in "adminreplies" collection
 # ======================================================
 @router.post("/admin/requests/{request_id}/reply")
 def reply_to_request(request_id: str, payload: dict,
                      current_user=Depends(get_current_user)):
-
     require_role(current_user, ["admin"])
 
     req = requests_col.find_one({"_id": request_id})
@@ -203,7 +198,7 @@ def reply_to_request(request_id: str, payload: dict,
         "sent_at": datetime.utcnow()
     }
 
-    replies_col.insert_one(reply_doc)
+    replies_col.insert_one(reply_doc)   # ✅ now saves to correct collection
 
     requests_col.update_one(
         {"_id": request_id},
@@ -219,12 +214,10 @@ def reply_to_request(request_id: str, payload: dict,
 @router.get("/admin/replies")
 def get_replies(current_user=Depends(get_current_user)):
     require_role(current_user, ["admin"])
-
     data = []
     for r in replies_col.find().sort("sent_at", -1):
         r["_id"] = str(r["_id"])
         data.append(r)
-
     return {"replies": data}
 
 
@@ -265,25 +258,25 @@ def set_role(username: str, payload: dict, current_user=Depends(get_current_user
 
 
 # ======================================================
-# ADMIN — RECORD LOGGED SESSIONS
+#  ADMIN — GET LOGGED SESSIONS  ✅ duplicate removed
 # ======================================================
-@router.post("/admin/loggedin")
-def record_logged_in(payload: dict, current_user=Depends(get_current_user)):
+@router.get("/admin/loggedin")
+def get_logged_sessions(current_user=Depends(get_current_user)):
+    require_role(current_user, ["admin"])
 
-    username = payload.get("username") or current_user["username"]
-    ts = payload.get("ts")
-
-    sessions_col.update_one(
-        {"username": username},
-        {"$set": {"ts": ts}},
-        upsert=True
+    sessions = list(
+        sessions_col.find({}, {"_id": 1, "username": 1, "ts": 1, "logged_at": 1})
+        .sort("logged_at", -1)
+        .limit(100)
     )
+    for s in sessions:
+        s["_id"] = str(s["_id"])
 
-    return {"message": "Recorded"}
+    return {"sessions": sessions}
 
 
 # ======================================================
-#  STRING-ID RESOLVE ENDPOINT FIXED
+#  ADMIN — RESOLVE REQUEST
 # ======================================================
 @router.post("/admin/requests/{request_id}/resolve")
 def resolve_request(request_id: str, current_user=Depends(get_current_user)):

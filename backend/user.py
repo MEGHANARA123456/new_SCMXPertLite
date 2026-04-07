@@ -1,15 +1,17 @@
-# backend/user.py
 from fastapi import APIRouter, Form, HTTPException, Depends, Body
-from pydantic import EmailStr
+from bson import ObjectId
+from pydantic import EmailStr,BaseModel
 from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from dotenv import load_dotenv
-import os, hashlib, re, base64, hmac, requests
+import os, hashlib, re, base64, hmac, requests,random, smtplib,json
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2 import id_token
-
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import Optional
 load_dotenv()
 
 router = APIRouter()
@@ -34,7 +36,9 @@ db = client[MONGO_DB_APP] # type: ignore
 users = db["user"]
 otp_col = db["otp_store"]
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
-
+# DB collections (add these after your existing db setup)
+shipments = db["shipments"]
+devices = db["devices"]
 
 # ============================================================
 # PASSWORD HELPERS
@@ -161,39 +165,161 @@ def validate_password(p: str):
         re.search(r"[0-9]", p) and
         re.search(r"[!@#$%^&*]", p)
     )
+# ============================================================
+# GET CURRENT USER PROFILE
+# ============================================================
+@router.get("/user/profile")
+def get_profile(current_user: dict = Depends(get_current_user)): # type: ignore
+    return {
+        "username": current_user["username"],
+        "email": current_user.get("email"),
+        "role": current_user.get("role", "user"),
+        "fullname": current_user.get("fullname", ""),
+        "picture": current_user.get("picture", ""),
+        "created_at": str(current_user.get("created_at", ""))
+    }
+# ============================================================
+# GET ONLY THIS USER'S SHIPMENTS
+# ============================================================
+@router.get("/user/shipments")
+def get_my_shipments(current_user: dict = Depends(get_current_user)):
+    username = current_user["username"]
 
+    my_shipments = list(shipments.find({"created_by": username}))
+
+    for s in my_shipments:
+        s["_id"] = str(s["_id"])
+
+    return {"shipments": my_shipments, "total": len(my_shipments)}
 
 # ============================================================
-# SIGNUP
+# GET ONLY THIS USER'S DEVICES
 # ============================================================
-@router.post("/signup")
-def signup(
-    username: str = Form(...),
-    email: EmailStr = Form(...),
-    password: str = Form(...),
-    confirm_password: str = Form(...),
-):
+@router.get("/user/devices")
+def get_my_devices(current_user: dict = Depends(get_current_user)):
+    username = current_user["username"]
 
-    if password != confirm_password:
-        raise HTTPException(status_code=400, detail="Passwords do not match")
+    my_devices = list(devices.find({"created_by": username}))
 
-    if not validate_password(password):
-        raise HTTPException(status_code=400, detail="Weak password")
+    for d in my_devices:
+        d["_id"] = str(d["_id"])
 
-    if users.find_one({"$or": [{"username": username}, {"email": email}]}):
+    return {"devices": my_devices, "total": len(my_devices)}
+
+# ============================================================
+# GET DASHBOARD SUMMARY (counts only for this user)
+# ============================================================
+@router.get("/user/dashboard")
+def get_my_dashboard(current_user: dict = Depends(get_current_user)):
+    username = current_user["username"]
+
+    total_shipments = shipments.count_documents({"created_by": username})
+    active_shipments = shipments.count_documents({"created_by": username, "status": "active"})
+    delivered = shipments.count_documents({"created_by": username, "status": "delivered"})
+    total_devices = devices.count_documents({"created_by": username})
+
+    return {
+        "username": username,
+        "total_shipments": total_shipments,
+        "active_shipments": active_shipments,
+        "delivered": delivered,
+        "total_devices": total_devices
+    }
+# ============================================================
+# Pydantic models for signup OTP flow
+# ============================================================
+class SignupOtpRequest(BaseModel):
+    firstname: str
+    lastname: str
+    username: str
+    email: str
+    password: str
+
+class SignupVerifyOtpRequest(BaseModel):
+    email: str
+    otp: str
+
+# ============================================================
+# Helper: send OTP email
+# ============================================================
+def send_otp_email(to_email: str, otp: str, firstname: str):
+    msg = MIMEText(f"Hi {firstname},\n\nYour SCMXpertLite signup OTP is: {otp}\n\nValid for 10 minutes.")
+    msg["Subject"] = "Your SCMXpertLite Signup OTP"
+    msg["From"] = MAIL_FROM # type: ignore
+    msg["To"] = to_email
+    with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as smtp: # type: ignore
+        smtp.starttls()
+        smtp.login(MAIL_FROM, MAIL_PASSWORD) # type: ignore
+        smtp.sendmail(MAIL_FROM, to_email, msg.as_string()) # type: ignore
+
+# ============================================================
+# STEP 1 — Validate details, store temp, send OTP
+# ============================================================
+@router.post("/signup/send-otp")
+def signup_send_otp(data: SignupOtpRequest):
+    if users.find_one({"$or": [{"username": data.username}, {"email": data.email.lower()}]}):
+        raise HTTPException(status_code=400, detail="Username or email already exists")
+
+    if not validate_password(data.password):
+        raise HTTPException(status_code=400, detail="Weak password. Min 8 chars, upper, lower, digit, special (!@#$%^&*)")
+
+    otp = str(random.randint(100000, 999999))
+    expires_at = datetime.utcnow() + timedelta(minutes=10)
+
+    # Upsert: overwrite any previous pending OTP for this email
+    otp_col.update_one(
+        {"email": data.email.lower()},
+        {"$set": {
+            "email":     data.email.lower(),
+            "otp":       otp,
+            "expires_at": expires_at,
+            "pending_user": {
+                "firstname": data.firstname,
+                "lastname":  data.lastname,
+                "username":  data.username,
+                "email":     data.email.lower(),
+                "password":  pbkdf2_hash(data.password),
+                "role":      "user",
+                "created_at": datetime.utcnow()
+            }
+        }},
+        upsert=True
+    )
+
+    try:
+        send_otp_email(data.email, otp, data.firstname)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send OTP email: {str(e)}")
+
+    return {"message": "OTP sent to email"}
+
+# ============================================================
+# STEP 2 — Verify OTP and create user
+# ============================================================
+@router.post("/signup/verify-otp")
+def signup_verify_otp(data: SignupVerifyOtpRequest):
+    record = otp_col.find_one({"email": data.email.lower()})
+
+    if not record:
+        raise HTTPException(status_code=400, detail="No OTP found for this email. Please request again.")
+
+    if datetime.utcnow() > record["expires_at"]:
+        otp_col.delete_one({"email": data.email.lower()})
+        raise HTTPException(status_code=400, detail="OTP expired. Please request a new one.")
+
+    if record["otp"] != data.otp.strip():
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+
+    pending = record["pending_user"]
+
+    # Final duplicate check
+    if users.find_one({"$or": [{"username": pending["username"]}, {"email": pending["email"]}]}):
         raise HTTPException(status_code=400, detail="User already exists")
 
-    users.insert_one({
-        "username": username,
-        "email": email.lower(),
-        "password": pbkdf2_hash(password),
-        "role": "user",
-        "created_at": datetime.utcnow()
-    })
+    users.insert_one(pending)
+    otp_col.delete_one({"email": data.email.lower()})
 
-    return {"message": "Signup successful"}
-
-
+    return {"message": "Account created successfully"}
 # ============================================================
 # LOGIN  (FIXED with role + email)
 # ============================================================
@@ -326,3 +452,149 @@ def auth_google(payload: dict = Body(...)):
         "fullname": user.get("fullname", ""), # type: ignore
         "picture": user.get("picture", "") # type: ignore
     }
+# ============================================================
+# UPDATE PROFILE
+# ============================================================
+class ProfileUpdateRequest(BaseModel):
+    firstname:  Optional[str] = None
+    lastname:   Optional[str] = None
+    bio:        Optional[str] = None
+    phone:      Optional[str] = None
+    department: Optional[str] = None
+    city:       Optional[str] = None
+    country:    Optional[str] = None
+
+@router.patch("/user/profile")
+def update_profile(
+    data: ProfileUpdateRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    update_fields = {k: v for k, v in data.dict().items() if v is not None}
+
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    users.update_one(
+        {"_id": current_user["_id"] if isinstance(current_user["_id"], ObjectId) else ObjectId(current_user["_id"])},
+        {"$set": update_fields}
+    )
+
+    return {"message": "Profile updated successfully"}
+@router.get("/user/profile")
+def get_profile(current_user: dict = Depends(get_current_user)):
+    return {
+        "username":    current_user["username"],
+        "email":       current_user.get("email"),
+        "role":        current_user.get("role", "user"),
+        "firstname":   current_user.get("firstname", ""),   # ← add
+        "lastname":    current_user.get("lastname", ""),    # ← add
+        "bio":         current_user.get("bio", ""),         # ← add
+        "phone":       current_user.get("phone", ""),       # ← add
+        "department":  current_user.get("department", ""),  # ← add
+        "city":        current_user.get("city", ""),        # ← add
+        "country":     current_user.get("country", ""),     # ← add
+        "auth_provider": current_user.get("auth_provider", "email"),  # ← add
+        "created_at":  str(current_user.get("created_at", ""))
+    }
+# ============================================================
+# CHANGE PASSWORD
+# ============================================================
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.post("/user/change-password")
+def change_password(
+    data: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    # Verify current password
+    if not verify_and_migrate_password(current_user, data.current_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    # Validate new password strength
+    if not validate_password(data.new_password):
+        raise HTTPException(
+            status_code=400,
+            detail="Weak password. Min 8 chars with uppercase, lowercase, digit and special character (!@#$%^&*)"
+        )
+
+    # Hash and save new password
+    new_hash = pbkdf2_hash(data.new_password)
+    users.update_one(
+        {"_id": current_user["_id"] if isinstance(current_user["_id"], ObjectId) else ObjectId(current_user["_id"])},
+        {"$set": {"password": new_hash}}
+    )
+
+    return {"message": "Password updated successfully"}
+
+# ============================================================
+# DATA EXPORT — sends user data to their email
+# ============================================================
+@router.post("/user/export-data")
+def export_data(current_user: dict = Depends(get_current_user)):
+    email = current_user.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="No email on file")
+
+    username = current_user.get("username", "")
+
+    # Gather user's shipments and devices
+    my_shipments = list(shipments.find({"created_by": username}, {"_id": 0}))
+    my_devices   = list(devices.find({"created_by": username}, {"_id": 0}))
+
+    # Build plain-text summary
+    shipment_lines = "\n".join(
+        [f"  - {s.get('shipment_id','?')} | {s.get('status','?')} | {s.get('created_at','')}" for s in my_shipments]
+    ) or "  No shipments found."
+
+    device_lines = "\n".join(
+        [f"  - {d.get('device_id','?')} | {d.get('name','?')}" for d in my_devices]
+    ) or "  No devices found."
+
+    body = f"""
+Hi {username},
+
+Here is your SCMXpertLite account data export:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ACCOUNT INFO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Username   : {username}
+Email      : {email}
+Role       : {current_user.get("role", "user")}
+First Name : {current_user.get("firstname", "—")}
+Last Name  : {current_user.get("lastname", "—")}
+Joined     : {current_user.get("created_at", "—")}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SHIPMENTS ({len(my_shipments)} total)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{shipment_lines}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEVICES ({len(my_devices)} total)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{device_lines}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This export was requested from your account settings.
+— SCMXpertLite Team
+"""
+
+    try:
+        msg = MIMEMultipart()
+        msg["Subject"] = "SCMXpertLite — Your Data Export"
+        msg["From"]    = MAIL_FROM # type: ignore
+        msg["To"]      = email
+        msg.attach(MIMEText(body, "plain"))
+
+        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as smtp: # type: ignore
+            smtp.starttls()
+            smtp.login(MAIL_FROM, MAIL_PASSWORD) # type: ignore
+            smtp.sendmail(MAIL_FROM, email, msg.as_string()) # type: ignore
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+    return {"message": "Data export sent to your email"}

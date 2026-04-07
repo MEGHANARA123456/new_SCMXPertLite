@@ -21,13 +21,13 @@ oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 
 # ================= MONGO ================= #
 client = MongoClient(os.getenv("MONGO_URI"))
-db = client[os.getenv("MONGO_DB_APP")]
+db = client[os.getenv("MONGO_DB_APP")] # type: ignore
 users = db["user"]
 
 # ================= AUTH HELPERS ================= #
 def get_current_user(token: str = Depends(oauth2)):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
         username = payload.get("sub") or payload.get("username")
         if not username:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -67,7 +67,7 @@ def _sync_send_email(subject: str, recipients: list, body: str):
     msg = MIMEMultipart()
     msg["From"] = MAIL_FROM
     msg["To"] = ", ".join(recipients)
-    msg["Subject"] = Header(subject, 'utf-8')
+    msg["Subject"] = Header(subject, 'utf-8') # type: ignore
     msg.attach(MIMEText(body, "html", "utf-8"))
 
     # connect and send

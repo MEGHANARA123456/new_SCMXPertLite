@@ -42,85 +42,163 @@
       min-height: 100vh;
     }
 
-    /* ── TOPBAR ── */
+    /* ── TOPBAR (matches dashboard exactly) ── */
     .topbar {
-      background: rgba(108,39,217,0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255,255,255,0.18);
-      padding: 0 24px;
-      height: 58px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 4px 18px rgba(108,39,217,0.22);
+      background: rgba(108, 39, 217, 0.85);
+      padding: 12px 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .nav-menu { display: flex; align-items: center; gap: 2px; }
-    .nav-menu a {
-      color: rgba(255,255,255,0.82); font-size: 14px; font-weight: 500;
-      padding: 6px 14px; border-radius: 6px; text-decoration: none;
-      transition: color 0.2s, background 0.2s; position: relative;
+    .topbar .left-section {
+      display: flex;
+      align-items: center;
+      gap: 20px;
     }
-    .nav-menu a:hover, .nav-menu a.active { color: #fff; background: rgba(255,255,255,0.12); }
-    .nav-menu a.active::after {
-      content:""; position:absolute; bottom:-1px; left:14px; right:14px;
-      height:2px; background:var(--neon); border-radius:2px;
+    .topbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 20px;
     }
 
-    .profile-wrapper { position: relative; }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .nav-menu a {
+      color: white;
+      margin-right: 20px;
+      font-weight: 500;
+      position: relative;
+      transition: 0.3s ease;
+      text-decoration: none;
+    }
+
+    .nav-menu a:hover,
+    .nav-menu a.active {
+      color: var(--neon);
+    }
+
+    .nav-menu a::after {
+      content: "";
+      width: 0;
+      height: 2px;
+      background: var(--neon);
+      position: absolute;
+      left: 0;
+      bottom: -3px;
+      transition: 0.3s;
+    }
+
+    .nav-menu a:hover::after,
+    .nav-menu a.active::after {
+      width: 100%;
+    }
+
+    /* ── Profile Button ── */
+    .profile-wrapper {  margin-left: auto;  position: relative; }
+
     .profile-btn {
-      display: flex; align-items: center; gap: 9px;
-      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
-      border-radius: 8px; cursor: pointer; color: #fff;
-      padding: 6px 12px 6px 8px; transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: white;
+      padding: 0;
     }
-    .profile-btn:hover { background: rgba(255,255,255,0.2); }
+
     .avatar-circle {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--neon), var(--purple-dark));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 12px; color: #fff;
-      border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #45e4ff, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.6);
+      flex-shrink: 0;
     }
-    .profile-btn-name { font-size: 14px; font-weight: 500; }
-    .chevron { font-size: 9px; opacity: 0.7; transition: transform 0.2s; }
+
+    .profile-btn-name { font-size: 14px; font-weight: 500; color: white; }
+    .chevron { font-size: 10px; color: white; transition: transform 0.2s; }
     .profile-btn.open .chevron { transform: rotate(180deg); }
 
+    /* ── Dropdown ── */
     .profile-dropdown {
-      position: absolute; top: calc(100% + 10px); right: 0;
-      width: 260px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 14px;
-      box-shadow: var(--shadow-lg); overflow: hidden; z-index: 9999;
-      opacity: 0; transform: translateY(-6px) scale(0.97);
-      pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease;
-    }
-    .profile-dropdown.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
-    .pd-header { display: flex; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid var(--border); }
+    position:absolute;
+    top:calc(100% + 10px);       
+    right: 0px; 
+   /* top: calc(100% + 12px);
+    right: 0;*/
+    width: 240px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(30,10,70,0.18), 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+    .profile-dropdown.show { opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+    .pd-header { display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; border-bottom: 1px solid #f0eeff; }
     .pd-avatar {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--neon), var(--purple));
+      width: 46px; height: 46px; border-radius: 50%;
+      background: linear-gradient(135deg, #45e4ff, #7c3aed);
       display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 16px; color: #fff; flex-shrink: 0;
+      font-weight: 700; font-size: 16px; color: white; flex-shrink: 0;
     }
-    .pd-name { font-weight: 700; font-size: 14px; color: var(--text); }
-    .pd-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .pd-info { flex: 1; min-width: 0; }
+    .pd-name { font-weight: 700; font-size: 14px; color: #1e1135; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pd-sub  { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
     .pd-badge {
       display: inline-flex; align-items: center; gap: 4px; margin-top: 5px;
-      background: #ecfdf5; color: var(--success); border-radius: 999px;
+      background: #ecfdf5; color: #059669; border-radius: 999px;
       font-size: 11px; font-weight: 700; padding: 2px 8px;
     }
-    .pd-badge::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--success); }
-    .pd-section { font-size: 10px; font-weight: 700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); padding:10px 16px 3px; }
+    .pd-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #059669; }
+    .pd-section { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #aaa; padding: 10px 16px 3px; }
     .pd-item {
-      display: flex; align-items: center; gap: 10px; padding: 9px 16px;
-      font-size: 14px; font-weight: 500; color: var(--text-dim); text-decoration: none;
-      transition: background 0.12s;
+      display: flex; align-items: center; gap: 12px; padding: 9px 16px;
+      font-size: 14px; font-weight: 500; color: #2d1f5e; text-decoration: none; transition: background 0.13s;
     }
-    .pd-item:hover { background: var(--purple-light); color: var(--purple); }
-    .pd-icon { width:30px; height:30px; border-radius:8px; background:var(--purple-light); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
-    .pd-divider { height: 1px; background: var(--border); margin: 4px 0; }
+    .pd-item:hover { background: #f5f3ff; }
+    .pd-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .ic-blue   { background: #eff6ff; }
+    .ic-purple { background: #f5f3ff; }
+    .ic-green  { background: #f0fdf4; }
+    .ic-red    { background: #fff1f2; }
+    .pd-divider { height: 1px; background: #f0eeff; margin: 4px 0; }
     .pd-signout {
-      display: flex; align-items: center; gap: 10px; padding: 11px 16px;
-      font-size: 14px; font-weight: 600; color: var(--danger);
-      cursor: pointer; transition: background 0.12s;
+      display: flex; align-items: center; gap: 12px; padding: 11px 16px;
+      font-size: 14px; font-weight: 600; color: #dc2626; cursor: pointer; transition: background 0.13s;
     }
     .pd-signout:hover { background: #fff5f5; }
 
@@ -298,42 +376,52 @@
 </head>
 <body>
 
+<!-- ══════════ TOPBAR — identical to dashboard ══════════ -->
 <header class="topbar">
-  <div style="display:flex;align-items:center;gap:24px">
-    <a style="font-size:18px;font-weight:700;color:#fff;text-decoration:none;" href="/frontend/home.html">
-      SCMXPert<span style="color:var(--neon)">Lite</span>
-    </a>
+  <div class="topbar-inner">
+
+    <!-- BRAND (LEFT) -->
+    <div class="brand">
+      <strong>SCMXPert<span style="color:#45e4ff">Lite</span></strong>
+    </div>
+
+    <!-- NAV (CENTER) -->
     <nav class="nav-menu">
       <a href="/frontend/home.html">Home</a>
       <a href="/frontend/dashboard.html">Dashboard</a>
-      <a href="/frontend/shipment_data.html">Create</a>
+      <a href="/frontend/shipments.html" class="active">My Shipments</a>
+      <a href="/frontend/shipment_data.html">Create Shipment</a>
     </nav>
-  </div>
-  <div class="profile-wrapper">
-    <button class="profile-btn" id="profileBtn">
-      <div class="avatar-circle" id="navAvatar">??</div>
-      <span class="profile-btn-name" id="navName">Loading…</span>
-      <span class="chevron">▼</span>
-    </button>
-    <div class="profile-dropdown" id="profileDropdown">
-      <div class="pd-header">
-        <div class="pd-avatar" id="dropAvatar">??</div>
-        <div>
-          <div class="pd-name" id="dropFullName">Loading…</div>
-          <div class="pd-sub"  id="dropSub">…</div>
-          <div class="pd-badge">Active</div>
+
+    <!-- PROFILE (RIGHT) -->
+    <div class="profile-wrapper">
+      <button class="profile-btn" id="profileBtn">
+        <div class="avatar-circle" id="navAvatar">??</div>
+        <span class="profile-btn-name" id="navName">Loading…</span>
+        <span class="chevron">▼</span>
+      </button>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="pd-header">
+          <div class="pd-avatar" id="dropAvatar">??</div>
+          <div class="pd-info">
+            <div class="pd-name" id="dropFullName">Loading…</div>
+            <div class="pd-sub"  id="dropSub">…</div>
+            <div class="pd-badge">Active</div>
+          </div>
         </div>
+        <div class="pd-section">Account</div>
+        <a href="/frontend/profile.html" class="pd-item"><div class="pd-icon ic-blue">👤</div>View &amp; Edit Profile</a>
+        <a href="/frontend/settings.html" class="pd-item"><div class="pd-icon ic-purple">⚙️</div>Settings &amp; Privacy</a>
+        <div class="pd-section">Manage</div>
+        <a href="/frontend/shipments.html" class="pd-item"><div class="pd-icon ic-green">📦</div>My Shipments</a>
+        <div class="pd-divider"></div>
+        <div class="pd-signout" id="signOutBtn"><div class="pd-icon ic-red">🚪</div>Sign Out</div>
       </div>
-      <div class="pd-section">Account</div>
-      <a href="/frontend/profile.html" class="pd-item"><div class="pd-icon">👤</div>View &amp; Edit Profile</a>
-      <a href="/frontend/settings.html" class="pd-item"><div class="pd-icon">⚙️</div>Settings &amp; Privacy</a>
-      <div class="pd-section">Manage</div>
-      <a href="/frontend/shipments.html" class="pd-item"><div class="pd-icon">📦</div>My Shipments</a>
-      <div class="pd-divider"></div>
-      <div class="pd-signout" id="signOutBtn"><div class="pd-icon">🚪</div>Sign Out</div>
     </div>
+
   </div>
 </header>
+<!-- ══════════ END TOPBAR ══════════ -->
 
 <main class="page">
   <div class="page-header">

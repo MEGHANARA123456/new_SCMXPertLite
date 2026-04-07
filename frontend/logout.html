@@ -120,14 +120,14 @@
   <!-- TOPBAR -->
   <header class="topbar" role="navigation">
     <nav class="nav-menu">
-        <a href="/frontend/user.html">My Account</a>
+        <a href="/frontend/home.html">My Account</a>
     </nav>
   </header>
 
   <!-- LOGOUT CARD -->
   <div class="logout-container">
     <div class="logout-title">You Are Logged Out</div>
-    <p class="logout-text">
+    <p class="logout-text"> 
       Your session has been securely closed.<br>
       Click below to login again.
     </p>
@@ -157,13 +157,21 @@
     // Redirect to login page
     function goToLogin() {
       console.log("[Logout] Redirecting to login page...");
-      window.location.href = "/frontend/user.html";
+      window.location.replace("/frontend/user.html?nocache=" + new Date().getTime());
     }
 
-    // Perform logout when page loads
+     // Perform logout when page loads
     window.addEventListener("load", function() {
       performLogout();
-    });
+
+      //  Push a dummy state so back button stays on logout page
+      history.pushState(null, '', window.location.href);
+
+      // Every time back is pressed, push again (traps the user here)
+      window.addEventListener('popstate', function() {
+        history.pushState(null, '', window.location.href);
+      });
+   });
 
     // Also perform logout immediately
     performLogout();

@@ -74,13 +74,14 @@ def page(name: str):
 
 @app.get("/")
 async def root():
-    return RedirectResponse("/frontend/user.html")      # default page is login/signup
+    return RedirectResponse("/frontend/home.html")      # default page is home page
 
-
+@app.get("/home")
+async def home(): # type: ignore
+    return RedirectResponse("/frontend/home.html")
 @app.get("/login")
 async def login_page():
     return RedirectResponse("/frontend/user.html")
-
 @app.get("/admin")
 async def admin_page():
     return RedirectResponse("/frontend/admin_dashboard.html")

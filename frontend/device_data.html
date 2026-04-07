@@ -6,7 +6,6 @@
   <title>Device Data Stream</title>
 
 <style>
-/* ===== GLOBAL SMOOTH ANIMATION ===== */
 * {
   transition: all 0.25s ease;
 }
@@ -24,6 +23,113 @@
 .card:hover {
   transform: translateY(-4px);
   box-shadow: 0px 10px 28px rgba(0,0,0,0.12);
+}
+
+* { transition: all 0.25s ease; }
+
+.card, .table tr { animation: fadeIn 0.6s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 10px 28px rgba(0,0,0,0.12);
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+  width: 100%;
+  background: linear-gradient(90deg, #6C27D9, #9c4dff);
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+/* ===== NEW FIX (ONLY ADD) ===== */
+.topbar > div {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.brand {
+  display:flex;
+  align-items:center;
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+  gap:6px;
+}
+
+.brand span { font-weight:600; }
+
+.nav-left a {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+.nav-right { display:flex; align-items:center; margin-left:auto; }
+
+/* ===== PROFILE ===== */
+.profile-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 8px;
+}
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+
+.username { color:#fff; }
+
+.dropdown {
+  display:none;
+  position:absolute;
+  top:100%;
+  right:0;
+  background:#fff;
+  border-radius:12px;
+  min-width:220px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.12);
+}
+
+.profile-wrap.open .dropdown { display:block; }
+
+.drop-item {
+  display:block;
+  padding:10px 16px;
+  text-decoration:none;
+  color:#222;
+}
+
+.drop-item:hover { background:#f5f5f5; }
+
+/* ===== TABLE ===== */
+.table { width:100%; border-collapse:collapse; }
+.table th, .table td { padding:12px; border-bottom:1px solid #eee; }
+
+.card {
+  border-radius: 18px;
+  padding: 24px;
+  background: #ffffff;
+  box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
 }
 
 /* ===== TOP NAVIGATION ===== */
@@ -162,20 +268,174 @@
     width: 100% !important;
   }
 }
+
+.nav-left a {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.25);
+  transition: background 0.15s;
+}
+.nav-left a:hover { background: rgba(255,255,255,0.15); }
+
+.nav-right { display: flex; align-items: center; }
+
+/* Profile trigger */
+.profile-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  user-select: none;
+}
+.profile-wrap:hover { background: rgba(255,255,255,0.15); }
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 500; color: #fff;
+  border: 2px solid rgba(255,255,255,0.5);
+}
+.username { font-size: 14px; color: #fff; font-weight: 500; }
+.arrow { font-size: 10px; color: rgba(255,255,255,0.8); transition: transform 0.2s; }
+.profile-wrap.open .arrow { transform: rotate(180deg); }
+
+/* Dropdown */
+.dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: 0.5px solid #e0e0e0;
+  border-radius: 14px;
+  min-width: 230px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  z-index: 9999;
+  overflow: hidden;
+}
+.profile-wrap.open .dropdown { display: block; }
+
+/* Dropdown header */
+.drop-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.drop-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: #7c5cbf;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 600; color: #fff;
+  flex-shrink: 0;
+}
+.drop-name { font-size: 15px; font-weight: 600; color: #111; }
+.drop-meta { font-size: 12px; color: #888; margin-top: 2px; }
+.drop-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; color: #2e7d32; font-weight: 500; margin-top: 3px;
+}
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #4caf50;
+  display: inline-block;
+}
+
+/* Section labels */
+.drop-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 0.6px;
+  padding: 6px 16px 2px;
+}
+
+/* Items */
+.drop-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  font-size: 14px;
+  color: #222;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+.drop-item:hover { background: #f5f5f5; }
+
+/* Icon circles */
+.drop-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.purple-icon { background: #ede9fb; color: #7c5cbf; }
+.gray-icon   { background: #f0f0f0; color: #666; }
+.orange-icon { background: #fff3e0; color: #e65100; }
+.blue-icon   { background: #e3f2fd; color: #1565c0; }
+.teal-icon   { background: #e0f2f1; color: #00695c; }
+.pink-icon   { background: #fce4ec; color: #c2185b; }
+.red-icon    { background: #fdecea; color: #c62828; }
+
+.logout-item { color: #c62828; }
+.logout-item:hover { background: #fdecea; }
+
+.drop-divider {
+  height: 0.5px;
+  background: #eeeeee;
+  margin: 4px 0;
+}
 </style>
 
 </head>
 
 <body>
 
+
 <header class="topbar">
-  <nav class="nav-menu">
-    <a href="/frontend/user.html">My Account</a>
-    <a href="/frontend/dashboard.html">My Dashboard</a>
-    <a href="/frontend/shipments.html">My Shipments</a>
-    <a href="/frontend/shipment_data.html">Create Shipment</a>
-    <a href="/frontend/logout.html">logout</a>
-  </nav>
+  <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;width:100%;gap:18px;">
+
+    <!-- BRAND -->
+    <div class="brand">
+      <strong>SCMXPert<span style="color:#45e4ff">Lite</span></strong>
+      <span style="opacity:.8;font-size:13px;margin-left:6px">Admin</span>
+    </div>
+
+    <!-- LEFT -->
+    <nav class="nav-left" style="margin-left:20px;">
+      <a href="/frontend/shipment_data.html">+ Create Shipment</a>
+    </nav>
+
+    <!-- RIGHT -->
+    <nav class="nav-right">
+      <div class="profile-wrap" id="profileWrap">
+        <div class="avatar" id="userAvatar">?</div>
+        <span class="username" id="usernameDisplay">Loading...</span>
+        <span>▼</span>
+
+        <!-- SINGLE DROPDOWN -->
+        <div class="dropdown" id="profileDropdown">
+          <a href="/frontend/dashboard.html" class="drop-item">Dashboard</a>
+          <a href="/frontend/profile.html" class="drop-item">Profile</a>
+          <a href="/frontend/admin_dashboard.html" id="adminLink" class="drop-item" style="display:none">Admin Panel</a>
+          <a href="/frontend/logout.html" class="drop-item">Logout</a>
+        </div>
+      </div>
+    </nav>
+
+  </div>
 </header>
 
 <div class="container">
@@ -232,8 +492,26 @@
   </div>
 
 </div>
+<div class="dropdown" id="profileDropdown">
+  <a href="/frontend/dashboard.html"><span class="icon">⊞</span> Dashboard</a>
 
+  <!-- Hidden by default, shown only for admins by JS -->
+  <a href="/frontend/admin_dashboard.html" id="adminLink" style="display:none">
+    <span class="icon">⚙</span> Admin panel
+  </a>
+
+  <a href="/frontend/profile.html"><span class="icon">◯</span> Profile</a>
+  <div class="divider"></div>
+  <a href="/frontend/logout.html" class="logout-link"><span class="icon">→</span> Logout</a>
+</div>
 <script>
+  //  If no token, redirect to signin immediately
+  (function() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.replace("/frontend/user.html");
+    }
+  })();
 const API_URL = `${location.protocol}//${location.hostname}:8000`;
 let selectedDevice = null;
 let autoRefreshTimer = null;
@@ -322,6 +600,9 @@ async function loadStream() {
     }
 }
 
+// ------------------------
+// FIXED WORKING loadStream() END
+// ------------------------
 // Handle input submit
 document.getElementById("deviceForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -345,6 +626,69 @@ window.addEventListener("load", () => {
     if (autoRefreshTimer) clearInterval(autoRefreshTimer);
     autoRefreshTimer = setInterval(loadStream, 20000); // 20 seconds
 });
+const token = localStorage.getItem("token");
+if (token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const username = payload.username || payload.sub || "";
+    const role = payload.role || "user";
+
+    // Set avatar + username
+    document.getElementById("usernameDisplay").textContent = username;
+    document.getElementById("userAvatar").textContent = username[0].toUpperCase();
+
+    // Show Admin Panel link only if role is admin
+    if (role === "admin") {
+      document.getElementById("adminLink").style.display = "flex";
+    }
+
+  } catch (e) {
+    console.error("Invalid token", e);
+  }
+}
+(function () {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const username = payload.username || payload.sub || "User";
+    const role = (payload.role || "user").toUpperCase();
+    const initial = username[0].toUpperCase();
+
+    // Navbar
+    document.getElementById("userAvatar").textContent = initial;
+    document.getElementById("usernameDisplay").textContent = username;
+
+    // Dropdown header
+    document.getElementById("dropAvatar").textContent = initial;
+    document.getElementById("dropName").textContent = username;
+    document.getElementById("dropUsername").textContent = username;
+    document.getElementById("dropRole").textContent = role;
+
+    // Show admin links only for admin
+    if (role === "ADMIN") {
+      document.getElementById("adminDashLink").style.display = "flex";
+      document.getElementById("adminReqLink").style.display = "flex";
+      document.getElementById("adminUsersLink").style.display = "flex";
+    }
+
+  } catch (e) {
+    console.error("Token parse error", e);
+  }
+
+  // Toggle dropdown on click
+  const wrap = document.getElementById("profileWrap");
+  wrap.addEventListener("click", function (e) {
+    e.stopPropagation();
+    wrap.classList.toggle("open");
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", function () {
+    wrap.classList.remove("open");
+  });
+})();
 </script>
 
 

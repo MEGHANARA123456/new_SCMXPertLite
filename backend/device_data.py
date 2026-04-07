@@ -16,7 +16,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB = os.getenv("MONGO_DB_IOT")
 
 client = MongoClient(MONGO_URI)
-db = client[MONGO_DB]
+db = client[MONGO_DB] # type: ignore
 
 # Main IoT collection
 device_data_collection = db["sensor_readings"]
@@ -69,7 +69,7 @@ def add_device_data(
         "Route_To": Route_To,
         "timestamp": timestamp,
         "created_by": current_user["username"],
-        "created_at": datetime.utcnow()
+        "created_at": datetime.now(timezone.utc)
     }
 
     device_data_collection.insert_one(doc)
@@ -116,7 +116,7 @@ def get_device_by_id(device_id: str):
 
     # Convert to int if possible (Mongo stores numbers, not strings)
     try:
-        device_id = int(device_id)
+        device_id = int(device_id) # type: ignore
     except ValueError:
         pass
 

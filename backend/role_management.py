@@ -14,13 +14,12 @@ router = APIRouter()
 
 # DB
 client = MongoClient(os.getenv("MONGO_URI"))
-db = client[os.getenv("MONGO_DB_APP")]
+db = client[os.getenv("MONGO_DB_APP")] # type: ignore
 users = db["user"]
 
 ALLOWED = ["admin", "manager", "editor", "viewer", "user"]
 
 # =======================================
-# FRONTEND-COMPATIBLE ENDPOINT
 # Called by admin_dashboard: POST /admin/set-role/{username}
 # =======================================
 @router.post("/admin/set-role/{username}")

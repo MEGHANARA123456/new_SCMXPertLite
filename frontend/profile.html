@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <script>
+    if (!localStorage.getItem("token")) window.location.replace("/frontend/user.html");
+    window.addEventListener("pageshow", function(e) {
+      if (!localStorage.getItem("token")) window.location.replace("/frontend/user.html");
+    });
+  </script>
+  <title>SCMXpertLite — Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple: #673AB7;
+      --purple-dark: #4A1CA0;
+      --purple-light: #ede8ff;
+      --teal: #45e4ff;
+      --bg: #f4f2ff;
+      --card: #ffffff;
+      --muted: #7a7a9a;
+      --border: #ece9f8;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --danger: #dc2626;
+      --danger-bg: #fff1f2;
+      --text: #1a1035;
+      --shadow: 0 4px 24px rgba(103,58,183,0.10);
+      --shadow-lg: 0 12px 48px rgba(103,58,183,0.16);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+  /* ── Topbar (cleaned) ── */
+.topbar {
+  background: linear-gradient(90deg, #6d28d9, #7c3aed);
+  padding: 14px 24px;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(103,58,183,0.18);
+}
+
+.topbar-inner {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+}
+
+.brand {
+  margin-right: 20px;
+}
+    .nav-menu { display: flex; align-items: center; gap: 4px; }
+    .nav-menu a {
+      color: rgba(255,255,255,0.85);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-menu a:hover, .nav-menu a.active {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .back-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* ── Page layout ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* ── Profile Hero ── */
+    .profile-hero {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .hero-banner {
+      height: 130px;
+      background: linear-gradient(135deg, #6a11cb 0%, #45e4ff 100%);
+      position: relative;
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-body {
+      padding: 0 28px 24px;
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      position: relative;
+    }
+    .avatar-wrap {
+      position: relative;
+      margin-top: -40px;
+      flex-shrink: 0;
+    }
+    .avatar-big {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #45e4ff, #7c3aed);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 800; color: white;
+      border: 4px solid white;
+      box-shadow: 0 4px 16px rgba(103,58,183,0.25);
+      position: relative;
+    }
+    .avatar-edit {
+      position: absolute;
+      bottom: 2px; right: 2px;
+      width: 26px; height: 26px;
+      background: var(--purple);
+      border-radius: 50%;
+      border: 2px solid white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .avatar-edit:hover { background: var(--purple-dark); }
+    .hero-info { padding-bottom: 4px; flex: 1; }
+    .hero-name { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .hero-meta { display: flex; align-items: center; gap: 10px; margin-top: 5px; flex-wrap: wrap; }
+    .hero-username { font-size: 14px; color: var(--muted); }
+    .role-badge {
+      background: var(--purple-light);
+      color: var(--purple);
+      font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 999px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .status-dot {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--success); font-weight: 600;
+    }
+    .status-dot::before {
+      content: ''; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--success);
+    }
+    .hero-actions { margin-left: auto; padding-bottom: 8px; }
+    .edit-btn {
+      background: var(--purple);
+      color: white; border: none;
+      padding: 9px 20px; border-radius: 10px;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .edit-btn:hover { background: var(--purple-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(103,58,183,0.3); }
+    .edit-btn.cancel { background: #f0eeff; color: var(--purple); }
+    .edit-btn.cancel:hover { background: #e0d8ff; }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--border);
+      margin-top: 12px;
+    }
+    .stat-item {
+      text-align: center; padding: 16px 12px;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-val { font-size: 22px; font-weight: 800; color: var(--purple); }
+    .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .icon {
+      width: 32px; height: 32px;
+      background: var(--purple-light);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+
+    /* ── Form fields ── */
+    .fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .fields-grid.single { grid-template-columns: 1fr; }
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group.full { grid-column: 1/-1; }
+    .field-label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+    .field-value {
+      font-size: 14px; font-weight: 500; color: var(--text);
+      padding: 10px 14px;
+      background: #faf9ff;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      min-height: 42px;
+      display: flex; align-items: center;
+    }
+    .field-input {
+      font-size: 14px; font-weight: 500; color: var(--text);
+      padding: 10px 14px;
+      background: white;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      font-family: inherit;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .field-input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(103,58,183,0.12);
+    }
+    .field-input:disabled {
+      background: #faf9ff; color: var(--muted); cursor: not-allowed;
+    }
+
+    /* ── Save bar ── */
+    .save-bar {
+      display: none;
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow-lg);
+      padding: 16px 24px;
+      margin-bottom: 20px;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 4px solid var(--purple);
+    }
+    .save-bar.visible { display: flex; }
+    .save-bar-msg { font-size: 14px; font-weight: 600; color: var(--purple); }
+    .save-bar-actions { display: flex; gap: 10px; }
+    .btn-save {
+      background: var(--purple); color: white;
+      border: none; padding: 9px 22px; border-radius: 10px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .btn-save:hover { background: var(--purple-dark); }
+    .btn-discard {
+      background: #f0eeff; color: var(--purple);
+      border: none; padding: 9px 18px; border-radius: 10px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background 0.2s;
+    }
+    .btn-discard:hover { background: #e0d8ff; }
+
+    /* ── Danger zone ── */
+    .danger-zone {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1.5px solid #ffd7d7;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .danger-title { font-size: 14px; font-weight: 700; color: var(--danger); margin-bottom: 12px; }
+    .danger-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #fff0f0;
+    }
+    .danger-item:last-child { border-bottom: none; }
+    .danger-desc { font-size: 13px; color: var(--text); }
+    .danger-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .btn-danger {
+      background: var(--danger-bg); color: var(--danger);
+      border: 1.5px solid #fca5a5; padding: 7px 16px;
+      border-radius: 8px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .btn-danger:hover { background: #fee2e2; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: #1a1035; color: white;
+      padding: 12px 22px; border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+      z-index: 9999; white-space: nowrap;
+    }
+    #toast.show { opacity: 1; }
+    #toast.success { background: #059669; }
+    #toast.error { background: var(--danger); }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .fields-grid { grid-template-columns: 1fr; }
+      .hero-body { flex-wrap: wrap; }
+      .hero-actions { margin-left: 0; }
+      .stats-bar { grid-template-columns: 1fr; }
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat-item:last-child { border-bottom: none; }
+    }
+   
+
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #a855f7, #22c55e); /* purple → green */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
+}
+
+.brand span {
+  font-weight: 700;
+}
+
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-btn {
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+}
+
+.profile-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+
+    <!-- LEFT -->
+    <div class="brand">
+      <strong>SCMXpertLite</strong>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="nav-right">
+
+      <!-- Dynamic Dashboard Button -->
+      <a href="/frontend/dashboard.html" id="dashboardBtn" class="back-btn">
+        ← Dashboard
+      </a>
+
+      <!-- Profile -->
+      <div class="profile-wrap" id="profileWrap">
+    </div>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- Save bar -->
+  <div class="save-bar" id="saveBar">
+    <span class="save-bar-msg">⚡ You have unsaved changes</span>
+    <div class="save-bar-actions">
+      <button class="btn-discard" onclick="discardChanges()">Discard</button>
+      <button class="btn-save" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="profile-hero">
+    <div class="hero-banner"></div>
+    <div class="hero-body">
+      <div class="avatar-wrap">
+        <div class="avatar-big" id="heroBigAvatar">MK</div>
+        <div class="avatar-edit" title="Change photo">✏️</div>
+      </div>
+      <div class="hero-info">
+        <div class="hero-name" id="heroName">Meghana Kamatam</div>
+        <div class="hero-meta">
+          <span class="hero-username" id="heroUsername">@meghanak</span>
+          <span class="role-badge" id="heroRole">User</span>
+          <span class="status-dot">Active</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="edit-btn" id="editToggleBtn" onclick="toggleEdit()">✏️ Edit Profile</button>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-val" id="statShipments">—</div>
+        <div class="stat-lbl">Total Shipments</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" id="statActive">—</div>
+        <div class="stat-lbl">Active</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" id="statDevices">—</div>
+        <div class="stat-lbl">Devices</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal Info -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="icon">👤</div>
+        Personal Information
+      </div>
+    </div>
+    <div class="fields-grid">
+      <div class="field-group">
+        <div class="field-label">First Name</div>
+        <div class="field-value" id="view-firstname">—</div>
+        <input class="field-input" id="edit-firstname" style="display:none" placeholder="First name">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Last Name</div>
+        <div class="field-value" id="view-lastname">—</div>
+        <input class="field-input" id="edit-lastname" style="display:none" placeholder="Last name">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Username</div>
+        <div class="field-value" id="view-username">—</div>
+        <input class="field-input" id="edit-username" style="display:none" placeholder="Username" disabled title="Username cannot be changed">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Email Address</div>
+        <div class="field-value" id="view-email">—</div>
+        <input class="field-input" id="edit-email" style="display:none" placeholder="Email" disabled title="Email cannot be changed here">
+      </div>
+      <div class="field-group full">
+        <div class="field-label">Bio</div>
+        <div class="field-value" id="view-bio" style="min-height:60px;align-items:flex-start;padding-top:12px;">—</div>
+        <textarea class="field-input" id="edit-bio" style="display:none;min-height:80px;resize:vertical" placeholder="Tell us a little about yourself…"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Info -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="icon">📞</div>
+        Contact & Location
+      </div>
+    </div>
+    <div class="fields-grid">
+      <div class="field-group">
+        <div class="field-label">Phone Number</div>
+        <div class="field-value" id="view-phone">—</div>
+        <input class="field-input" id="edit-phone" style="display:none" type="tel" placeholder="+91 00000 00000">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Department</div>
+        <div class="field-value" id="view-department">—</div>
+        <input class="field-input" id="edit-department" style="display:none" placeholder="e.g. Logistics">
+      </div>
+      <div class="field-group">
+        <div class="field-label">City</div>
+        <div class="field-value" id="view-city">—</div>
+        <input class="field-input" id="edit-city" style="display:none" placeholder="City">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Country</div>
+        <div class="field-value" id="view-country">—</div>
+        <input class="field-input" id="edit-country" style="display:none" placeholder="Country">
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Info (read-only) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><div class="icon">🔐</div>Account Details</div>
+    </div>
+    <div class="fields-grid">
+      <div class="field-group">
+        <div class="field-label">Role</div>
+        <div class="field-value" id="view-role">—</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Account Status</div>
+        <div class="field-value" style="color: var(--success); font-weight: 700;">✅ Active</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Member Since</div>
+        <div class="field-value" id="view-created">—</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Auth Provider</div>
+        <div class="field-value" id="view-provider">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="danger-zone">
+    <div class="danger-title">⚠️ Danger Zone</div>
+    <div class="danger-item">
+      <div>
+        <div class="danger-desc">Change Password</div>
+        <div class="danger-sub">Update your account password securely</div>
+      </div>
+      <button class="btn-danger" onclick="window.location.href='/frontend/settings.html#password'">Change Password</button>
+    </div>
+    <div class="danger-item">
+      <div>
+        <div class="danger-desc">Sign out of all devices</div>
+        <div class="danger-sub">Revoke all active sessions</div>
+      </div>
+      <button class="btn-danger" onclick="signOutAll()">Sign Out All</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ── Config ── */
+const API = `${location.protocol}//${location.hostname}:8000`;
+function getToken(){ return localStorage.getItem("token") || ""; }
+function authHeaders(){ return { "Authorization": "Bearer " + getToken(), "Content-Type": "application/json" }; }
+
+function decodeToken(){
+  try { return JSON.parse(atob(getToken().split('.')[1])); }
+  catch { return null; }
+}
+
+let isEditing = false;
+let originalData = {};
+
+/* ── Toast ── */
+function showToast(msg, type="", duration=3200){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "show " + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(()=> el.className = "", duration);
+}
+
+/* ── Load profile from API ── */
+async function loadProfile(){
+  try {
+    const res = await fetch(`${API}/user/profile`, { headers: authHeaders() });
+    if(!res.ok) throw new Error("Failed");
+    const d = await res.json();
+
+    originalData = d;
+    renderProfile(d);
+  } catch(e){
+    // fallback to token data
+    const p = decodeToken();
+    if(p) {
+      originalData = { username: p.username || p.sub, email: p.email, role: p.role || "user" };
+      renderProfile(originalData);
+    }
+  }
+}
+
+function renderProfile(d){
+  const initials = getInitials(d.firstname, d.lastname, d.username);
+
+  /* Hero */
+  document.getElementById("heroBigAvatar").textContent = initials;
+  const fullname = [d.firstname, d.lastname].filter(Boolean).join(" ") || d.username || "—";
+  document.getElementById("heroName").textContent = fullname;
+  document.getElementById("heroUsername").textContent = "@" + (d.username || "");
+  document.getElementById("heroRole").textContent = capitalize(d.role || "user");
+
+  /* Personal */
+  setField("firstname", d.firstname);
+  setField("lastname",  d.lastname);
+  setField("username",  d.username);
+  setField("email",     d.email);
+  setField("bio",       d.bio);
+  setField("phone",     d.phone);
+  setField("department",d.department);
+  setField("city",      d.city);
+  setField("country",   d.country);
+  setField("role",      capitalize(d.role || "user"));
+
+  /* Account */
+  document.getElementById("view-created").textContent =
+    d.created_at ? new Date(d.created_at).toLocaleDateString("en-IN", { year:"numeric", month:"long", day:"numeric" }) : "—";
+  document.getElementById("view-provider").textContent =
+    d.auth_provider === "google" ? "🔵 Google" : "🔒 Email / Password";
+}
+
+function setField(key, val){
+  const viewEl = document.getElementById("view-" + key);
+  const editEl = document.getElementById("edit-" + key);
+  if(viewEl) viewEl.textContent = val || "—";
+  if(editEl) editEl.value = val || "";
+}
+
+function getInitials(fn, ln, un){
+  if(fn && ln) return (fn[0] + ln[0]).toUpperCase();
+  if(fn) return fn.slice(0,2).toUpperCase();
+  if(un) return un.slice(0,2).toUpperCase();
+  return "U";
+}
+function capitalize(s){ return s ? s[0].toUpperCase() + s.slice(1) : s; }
+
+/* ── Edit toggle ── */
+function toggleEdit(){
+  isEditing = !isEditing;
+  const editFields = document.querySelectorAll('.field-input:not([disabled])');
+  const viewFields = document.querySelectorAll('[id^="view-"]');
+  const btn = document.getElementById("editToggleBtn");
+
+  if(isEditing){
+    /* Show inputs, hide values */
+    document.querySelectorAll('.field-value').forEach(el => {
+      const key = el.id.replace("view-","");
+      if(["firstname","lastname","bio","phone","department","city","country"].includes(key)){
+        el.style.display = "none";
+        const inp = document.getElementById("edit-" + key);
+        if(inp) inp.style.display = "";
+      }
+    });
+    btn.innerHTML = "✕ Cancel";
+    btn.classList.add("cancel");
+    document.getElementById("saveBar").classList.add("visible");
+  } else {
+    discardChanges();
+  }
+}
+
+function discardChanges(){
+  isEditing = false;
+  document.querySelectorAll('.field-input').forEach(el => el.style.display = "none");
+  document.querySelectorAll('.field-value').forEach(el => el.style.display = "");
+  document.getElementById("editToggleBtn").innerHTML = "✏️ Edit Profile";
+  document.getElementById("editToggleBtn").classList.remove("cancel");
+  document.getElementById("saveBar").classList.remove("visible");
+  renderProfile(originalData);
+}
+
+async function saveProfile(){
+  const updated = {
+    firstname:  document.getElementById("edit-firstname").value.trim(),
+    lastname:   document.getElementById("edit-lastname").value.trim(),
+    bio:        document.getElementById("edit-bio").value.trim(),
+    phone:      document.getElementById("edit-phone").value.trim(),
+    department: document.getElementById("edit-department").value.trim(),
+    city:       document.getElementById("edit-city").value.trim(),
+    country:    document.getElementById("edit-country").value.trim(),
+  };
+
+  try {
+    const res = await fetch(`${API}/user/profile`, {
+      method: "PATCH",
+      headers: authHeaders(),
+      body: JSON.stringify(updated)
+    });
+    const json = await res.json();
+    if(!res.ok) throw new Error(json.detail || "Failed to save");
+
+    originalData = { ...originalData, ...updated };
+    renderProfile(originalData);
+    discardChanges();
+    showToast("✅ Profile updated successfully!", "success");
+  } catch(e){
+    showToast("❌ " + e.message, "error");
+  }
+}
+
+/* ── Load stats ── */
+async function loadStats(){
+  try {
+    const res = await fetch(`${API}/user/dashboard`, { headers: authHeaders() });
+    if(!res.ok) return;
+    const d = await res.json();
+    document.getElementById("statShipments").textContent = d.total_shipments ?? "—";
+    document.getElementById("statActive").textContent    = d.active_shipments ?? "—";
+    document.getElementById("statDevices").textContent   = d.total_devices ?? "—";
+  } catch{}
+}
+
+function signOutAll(){
+  if(!confirm("Sign out from all devices?")) return;
+  localStorage.removeItem("token");
+  window.location.replace("/frontend/user.html");
+}
+function decodeToken() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+}
+/* ============================================================
+  Dynamic Dashboard Redirect (FIXED)
+============================================================ */
+function setupDashboardRedirect() {
+  const token = localStorage.getItem("token");
+  const btn = document.getElementById("dashboardBtn");
+
+  if (!btn || !token) return;
+
+  let user = null;
+
+  try {
+    user = JSON.parse(atob(token.split(".")[1]));
+  } catch (e) {
+    console.error("Invalid token");
+    return;
+  }
+
+  const role = (user?.role || "").toLowerCase();
+
+  if (role === "admin") {
+    btn.href = "/frontend/admin_dashboard.html";
+    btn.textContent = "← Admin Dashboard";
+  } else {
+    btn.href = "/frontend/dashboard.html";
+    btn.textContent = "← User Dashboard";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", setupDashboardRedirect);
+/* ── Init ── */
+loadProfile();
+loadStats();
+</script>
+</body>
+</html>

@@ -41,6 +41,147 @@
     box-shadow:0 3px 12px rgba(0,0,0,0.08);
     position:sticky; top:0; z-index:40;
   }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+.topbar {
+  background: #7c5cbf;
+  padding: 0 24px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1000;
+}
+
+.nav-left a {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.25);
+  transition: background 0.15s;
+}
+.nav-left a:hover { background: rgba(255,255,255,0.15); }
+
+.nav-right { display: flex; align-items: center; }
+
+/* Profile trigger */
+.profile-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  user-select: none;
+}
+.profile-wrap:hover { background: rgba(255,255,255,0.15); }
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 500; color: #fff;
+  border: 2px solid rgba(255,255,255,0.5);
+}
+.username { font-size: 14px; color: #fff; font-weight: 500; }
+.arrow { font-size: 10px; color: rgba(255,255,255,0.8); transition: transform 0.2s; }
+.profile-wrap.open .arrow { transform: rotate(180deg); }
+
+/* Dropdown */
+.dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: 0.5px solid #e0e0e0;
+  border-radius: 14px;
+  min-width: 230px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  z-index: 9999;
+  overflow: hidden;
+}
+.profile-wrap.open .dropdown { display: block; }
+
+/* Dropdown header */
+.drop-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.drop-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: #7c5cbf;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 600; color: #fff;
+  flex-shrink: 0;
+}
+.drop-name { font-size: 15px; font-weight: 600; color: #111; }
+.drop-meta { font-size: 12px; color: #888; margin-top: 2px; }
+.drop-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; color: #2e7d32; font-weight: 500; margin-top: 3px;
+}
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #4caf50;
+  display: inline-block;
+}
+
+/* Section labels */
+.drop-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 0.6px;
+  padding: 6px 16px 2px;
+}
+
+/* Items */
+.drop-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  font-size: 14px;
+  color: #222;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+.drop-item:hover { background: #f5f5f5; }
+
+/* Icon circles */
+.drop-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.purple-icon { background: #ede9fb; color: #7c5cbf; }
+.gray-icon   { background: #f0f0f0; color: #666; }
+.orange-icon { background: #fff3e0; color: #e65100; }
+.blue-icon   { background: #e3f2fd; color: #1565c0; }
+.teal-icon   { background: #e0f2f1; color: #00695c; }
+.pink-icon   { background: #fce4ec; color: #c2185b; }
+.red-icon    { background: #fdecea; color: #c62828; }
+
+.logout-item { color: #c62828; }
+.logout-item:hover { background: #fdecea; }
+
+.drop-divider {
+  height: 0.5px;
+  background: #eeeeee;
+  margin: 4px 0;
+}
   .nav-menu{display:flex; gap:18px; align-items:center; justify-content:flex-start}
   .nav-menu a{color:#fff; text-decoration:none; font-weight:600; font-size:14px}
   .brand{display:flex;align-items:center;gap:12px;color:#fff}
@@ -56,26 +197,45 @@
 
   /* Glass sidebar (purple-tinted) */
   .sidebar{
-    width:260px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04));
-    border-radius:14px;
-    padding:14px;
-    color:#111;
-    backdrop-filter: blur(8px) saturate(120%);
-    -webkit-backdrop-filter: blur(8px) saturate(120%);
-    box-shadow: 0 18px 40px rgba(88,40,160,0.08);
-    border:1px solid rgba(255,255,255,0.12);
-  }
-  .sidebar h3{margin:0 0 12px; font-size:16px; color:rgba(255,255,255,0.95)}
+  width:260px;
+  background: linear-gradient(180deg, #6a3ecf 0%, #4a1ca0 100%);
+  border-radius:14px;
+  padding:14px;
+  color:#fff;
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  box-shadow: 0 18px 40px rgba(88,40,160,0.18);
+  border:none;
+}
+  .sidebar h3{
+  margin:0 0 12px;
+  font-size:16px;
+  color:#d6c9ff;
+  font-weight:700;
+}
   .menu-item{
-    display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start;
-    padding:12px 10px; border-radius:8px; cursor:pointer;
-    color:rgba(255,255,255,0.88); margin-bottom:8px; transition:all .14s ease;
-    background: linear-gradient(180deg, rgba(124,82,208,0.06), rgba(255,255,255,0.01));
-  }
-  .menu-item:hover{ transform:translateX(4px); }
-  .menu-item.active{ background: rgba(255,255,255,0.12); }
-  .menu-item small{ color: rgba(255,255,255,0.7); font-weight:400; margin-top:6px; display:block }
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  align-items:flex-start;
+  padding:12px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  color:#f3efff;
+  margin-bottom:8px;
+  transition:all .2s ease;
+  background: rgba(255,255,255,0.05);
+}
+  .menu-item:hover{
+  /* background: rgba(255,255,255,0.12);
+  transform:translateX(5px); */
+  background:#ffffff;
+  color:#4a1ca0;
+  font-weight:600;
+} */
+ .menu-item small{
+  color: rgba(255,255,255,0.7);
+}
 
   .main{flex:1}
   .panel{
@@ -119,10 +279,17 @@
   .modal h4{margin:0 0 8px; color:var(--purple)}
   .close-btn{background:#eee; border-radius:8px; padding:6px 8px; border:0; cursor:pointer}
 
-  /* permissions grid */
-  .perm-grid{width:100%; border-collapse:collapse; margin-top:12px}
-  .perm-grid th,.perm-grid td{padding:10px; border:1px solid #f0eff6; text-align:center}
-  .perm-grid th{background:#fbf8ff; color:var(--purple); font-weight:700}
+ /* Permissions table scroll + row hover */
+#permGrid {
+  font-size: 12.5px;
+  max-height: 280px;
+  display: block;
+  overflow-y: auto;
+}
+  #permGrid thead,
+  #permGrid tbody tr {display: table;width: 100%;table-layout: fixed;}
+  #permGrid tbody tr:hover {background: #f7f4ff;}
+  #permGrid td:first-child {text-align: left;font-weight: 500;color: #333;}
   .chip.yes{background:var(--success); color:white; padding:6px 8px; border-radius:8px}
   .chip.no{background:var(--danger); color:white; padding:6px 8px; border-radius:8px}
 
@@ -147,6 +314,10 @@
 
   /* logged-in list */
   .logged-list { margin-top:10px; border-radius:8px; padding:10px; background:rgba(255,255,255,0.06); font-size:13px; max-height:160px; overflow:auto; color:rgba(255,255,255,0.95) }
+  #loggedList::-webkit-scrollbar { width: 4px; }
+  #loggedList::-webkit-scrollbar-track { background: transparent; }
+  #loggedList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 999px; }
+  #loggedList::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
   .logout-btn { background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; cursor:pointer }
   .logout-btn svg { vertical-align:middle }
 
@@ -196,33 +367,77 @@
 </style>
 </head>
 <body>
+<header class="topbar">
+  <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:18px;">
 
-  <header class="topbar">
-    <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:18px;">
-      <div class="brand"><strong style="font-size:18px">SCMXpertLite</strong> <span style="opacity:.85;font-size:13px;margin-left:8px">Admin</span></div>
-      <nav class="nav-menu" style="margin-left:18px">
-        <a href="/frontend/user.html">My Account</a>
-        <a href="/frontend/device_data.html">live streaming</a>
-        <a href="/frontend/dashboard.html">Dashboard</a>
-        <a href="/frontend/shipments.html">Shipments</a>
-        <a href="/frontend/shipment_data.html">create Shipments</a>
-      </nav>
+    <!-- LEFT: BRAND -->
+    <div class="brand">
+  <strong>SCMXPert<span style="color: #45e4ff">Lite</span></strong>
+  <span style="opacity:.8;font-size:13px;margin-left:0px">Admin</span>
+</div>
 
-      <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
-        <div style="color:#fff; font-weight:600">Welcome — <span id="currentAdmin">...</span></div>
-        <button id="logoutBtn" class="logout-btn" title="Logout">
-          <!-- logout icon -->
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right:6px" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 17L21 12L16 7" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 12H9" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M13 19H6C5.44772 19 5 18.5523 5 18V6C5 5.44772 5.44772 5 6 5H13" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Logout
-        </button>
+    <!-- OPTIONAL NAV -->
+    <nav class="nav-menu" style="margin-left:18px">
+      <a href="/frontend/shipment_data.html">+ Create Shipment</a>
+    </nav>
+
+    <!-- RIGHT: PROFILE -->
+    <div style="margin-left:auto; display:flex; align-items:center; gap:16px;">
+
+      <!-- Welcome -->
+      <div style="color:#fff; font-weight:600">
+        Welcome — <span id="currentAdmin">...</span>
+      </div>
+
+      <!-- PROFILE DROPDOWN -->
+      <div class="profile-wrap" id="profileWrap">
+        <div class="avatar" id="userAvatar">?</div>
+        <span class="arrow">▼</span>
+
+        <div class="dropdown" id="profileDropdown">
+
+          <div class="drop-header">
+            <div class="drop-avatar" id="dropAvatar">?</div>
+            <div>
+              <div class="drop-name" id="dropName">Username</div>
+              <div class="drop-meta">
+                <span id="dropUsername">user</span> ·
+                <span id="dropRole">ADMIN</span>
+              </div>
+              <div class="drop-status"><span class="dot"></span> Active</div>
+            </div>
+          </div>
+
+          <div class="drop-divider"></div>
+
+          <!-- ACCOUNT -->
+          <a href="/frontend/profile.html" class="drop-item">
+            View Profile
+          </a>
+
+          <a href="/frontend/settings.html" class="drop-item">
+            Settings
+          </a>
+
+          <div class="drop-divider"></div>
+
+          <!-- ADMIN LINKS -->
+          <a href="/frontend/admin_dashboard.html" class="drop-item">
+            Dashboard
+          </a>
+
+          <div class="drop-divider"></div>
+
+          <!-- LOGOUT -->
+          <div class="drop-item logout-item" id="logoutBtn">
+            Logout
+          </div>
+
+        </div>
       </div>
     </div>
-  </header>
-
+  </div>
+</header>
   <div class="layout">
     <aside class="sidebar">
       <h3>Admin Tools</h3>
@@ -246,11 +461,25 @@
         Audit & Logs
         <small>history</small>
       </div>
-
-      <div style="margin-top:12px">
-        <div class="small muted">Logged in sessions</div>
-        <div id="loggedList" class="logged-list"></div>
+      <div id="menushipments" class="menu-item" data-section="shipments">
+        Shipments
+        <small>manage shipments</small>
       </div>
+      <div id="menudevicedata" class="menu-item" data-section="devicedata">
+        Device Data
+        <small>view live data</small>
+      </div>
+      <div style="color:#d6c9ff; font-size:13px; font-weight:600; letter-spacing:0.4px; margin-bottom:6px;">
+  Logged in sessions
+  <span id="sessionCount" style="background:rgba(255,255,255,0.15); color:#fff; font-size:11px; padding:2px 7px; border-radius:999px; margin-left:6px; font-weight:700;">0</span>
+</div>
+<div id="loggedList" class="logged-list" style="
+  max-height:200px;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,0.25) transparent;
+  padding-right:4px;
+"></div>
     </aside>
 
     <main class="main">
@@ -286,7 +515,6 @@
           </section>
 
           <!-- PENDING REQUESTS PANEL (prominent on load) -->
-          <!-- NOTE: Title column was added per your request (1.b) -->
           <section id="panelRequests" class="panel fade-in">
             <div class="header-row">
               <div>
@@ -335,6 +563,62 @@
             </div>
           </section>
         </div>
+        <!-- SHIPMENTS PANEL -->
+        <section id="panelShipments" class="panel hidden fade-in">
+          <div class="header-row">
+            <div>
+              <div class="title">Shipments Management</div>
+              <div class="small">View, edit, and delete shipments</div>
+            </div>
+            <div class="controls">
+              <button class="btn ghost" onclick="loadAllShipments()">Refresh</button>
+            </div>
+          </div>
+          <div style="overflow:auto">
+            <table id="shipmentTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Origin</th>
+                  <th>Destination</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="shipmentTableBody">
+                <!-- JS will inject rows -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <!-- DEVICE DATA PANEL -->
+           <section id="panelDeviceData" class="panel hidden fade-in">
+            <div class="header-row">
+              <div>
+                <div class="title">Device Data</div>
+                <div class="small">Live tracking & telemetry</div>
+              </div>
+              <div class="controls">
+                <button class="btn ghost" onclick="loadDeviceData()">Refresh</button>
+              </div>
+            </div>
+            <div style="overflow:auto">
+              <table id="deviceTable">
+                <thead>
+                  <tr>
+                    <th>Device ID</th>
+                    <th>Shipment ID</th>
+                    <th>Temperature</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="deviceTableBody">
+                  <!-- JS injects -->
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
         <!-- RIGHT: Quick tools + replies -->
         <aside>
@@ -350,19 +634,33 @@
               <button id="btnTeamMembers" class="btn primary">Team Members</button>
               <button id="btnEditRoles" class="btn ghost">Edit Roles</button>
               <button id="btnShowPendingFull" class="btn warn">Show Pending Requests (Full)</button>
-
+              <button id="btnViewShipments" class="btn ghost" data-section="shipments">All Shipments</button>
+              <button id="btnViewAuditLogs" class="btn ghost" >View Audit Logs</button>
               <div class="gap"></div>
-              <div class="muted-block">Permissions preview</div>
-              <table class="perm-grid" id="permGrid">
-                <thead>
-                  <tr><th>Permission</th><th>Admin</th><th>Manager</th><th>Editor</th><th>Viewer</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>View Dashboard</td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td></tr>
-                  <tr><td>Export Users</td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
-                  <tr><td>Manage Shipments</td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
-                </tbody>
-              </table>
+<div class="muted-block">Permissions preview</div>
+<table class="perm-grid" id="permGrid">
+  <thead>
+    <tr>
+      <th>Permission</th>
+      <th>Admin</th>
+      <th>Manager</th>
+      <th>Editor</th>
+      <th>Viewer</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>🖥️ View Dashboard</td>       <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td></tr>
+    <tr><td>📦 Manage Shipments</td>     <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td></tr>
+    <tr><td>📡 Live Device Stream</td>   <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td></tr>
+    <tr><td>👥 Manage Users</td>         <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
+    <tr><td>🔐 Assign Roles</td>         <td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
+    <tr><td>📤 Export Data</td>          <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
+    <tr><td>✅ Approve Requests</td>     <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
+    <tr><td>📝 Create Shipments</td>     <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td></tr>
+    <tr><td>📋 View Audit Logs</td>      <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
+    <tr><td>💬 Reply to Requests</td>    <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
+  </tbody>
+</table>
             </div>
           </section>
 
@@ -376,6 +674,17 @@
             </div>
             <div id="repliesList" style="max-height:260px; overflow:auto; font-size:13px;">
               <div class="muted">No replies yet</div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="header-row">
+              <div>
+                <div class="title">Admin Messages</div>
+                <div class="small">Messages sent to users</div>
+              </div>
+            </div>
+            <div id="adminMessagesBox">
+              <div class="muted">Loading...</div>
             </div>
           </section>
         </aside>
@@ -417,7 +726,7 @@
   </div>
 
   <!-- Floating FAB and Drawer (request sending) -->
-  <button id="fabRequest" class="request-fab">+ Request</button>
+  <button id="fabRequest" class="request-fab">Reply</button>
 
   <div id="drawer" class="drawer" aria-hidden="true">
     <h4>Send request to admin</h4>
@@ -451,6 +760,16 @@
   <div id="smallToast"></div>
 
 <script>
+  /* ============================================================
+    AUTH CHECK (redirect to signin if no token)
+============================================================ */
+  //  If no token, redirect to signin immediately
+  (function() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.replace("/frontend/user.html");
+    }
+  })();
 /* ============================================================
    BASE HELPERS & CONSTANTS
    - small changes: requests table uses request._id (string)
@@ -777,7 +1096,88 @@ async function loadReplies() {
   }
 }
 
+/* ============================================================
+   ADMIN STATS (Hero badges)
+============================================================ */
+async function loadAdminStats() {
+  try {
+    // USERS
+    const usersRes = await fetch(`${API}/admin/users`, { headers: authHeaders() });
+    const usersData = await usersRes.json();
+    const usersCount = (usersData.users || []).length;
 
+    // REQUESTS
+    const reqRes = await fetch(`${API}/admin/pending`, { headers: authHeaders() });
+    const reqData = await reqRes.json();
+    const pendingCount = (reqData.requests || []).length;
+
+    // SHIPMENTS
+    const shipRes = await fetch(`${API}/api/shipments`, { headers: authHeaders() });
+    const shipData = await shipRes.json();
+    const shipmentCount = (shipData.records || shipData.shipments || []).length;
+
+    // SESSIONS
+    const sessRes = await fetch(`${API}/admin/loggedin`, { headers: authHeaders() });
+    const sessData = await sessRes.json();
+    const sessionCount = (sessData.sessions || []).length;
+
+    // UPDATE UI (safe checks)
+    document.getElementById("statUsers") && (document.getElementById("statUsers").textContent = usersCount);
+    document.getElementById("statPending") && (document.getElementById("statPending").textContent = pendingCount);
+    document.getElementById("statShipments") && (document.getElementById("statShipments").textContent = shipmentCount);
+    document.getElementById("statSessions") && (document.getElementById("statSessions").textContent = sessionCount);
+
+  } catch (err) {
+    console.error("Stats load error:", err);
+  }
+}
+/* ============================================================
+   ADMIN MESSAGES PANEL (clean version)
+============================================================ */
+async function loadAdminMessages() {
+  const box = document.getElementById("adminMessagesBox");
+  if (!box) return;
+
+  box.innerHTML = `<div class="muted">Loading...</div>`;
+
+  try {
+    const res = await fetch(`${API}/admin/replies`, { headers: authHeaders() });
+    const data = await res.json();
+
+    const list = (data.replies || []).slice(0, 5); // latest 5 only
+
+    if (!list.length) {
+      box.innerHTML = `<div class="muted">No messages sent yet</div>`;
+      return;
+    }
+
+    box.innerHTML = list.map(r => `
+      <div class="admin-msg">
+        <h4>${escapeHtml(r.request_title || "Request")}</h4>
+        <p>${escapeHtml(r.reply || "")}</p>
+        <div style="font-size:11px;color:#888;margin-top:6px">
+          ${escapeHtml(r.admin || "admin")} • ${r.sent_at ? fmt(r.sent_at) : ""}
+        </div>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.error(err);
+    box.innerHTML = `<div class="muted">Error loading messages</div>`;
+  }
+}
+/* ============================================================
+   AUTO REFRESH DASHBOARD
+============================================================ */
+function startAdminAutoRefresh() {
+  loadAdminStats();
+  loadAdminMessages();
+
+  setInterval(() => {
+    loadAdminStats();
+    loadAdminMessages();
+  }, 15000); // every 15 sec
+}
 /* ============================================================
    LOAD USERS  (uses /admin/users)
 ============================================================ */
@@ -871,32 +1271,58 @@ document.getElementById("modalSave").onclick = async () => {
     showToast("Update failed");
   }
 };
+/* ============================================================
+   ROLES & PERMISSIONS — sidebar + quick tools button fix
+============================================================ */
+document.getElementById("menuRoles").onclick = () => {
+  hidePanels();
+  panelUsers.classList.remove("hidden");
+  loadUsers();
+};
+
+document.getElementById("btnEditRoles").onclick = () => {
+  hidePanels();
+  panelUsers.classList.remove("hidden");
+  loadUsers();
+};
 
 /* ============================================================
-   AUDIT LOGS (fallback mock for now)
+   AUDIT LOGS — reads from logged_sessions via /admin/loggedin
 ============================================================ */
 async function loadAudit() {
   const tbody = document.querySelector("#auditTable tbody");
   tbody.innerHTML = `<tr><td colspan="4">Loading...</td></tr>`;
 
   try {
-    const mock = [
-      { time: Date.now(), user: "admin", action: "Approved", details: "User promoted" }
-    ];
-    tbody.innerHTML = mock
-      .map(m => `
-        <tr>
-          <td>${fmt(m.time)}</td>
-          <td>${m.user}</td>
-          <td>${m.action}</td>
-          <td>${m.details}</td>
-        </tr>`)
-      .join("");
-  } catch {
-    tbody.innerHTML = `<tr><td colspan="4">Error</td></tr>`;
+    const res = await fetch(`${API}/admin/loggedin`, { headers: authHeaders() });
+
+    if (!res.ok) {
+      tbody.innerHTML = `<tr><td colspan="4">Failed to load sessions</td></tr>`;
+      return;
+    }
+
+    const data = await res.json();
+    const logs = data.sessions || data.users || data || [];
+
+    if (!Array.isArray(logs) || logs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4">No session logs found</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = logs.map(m => `
+      <tr>
+        <td>${fmt(m.ts || m.timestamp || m.created_at || "")}</td>
+        <td>${escapeHtml(m.username || m.user || "—")}</td>
+        <td><span class="role-badge" style="background:#f0fff4;color:#27ae60">Login Session</span></td>
+        <td>${escapeHtml(m._id || "—")}</td>
+      </tr>
+    `).join("");
+
+  } catch (err) {
+    console.error("Audit load error:", err);
+    tbody.innerHTML = `<tr><td colspan="4">Error loading session logs</td></tr>`;
   }
 }
-
 /* ============================================================
    REQUEST DRAWER + /requests
 ============================================================ */
@@ -971,7 +1397,124 @@ function addSession() {
     body: JSON.stringify({ username: u, ts: new Date().toISOString() })
   }).catch(() => {});
 }
+async function updateLoggedList() {
+  const list = document.getElementById("loggedList");
+  const countBadge = document.getElementById("sessionCount");
+  list.innerHTML = `<div style="opacity:.7;font-size:12px">Loading...</div>`;
 
+  try {
+    const res = await fetch(`${API}/admin/loggedin`, { headers: authHeaders() });
+
+    if (!res.ok) {
+      list.innerHTML = `<div style="opacity:.7;font-size:12px">Failed to load</div>`;
+      return;
+    }
+
+    const data = await res.json();
+    const sessions = data.sessions || [];
+
+    countBadge.textContent = sessions.length; // ← update count
+
+    if (!sessions.length) {
+      list.innerHTML = `<div style="opacity:.7;font-size:12px">No sessions</div>`;
+      return;
+    }
+
+    list.innerHTML = sessions
+      .sort((a, b) => new Date(b.ts) - new Date(a.ts))
+      .map(s => `
+        <div style="padding:6px 8px;background:rgba(255,255,255,0.12);border-radius:8px;margin-bottom:8px;">
+          <div><strong>${escapeHtml(s.username)}</strong></div>
+          <div style="font-size:12px;opacity:.8">${fmt(s.ts)}</div>
+        </div>`)
+      .join("");
+
+  } catch (err) {
+    console.error("Sessions load error:", err);
+    list.innerHTML = `<div style="opacity:.7;font-size:12px">Error loading sessions</div>`;
+  }
+}
+/* ============================================================
+    LOAD SHIPMENTS (new panel, uses /api/shipments)
+============================================================ */
+async function loadAllShipments() {
+  const tbody = document.getElementById("shipmentTableBody"); 
+  if (!tbody) {
+    console.error("shipmentTableBody not found");
+    return;
+  }
+
+  tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
+
+  try {
+    console.log("Calling API:", `${API}/api/shipments`);
+
+    const res = await fetch(`${API}/api/shipments`, {
+      headers: authHeaders()
+    });
+
+    console.log("Response status:", res.status);
+
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error("Error response:", txt);
+      tbody.innerHTML = `<tr><td colspan="5">Failed to load shipments</td></tr>`;
+      return;
+    }
+
+    const data = await res.json();
+    console.log("API DATA:", data);
+
+    const shipments = data.records || data.shipments || data;
+
+    if (!Array.isArray(shipments) || shipments.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5">No shipments found</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = shipments.map(s => {
+      const id = s.shipment_number || s._id || "N/A";
+
+      return `
+        <tr>
+          <td>${escapeHtml(id)}</td>
+          <td>${escapeHtml(s.route_from || s.origin)}</td>
+          <td>${escapeHtml(s.route_to || s.destination)}</td>
+          <td>${escapeHtml(s.status)}</td>
+          <td>
+            <button class="btn primary" onclick="editShipment('${id}')">Edit</button>
+            <button class="btn ghost" onclick="deleteShipment('${id}')">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (err) {
+    console.error("FETCH ERROR:", err);
+    tbody.innerHTML = `<tr><td colspan="5">Error loading shipments</td></tr>`;
+  }
+}
+/* ============================================================
+   device data management and other admin actions
+============================================================ */
+document.querySelectorAll(".menu-item").forEach(item => {
+    item.addEventListener("click", () => {
+        const sectionId = item.getAttribute("data-section");
+
+        // Special case: redirect page
+        if (sectionId === "devicedata") {
+            window.location.href = "/frontend/device_data.html";
+            return;
+        }
+
+        // Normal section logic
+        document.querySelectorAll(".section").forEach(sec => {
+            sec.style.display = "none";
+        });
+
+        document.getElementById(sectionId).style.display = "block";
+    });
+});
 /* ============================================================
    INIT LOAD
 ============================================================ */
@@ -980,7 +1523,7 @@ loadUsers();
 loadAudit();
 loadReplies();
 addSession();
-
+startAdminAutoRefresh();
 document.getElementById("refreshAll").onclick = () => {
   loadRequests();
   loadUsers();
@@ -1002,6 +1545,52 @@ document.getElementById("requestsFilter").oninput = e => {
     tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
   });
 };
+/* ============================================================
+    NAVBAR USER INFO + DROPDOWN
+============================================================ */
+(function () {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const username = payload.username || payload.sub || "User";
+    const role = (payload.role || "user").toUpperCase();
+    const initial = username[0].toUpperCase();
+
+    // Navbar
+    document.getElementById("userAvatar").textContent = initial;
+    document.getElementById("usernameDisplay").textContent = username;
+
+    // Dropdown header
+    document.getElementById("dropAvatar").textContent = initial;
+    document.getElementById("dropName").textContent = username;
+    document.getElementById("dropUsername").textContent = username;
+    document.getElementById("dropRole").textContent = role;
+
+    // Show admin links only for admin
+    if (role === "ADMIN") {
+      document.getElementById("adminDashLink").style.display = "flex";
+      document.getElementById("adminReqLink").style.display = "flex";
+      document.getElementById("adminUsersLink").style.display = "flex";
+    }
+
+  } catch (e) {
+    console.error("Token parse error", e);
+  }
+
+  // Toggle dropdown on click
+  const wrap = document.getElementById("profileWrap");
+  wrap.addEventListener("click", function (e) {
+    e.stopPropagation();
+    wrap.classList.toggle("open");
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", function () {
+    wrap.classList.remove("open");
+  });
+})();
 </script>
 </body>
 </html>

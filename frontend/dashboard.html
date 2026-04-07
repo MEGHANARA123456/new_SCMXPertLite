@@ -3,6 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- 1. Disable cache -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <script>
+    // 2. Instant check on normal load
+    if (!localStorage.getItem("token")) {
+      window.location.replace("/frontend/user.html");
+    }
+
+    // 3. Check on back button (bfcache restore)
+    window.addEventListener("pageshow", function(event) {
+      if (!localStorage.getItem("token")) {
+        window.location.replace("/frontend/user.html");
+      }
+    });
+  </script>
+
   <title>SCMXPertLite — Dashboard</title>
 
   <!-- keep your stylesheet -->
@@ -10,17 +30,259 @@
 
   <style>
     /* --- small inline styles to match your UI --- */
-    body{font-family:Roboto,Arial,Helvetica,sans-serif;margin:0}
-    .topbar{height:64px;background:#673AB7;color:#fff;display:flex;align-items:center;padding:0 18px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-    .nav-menu a{color:white;margin-right:18px;text-decoration:none;font-weight:600}
-    .welcome{padding:28px;text-align:center;font-size:28px;color: #673AB7;font-weight:700}
-    .split-bg{display:flex;height:420px}
-    .left-side,.right-side{flex:1;display:flex;align-items:center;justify-content:center}
-    .left-side{background:#bfe9ff}
-    .right-side{background:#e9cfff}
-    .box-content{text-align:center}
-    .btn-blue{display:inline-block;background:#0aa1ff;color:white;padding:12px 26px;border-radius:24px;text-decoration:none;font-weight:800}
-    .btn-purple{display:inline-block;background:#7a33c7;color:white;padding:12px 26px;border-radius:24px;text-decoration:none;font-weight:800}
+     :root {
+    --neon-blue: #45e4ff;
+  }
+
+  body { font-family: Roboto, Arial, Helvetica, sans-serif; margin: 0; }
+
+  /* Topbar */
+  .topbar {
+    background: rgba(108, 39, 217, 0.85);
+    padding: 12px 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    display: flex;                        
+    align-items: center;                  
+    justify-content: center; 
+  }
+  .topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+}
+
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  
+  }
+
+  .nav-menu a {
+    color: white;
+    margin-right: 20px;
+    font-weight: 500;
+    position: relative;
+    transition: 0.3s ease;
+    text-decoration: none;
+  }
+
+  .nav-menu a:hover {
+    color: var(--neon-blue);
+  }
+
+  .nav-menu a::after {
+    content: "";
+    width: 0;
+    height: 2px;
+    background: var(--neon-blue);
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    transition: 0.3s;
+  }
+
+  .nav-menu a:hover::after {
+    width: 100%;
+  }
+  .welcome{padding:28px;text-align:center;font-size:28px;color: #673AB7;font-weight:700}
+  .split-bg{display:flex;height:420px}
+  .left-side,.right-side{flex:1;display:flex;align-items:center;justify-content:center}
+  .left-side{background:#bfe9ff}
+  .right-side{background:#e9cfff}
+  .box-content{text-align:center}
+  .btn-blue{display:inline-block;background:#0aa1ff;color:white;padding:12px 26px;border-radius:24px;text-decoration:none;font-weight:800}
+  .btn-purple{display:inline-block;background:#7a33c7;color:white;padding:12px 26px;border-radius:24px;text-decoration:none;font-weight:800}
+    
+  /* ── Profile Button ── */
+  .profile-wrapper { position: relative; margin-left: auto; 
+  position: relative; }
+
+  .profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: white;
+      padding: 0;
+    }
+
+  .avatar-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #45e4ff, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.6);
+      flex-shrink: 0;
+    }
+
+  .profile-btn-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: white;
+    }
+
+  .chevron {
+      font-size: 10px;
+      color: white;
+      transition: transform 0.2s;
+    }
+
+  .profile-btn.open .chevron { transform: rotate(180deg); }
+
+    /* ── Dropdown ── */
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 12px);
+      right: 0;
+      width: 260px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 16px 48px rgba(30,10,70,0.18), 0 2px 8px rgba(0,0,0,0.08);
+      overflow: hidden;
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(-6px) scale(0.97);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .profile-dropdown.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: all;
+    }
+
+    .pd-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid #f0eeff;
+    }
+
+    .pd-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #45e4ff, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .pd-info { flex: 1; min-width: 0; }
+
+    .pd-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #1e1135;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pd-sub {
+      font-size: 12px;
+      color: #888;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .pd-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 5px;
+      background: #ecfdf5;
+      color: #059669;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+    }
+
+    .pd-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #059669;
+    }
+
+    .pd-section {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #aaa;
+      padding: 10px 16px 3px;
+    }
+
+    .pd-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #2d1f5e;
+      text-decoration: none;
+      transition: background 0.13s;
+    }
+
+    .pd-item:hover { background: #f5f3ff; }
+
+    .pd-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .ic-blue   { background: #eff6ff; }
+    .ic-purple { background: #f5f3ff; }
+    .ic-green  { background: #f0fdf4; }
+    .ic-red    { background: #fff1f2; }
+
+    .pd-divider { height: 1px; background: #f0eeff; margin: 4px 0; }
+
+    .pd-signout {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #dc2626;
+      cursor: pointer;
+      transition: background 0.13s;
+    }
+
+    .pd-signout:hover { background: #fff5f5; }
 
     /* Floating Request button */
     #requestAccessBtn {
@@ -58,19 +320,103 @@
     }
     .replyItem{background:#f8f6ff;border-radius:8px;padding:10px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.04)}
     .replyItem time{display:block;color:#666;font-size:12px;margin-bottom:6px}
+    .topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* brand */
+.brand {
+  display: flex;
+  align-items:center;
+  gap: 6px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+}
+/* center nav */
+.nav-menu {
+  display: flex;
+  gap: 24px;
+  margin-left: 0px;
+}
+
+.nav-menu a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* push profile to right */
+.profile-wrapper {
+  margin-left: auto;
+  position: relative;
+}
   </style>
 </head>
 <body>
+<header class="topbar">
+  <div class="topbar-inner">
 
-  <header class="topbar">
-    <nav class="nav-menu" style="display:flex;align-items:center;">
-      <a href="/frontend/user.html">My Account</a>
-      <a href="/frontend/shipments.html">My Shipments</a>
-      <a href="/frontend/shipment_data.html">create Shipments</a>
-      <a href="/frontend/device_data.html">live streaming</a>
-      <a href="/frontend/logout.html">logout</a>
+    <!-- BRAND (LEFT) -->
+    <div class="brand">
+      <strong>SCMXPert<span style="color:#45e4ff">Lite</span></strong>
+      <span style="opacity:.8;font-size:13px;margin-left:6px"></span>
+    </div>
+
+    <!-- NAV (CENTER) -->
+    <nav class="nav-menu">
+      <a href="/frontend/home.html">Home</a>
+      <a href="/frontend/shipments (1).html">My Shipments</a>
+      <a href="/frontend/shipment_data.html">Create Shipment</a>
     </nav>
-  </header>
+
+    <!-- PROFILE (RIGHT) -->
+    <div class="profile-wrapper">
+      <button class="profile-btn" id="profileBtn">
+        <div class="avatar-circle" id="navAvatar">??</div>
+        <span class="profile-btn-name" id="navName">Loading...</span>
+        <span class="chevron">▼</span>
+      </button>
+
+      <div class="profile-dropdown" id="profileDropdown">
+
+        <div class="pd-header">
+          <div class="pd-avatar" id="dropAvatar">??</div>
+          <div class="pd-info">
+            <div class="pd-name" id="dropFullName">Loading...</div>
+            <div class="pd-sub" id="dropSub">...</div>
+            <div class="pd-badge">Active</div>
+          </div>
+        </div>
+
+        <div class="pd-section">Account</div>
+        <a href="/frontend/profile.html" class="pd-item">
+          <div class="pd-icon ic-blue">👤</div> View &amp; Edit Profile
+        </a>
+        <a href="/frontend/settings.html" class="pd-item">
+          <div class="pd-icon ic-purple">⚙️</div> Settings &amp; Privacy
+        </a>
+
+        <div class="pd-section">Manage</div>
+        <a href="/frontend/shipments.html" class="pd-item">
+          <div class="pd-icon ic-green">📦</div> My Shipments
+        </a>
+
+        <div class="pd-divider"></div>
+
+        <div class="pd-signout" id="signOutBtn">
+          <div class="pd-icon ic-red">🚪</div> Sign Out
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</header>
 
   <div class="welcome" id="welcomeText">Hi user, Welcome to SCMXPertLite</div>
 
@@ -86,13 +432,13 @@
       <div class="box-content">
         <h2>To see Device Data Stream</h2>
         <p>Monitor your real-time device activity.</p>
-        <a href="/frontend/device_data.html" class="btn-purple">DEVICE DATA STREAM</a>
+        <a href="/frontend/profile.html" class="btn-purple">MY ACCOUNT</a>
       </div>
     </div>
   </div>
 
   <!-- Floating Request Button -->
-  <button id="requestAccessBtn">Request Access</button>
+  <button id="requestAccessBtn">Raise a Ticket</button>
 
   <!-- Request Modal -->
   <div id="requestModalOverlay">
@@ -118,150 +464,190 @@
   <div id="toast"></div>
 
 <script>
-/* ============================
-   Config & helpers
-   ============================ */
-const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
-function getToken(){ return localStorage.getItem("token") || ""; }
-function authHeaders(){ const t=getToken(); return t ? { "Authorization":"Bearer "+t } : {}; }
-function decodeToken(){ try{ const t=getToken(); if(!t) return null; return JSON.parse(atob(t.split('.')[1])); }catch{return null;} }
+  /* ============================================================
+    AUTH CHECK (redirect to signin if no token)
+  ============================================================ */
+  (function() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.replace("/frontend/user.html");
+    }
+  })();
 
-function showToast(msg, t = 3000){
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.classList.add("show");
-  setTimeout(()=> el.classList.remove("show"), t);
-}
-
-/* Welcome text */
-document.addEventListener("DOMContentLoaded", () => {
-  const p = decodeToken();
-  if (p) {
-    const username = p.username || p.sub || "";
-    const role = (p.role || "user").toUpperCase();
-
-    document.getElementById("welcomeText").innerHTML = `
-      Hi <span class="welcome-username">${username}</span> (${role}), Welcome to SCMXPertLite. Ready to dive in?`;
+  /* ============================
+     Config & helpers
+  ============================ */
+  const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
+  function getToken(){ return localStorage.getItem("token") || ""; }
+  function authHeaders(){ const t=getToken(); return t ? { "Authorization":"Bearer "+t } : {}; }
+  function decodeToken(){
+    try{ const t=getToken(); if(!t) return null; return JSON.parse(atob(t.split('.')[1])); }
+    catch{ return null; }
   }
-});
 
-/* ===== Request Modal ===== */
-const requestBtn = document.getElementById("requestAccessBtn");
-const modalOverlay = document.getElementById("requestModalOverlay");
-const closeModal = document.getElementById("closeModal");
-const submitBtn = document.getElementById("submitRequestBtn");
+  function showToast(msg, t = 3000){
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    setTimeout(()=> el.classList.remove("show"), t);
+  }
 
-requestBtn.onclick = () => modalOverlay.style.display = "flex";
-closeModal.onclick = () => modalOverlay.style.display = "none";
-modalOverlay.onclick = (e) => { if(e.target === modalOverlay) modalOverlay.style.display = "none"; };
+  /* ============================
+     Populate profile from JWT — runs immediately on load
+  ============================ */
+  document.addEventListener("DOMContentLoaded", () => {
+    const p = decodeToken();
+    if (p) {
+      const username = p.username || p.sub || "";
+      const fullName = p.full_name || p.name || username;
+      const email    = p.email || "";
+      const role     = (p.role || "user").toUpperCase();
 
-submitBtn.onclick = async () => {
-  const desc = document.getElementById("requestDescription").value.trim();
-  if(!desc) { showToast("Please enter a request"); return; }
+      // Build initials (up to 2 letters)
+      const initials = fullName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(w => w[0].toUpperCase())
+        .join("") || username.slice(0, 2).toUpperCase();
 
-  // try two endpoints for compatibility: /requests and /admin/request-access
-  const payload = { description: desc };
+      // ── Welcome message ──
+      document.getElementById("welcomeText").innerHTML =
+        `Hi <span class="welcome-username">${username}</span> (${role}), Welcome to SCMXPertLite. Ready to dive in?`;
 
-  try {
-    let res = await fetch(`${API_BASE_URL}/requests`, {
-      method: "POST",
-      headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
-      body: JSON.stringify({ type: "user_request", description: desc })
-    });
+      // ── Nav bar: avatar initials + username ──
+      document.getElementById("navAvatar").textContent = initials;
+      document.getElementById("navName").textContent   = username;
 
-    if(!res.ok){
-      // fallback to older endpoint if present
-      res = await fetch(`${API_BASE_URL}/admin/request-access`, {
+      // ── Dropdown header ──
+      document.getElementById("dropAvatar").textContent   = initials;
+      document.getElementById("dropFullName").textContent = fullName;
+      document.getElementById("dropSub").textContent      = `${username} · ${role}`;
+    }
+  });
+
+  /* Dropdown toggle */
+  const profileBtn      = document.getElementById("profileBtn");
+  const profileDropdown = document.getElementById("profileDropdown");
+
+  profileBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    const open = profileDropdown.classList.toggle("show");
+    profileBtn.classList.toggle("open", open);
+  });
+
+  document.addEventListener("click", e => {
+    if (!profileDropdown.contains(e.target) && e.target !== profileBtn) {
+      profileDropdown.classList.remove("show");
+      profileBtn.classList.remove("open");
+    }
+  });
+
+  /* Sign Out */
+  document.getElementById("signOutBtn").addEventListener("click", () => {
+    localStorage.removeItem("token");
+    window.location.replace("/frontend/user.html");
+  });
+
+  /* ===== Request Modal ===== */
+  const requestBtn   = document.getElementById("requestAccessBtn");
+  const modalOverlay = document.getElementById("requestModalOverlay");
+  const closeModal   = document.getElementById("closeModal");
+  const submitBtn    = document.getElementById("submitRequestBtn");
+
+  requestBtn.onclick = () => modalOverlay.style.display = "flex";
+  closeModal.onclick = () => modalOverlay.style.display = "none";
+  modalOverlay.onclick = (e) => { if(e.target === modalOverlay) modalOverlay.style.display = "none"; };
+
+  submitBtn.onclick = async () => {
+    const desc = document.getElementById("requestDescription").value.trim();
+    if(!desc) { showToast("Please enter a request"); return; }
+
+    try {
+      let res = await fetch(`${API_BASE_URL}/requests`, {
         method: "POST",
         headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
-        body: JSON.stringify({ description: desc })
+        body: JSON.stringify({ type: "user_request", description: desc })
       });
-    }
 
-    const j = await res.json().catch(()=>({}));
-    if(!res.ok) { showToast(j.detail || j.message || "Request failed"); return; }
-
-    showToast("Request submitted!");
-    document.getElementById("requestDescription").value = "";
-    modalOverlay.style.display = "none";
-  } catch(err){
-    console.error(err);
-    showToast("Network error");
-  }
-};
-
-/* ===== Replies (user) =====
-   - loadReplies() fetches /user/replies
-   - poll for new replies every 4s
-*/
-let lastReplyTime = 0;
-
-async function loadReplies(){
-  const box = document.getElementById("replyBox");
-  const list = document.getElementById("replyBoxList");
-  try {
-    const res = await fetch(`${API_BASE_URL}/user/replies`, { headers: authHeaders() });
-    if(!res.ok){
-      // hide box if endpoint not available or 403
-      box.style.display = "none";
-      return;
-    }
-    const data = await res.json();
-    const replies = data.replies || [];
-
-    if(!replies.length){
-      box.style.display = "none";
-      return;
-    }
-
-    // render reversed (most recent top)
-    const rendered = replies.slice().reverse().map(r => {
-      const ts = r.sent_at ? new Date(r.sent_at).toLocaleString() : '';
-      const msg = escapeHtml(r.message || r.reply || '');
-      return `<div class="replyItem"><time>${escapeHtml(ts)}</time><div>${msg}</div></div>`;
-    }).join("");
-
-    list.innerHTML = rendered;
-    box.style.display = "block";
-
-    // update lastReplyTime
-    const latest = new Date(replies[replies.length-1]?.sent_at || 0).getTime();
-    if(latest && latest > lastReplyTime) lastReplyTime = latest;
-
-  } catch(err) {
-    console.error("loadReplies error", err);
-  }
-}
-
-async function pollReplies(){
-  try {
-    const res = await fetch(`${API_BASE_URL}/user/replies`, { headers: authHeaders() });
-    if(!res.ok) return;
-    const data = await res.json();
-    const replies = data.replies || [];
-    if(!replies.length) return;
-    const latest = new Date(replies[replies.length-1].sent_at || 0).getTime();
-    if(latest > lastReplyTime){
-      if(lastReplyTime !== 0){
-        showToast("New reply from Admin!");
+      if(!res.ok){
+        res = await fetch(`${API_BASE_URL}/admin/request-access`, {
+          method: "POST",
+          headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+          body: JSON.stringify({ description: desc })
+        });
       }
-      lastReplyTime = latest;
-      loadReplies();
+
+      const j = await res.json().catch(()=>({}));
+      if(!res.ok) { showToast(j.detail || j.message || "Request failed"); return; }
+
+      showToast("Request submitted!");
+      document.getElementById("requestDescription").value = "";
+      modalOverlay.style.display = "none";
+    } catch(err){
+      console.error(err);
+      showToast("Network error");
     }
-  } catch(e){
-    // silent
+  };
+
+  const token = localStorage.getItem("token");
+
+  /* ===== Replies (user) ===== */
+  let lastReplyTime = 0;
+
+  async function loadReplies(){
+    const box  = document.getElementById("replyBox");
+    const list = document.getElementById("replyBoxList");
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/replies`, { headers: authHeaders() });
+      if(!res.ok){ box.style.display = "none"; return; }
+
+      const data    = await res.json();
+      const replies = data.replies || [];
+      if(!replies.length){ box.style.display = "none"; return; }
+
+      const rendered = replies.slice().reverse().map(r => {
+        const ts  = r.sent_at ? new Date(r.sent_at).toLocaleString() : '';
+        const msg = escapeHtml(r.message || r.reply || '');
+        return `<div class="replyItem"><time>${escapeHtml(ts)}</time><div>${msg}</div></div>`;
+      }).join("");
+
+      list.innerHTML = rendered;
+      box.style.display = "block";
+
+      const latest = new Date(replies[replies.length-1]?.sent_at || 0).getTime();
+      if(latest && latest > lastReplyTime) lastReplyTime = latest;
+
+    } catch(err) {
+      console.error("loadReplies error", err);
+    }
   }
-}
 
-/* small helper to escape html */
-function escapeHtml(str){
-  if(str === undefined || str === null) return '';
-  return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); });
-}
+  async function pollReplies(){
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/replies`, { headers: authHeaders() });
+      if(!res.ok) return;
+      const data    = await res.json();
+      const replies = data.replies || [];
+      if(!replies.length) return;
+      const latest = new Date(replies[replies.length-1].sent_at || 0).getTime();
+      if(latest > lastReplyTime){
+        if(lastReplyTime !== 0) showToast("New reply from Admin!");
+        lastReplyTime = latest;
+        loadReplies();
+      }
+    } catch(e){ /* silent */ }
+  }
 
-/* init */
-loadReplies();
-setInterval(pollReplies, 4000);
+  function escapeHtml(str){
+    if(str === undefined || str === null) return '';
+    return String(str).replace(/[&<>"']/g, function(m){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]);
+    });
+  }
+
+  loadReplies();
+  setInterval(pollReplies, 4000);
 </script>
 
 </body>
