@@ -4,1592 +4,2054 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>SCMXpertLite — Admin Dashboard</title>
-<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  /* ===== Palette & base (matches your UI, updated visuals) ===== */
-  :root{
-    --purple:#673AB7;
-    --purple-dark:#4A1CA0;
-    --purple-soft:#7c52d0;
-    --teal:#03C2E0;
-    --bg:#f3f1fb;
-    --panel:#ffffff;
-    --muted:#666;
-    --success:#2ecc71;
-    --danger:#e74c3c;
-    --accent:#6ac4ee;
-    --shadow: 0 8px 28px rgba(46,17,84,0.06);
-  }
-
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    font-family:Roboto,system-ui,Arial;
-    margin:0;
-    background: linear-gradient(135deg, rgba(124,82,208,0.04), rgba(230,226,245,0.04)), #f8f6fb;
-    color:#222;
-    -webkit-font-smoothing:antialiased;
-  }
-
-  a{color:inherit}
-
-  /* topbar */
-  .topbar{
-    width:100%;
-    background:var(--purple);
-    padding:12px 20px;
-    box-shadow:0 3px 12px rgba(0,0,0,0.08);
-    position:sticky; top:0; z-index:40;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-.topbar {
-  background: #7c5cbf;
-  padding: 0 24px;
-  height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  z-index: 1000;
+:root{
+  --purple:#673AB7;--purple-dark:#4A1CA0;--purple-soft:#7c52d0;
+  --teal:#03C2E0;--bg:#f3f1fb;--panel:#ffffff;
+  --muted:#666;--success:#059669;--danger:#e74c3c;
+  --warning:#b45309;--blue:#1d4ed8;
+  --shadow:0 4px 16px rgba(46,17,84,0.07);
+  --border:rgba(103,58,183,0.1);
+  --super:#dc2626;
 }
-
-.nav-left a {
-  color: rgba(255,255,255,0.9);
-  text-decoration: none;
-  font-size: 14px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.25);
-  transition: background 0.15s;
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:#f3f1fb;color:#222;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+ 
+/* ── TOPBAR ── */
+.topbar{
+  background:linear-gradient(135deg,#4A1CA0 0%,#6C27D9 100%);
+  padding:0 24px;height:56px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:1000;
+  box-shadow:0 2px 16px rgba(60,20,120,0.22);
 }
-.nav-left a:hover { background: rgba(255,255,255,0.15); }
-
-.nav-right { display: flex; align-items: center; }
-
-/* Profile trigger */
-.profile-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 8px;
-  transition: background 0.15s;
-  user-select: none;
+.nav-left{display:flex;align-items:center;gap:18px}
+.brand{color:#fff;font-weight:700;font-size:17px}
+.brand .teal{color:#45e4ff}
+.admin-badge{background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.35);
+  border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;letter-spacing:.05em;margin-left:6px}
+.admin-badge.super{background:rgba(220,38,38,0.8);border-color:rgba(220,38,38,0.5)}
+.nav-link{color:rgba(255,255,255,0.88);font-size:13px;padding:6px 12px;border-radius:8px;
+  border:1px solid rgba(255,255,255,0.22);transition:background .15s}
+.nav-link:hover{background:rgba(255,255,255,0.15)}
+.nav-right{display:flex;align-items:center;gap:14px}
+.welcome-text{color:#fff;font-weight:600;font-size:13px}
+ 
+.profile-wrap{position:relative;display:flex;align-items:center;gap:7px;
+  cursor:pointer;padding:5px 10px;border-radius:8px;transition:background .15s;user-select:none}
+.profile-wrap:hover{background:rgba(255,255,255,0.15)}
+.avatar{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.25);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;
+  color:#fff;border:2px solid rgba(255,255,255,0.45)}
+.username{font-size:14px;color:#fff;font-weight:600}
+.arrow{font-size:10px;color:rgba(255,255,255,0.75);transition:transform .2s}
+.profile-wrap.open .arrow{transform:rotate(180deg)}
+.dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;
+  border:.5px solid #e0e0e0;border-radius:14px;min-width:230px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.14);z-index:9999;overflow:hidden}
+.profile-wrap.open .dropdown{display:block}
+.drop-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#f7f4ff}
+.drop-avatar{width:42px;height:42px;border-radius:50%;background:#7c5cbf;
+  display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.drop-name{font-size:15px;font-weight:700;color:#111}
+.drop-meta{font-size:12px;color:#888;margin-top:1px}
+.drop-status{display:flex;align-items:center;gap:5px;font-size:12px;color:#059669;font-weight:600;margin-top:3px}
+.live-dot-sm{width:6px;height:6px;border-radius:50%;background:#4caf50;display:inline-block}
+.drop-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:14px;color:#222;transition:background .12s;cursor:pointer}
+.drop-item:hover{background:#f5f5f5}
+.drop-divider{height:.5px;background:#eee;margin:3px 0}
+.logout-item{color:#c62828}.logout-item:hover{background:#fdecea}
+ 
+/* ── AUTH BANNER ── */
+.auth-banner{
+  display:none;background:#fef2f2;border:1px solid #fecaca;
+  color:#991b1b;padding:12px 20px;font-size:13px;font-weight:600;
+  text-align:center;border-radius:8px;margin:12px 16px 0;
 }
-.profile-wrap:hover { background: rgba(255,255,255,0.15); }
-
-.avatar {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 500; color: #fff;
-  border: 2px solid rgba(255,255,255,0.5);
+.auth-banner.show{display:block}
+.auth-banner a{color:#7c1d1d;text-decoration:underline;cursor:pointer;margin-left:8px}
+ 
+/* ── SUPER ADMIN BANNER ── */
+.super-banner{
+  display:none;background:linear-gradient(90deg,#4a0000,#7f1d1d);
+  border-bottom:2px solid #dc2626;color:#fff;padding:8px 24px;
+  font-size:12px;font-weight:700;letter-spacing:.05em;text-align:center;
+  text-transform:uppercase;
 }
-.username { font-size: 14px; color: #fff; font-weight: 500; }
-.arrow { font-size: 10px; color: rgba(255,255,255,0.8); transition: transform 0.2s; }
-.profile-wrap.open .arrow { transform: rotate(180deg); }
-
-/* Dropdown */
-.dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: #fff;
-  border: 0.5px solid #e0e0e0;
-  border-radius: 14px;
-  min-width: 230px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-  z-index: 9999;
-  overflow: hidden;
+.super-banner.show{display:block}
+ 
+/* ── LAYOUT ── */
+.layout{display:flex;max-width:1340px;margin:22px auto;gap:20px;padding:0 16px}
+ 
+/* ── SIDEBAR ── */
+.sidebar{
+  width:248px;flex-shrink:0;
+  background:linear-gradient(180deg,#5a2fa8 0%,#3d1690 100%);
+  border-radius:14px;padding:16px;color:#fff;
+  box-shadow:0 12px 40px rgba(88,40,160,0.22);
+  height:fit-content;position:sticky;top:72px;
 }
-.profile-wrap.open .dropdown { display: block; }
-
-/* Dropdown header */
-.drop-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+.sidebar h3{margin:0 0 14px;font-size:13px;color:#c4b0ff;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase}
+.menu-item{
+  display:flex;flex-direction:column;padding:10px 12px;border-radius:10px;
+  cursor:pointer;color:#e8e0ff;margin-bottom:5px;
+  transition:all .2s ease;background:rgba(255,255,255,0.06);
+  font-size:13px;font-weight:600;
 }
-.drop-avatar {
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  background: #7c5cbf;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; font-weight: 600; color: #fff;
-  flex-shrink: 0;
+.menu-item small{color:rgba(255,255,255,0.55);font-weight:400;font-size:11px;margin-top:2px}
+.menu-item:hover,.menu-item.active{background:#fff;color:#4a1ca0}
+.menu-item.active small,.menu-item:hover small{color:#7c5cbf}
+.menu-item.super-item{background:rgba(220,38,38,0.15);color:#fca5a5;border:1px solid rgba(220,38,38,0.2)}
+.menu-item.super-item:hover,.menu-item.super-item.active{background:#dc2626;color:#fff}
+.menu-item.super-item:hover small,.menu-item.super-item.active small{color:rgba(255,255,255,0.75)}
+.session-label{color:#c4b0ff;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;margin:16px 0 8px;display:flex;align-items:center;gap:7px}
+.session-count{background:rgba(255,255,255,0.18);color:#fff;font-size:10px;
+  padding:2px 6px;border-radius:999px;font-weight:700}
+.logged-list{max-height:160px;overflow-y:auto;scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,0.2) transparent;
+  background:rgba(255,255,255,0.06);border-radius:8px;padding:8px}
+.session-row{padding:6px;background:rgba(255,255,255,0.09);border-radius:7px;
+  margin-bottom:5px;color:rgba(255,255,255,0.92)}
+.session-row strong{display:block;font-size:12px}
+.session-row span{font-size:11px;opacity:.7}
+ 
+/* ── MAIN ── */
+.main{flex:1;min-width:0}
+ 
+/* ── STAT CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.stat-card{background:#fff;border-radius:12px;padding:16px 18px;
+  box-shadow:var(--shadow);border:.5px solid var(--border);
+  position:relative;overflow:hidden;transition:transform .15s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--card-accent,var(--purple))}
+.stat-label{font-size:11px;color:#888;margin-bottom:6px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.stat-val{font-size:26px;font-weight:700;color:#222;font-family:'DM Mono',monospace;line-height:1}
+.stat-pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;margin-top:6px}
+.pill-green{background:#ecfdf5;color:#059669}
+.pill-amber{background:#fffbeb;color:#b45309}
+.pill-blue{background:#eff6ff;color:#1d4ed8}
+.pill-purple{background:#f3f0ff;color:#6d28d9}
+.pill-red{background:#fef2f2;color:#dc2626}
+.pill-teal{background:#e0f9fd;color:#0e7490}
+.c-purple{--card-accent:#673AB7}.c-amber{--card-accent:#b45309}
+.c-green{--card-accent:#059669}.c-blue{--card-accent:#1d4ed8}.c-teal{--card-accent:#03C2E0}
+.c-red{--card-accent:#dc2626}
+ 
+/* ── PANELS ── */
+.panel{background:#fff;border-radius:12px;padding:20px;
+  box-shadow:var(--shadow);margin-bottom:16px;border:.5px solid var(--border)}
+.panel-title{font-size:16px;color:var(--purple);font-weight:700}
+.panel-sub{font-size:13px;color:#888;margin-top:2px}
+.header-row{display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.search{padding:8px 10px;border-radius:8px;border:1px solid #e8e8e8;
+  font-size:13px;outline:none;background:#fafafa;font-family:'DM Sans',sans-serif;width:220px}
+.search:focus{border-color:var(--purple);background:#fff}
+ 
+/* ── BUTTONS ── */
+.btn{padding:8px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700;
+  font-size:13px;transition:all .15s;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:5px}
+.btn.primary{background:var(--purple);color:#fff}.btn.primary:hover{background:#5a2da8}
+.btn.ghost{background:transparent;border:1px solid #ddd;color:#444}.btn.ghost:hover{background:#f5f5f5;border-color:#bbb}
+.btn.warn{background:#03C2E0;color:#001f2e}.btn.warn:hover{background:#02afc8}
+.btn.danger{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}.btn.danger:hover{background:#fee2e2}
+.btn.danger-solid{background:#dc2626;color:#fff}.btn.danger-solid:hover{background:#b91c1c}
+.btn.view{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}.btn.view:hover{background:#dbeafe}
+.btn.super{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;border:none}
+.btn.super:hover{background:linear-gradient(135deg,#991b1b,#ef4444)}
+.btn.sm{padding:5px 10px;font-size:11px;border-radius:6px}
+ 
+/* ── ANALYTICS BAR ── */
+.analytics-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;background:linear-gradient(90deg,#f3f0ff,#eff6ff);
+  border-radius:10px;border:.5px solid rgba(103,58,183,0.14);margin-bottom:16px;
 }
-.drop-name { font-size: 15px; font-weight: 600; color: #111; }
-.drop-meta { font-size: 12px; color: #888; margin-top: 2px; }
-.drop-status {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 12px; color: #2e7d32; font-weight: 500; margin-top: 3px;
+.analytics-bar-left{font-size:13px;font-weight:700;color:#4a1ca0}
+.analytics-bar-right{display:flex;align-items:center;gap:10px}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:12px;color:#059669;font-weight:700}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:#059669;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
+.last-upd{font-size:11px;color:#999}
+ 
+/* ── STATUS / PRIORITY CHIPS ── */
+.status-breakdown{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.sc{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;
+  font-size:13px;font-weight:700;border:.5px solid transparent;transition:transform .15s}
+.sc:hover{transform:translateY(-1px)}
+.sc-num{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}
+.sc-active{background:#ecfdf5;color:#059669;border-color:#d1fae5}
+.sc-transit{background:#eff6ff;color:#1d4ed8;border-color:#dbeafe}
+.sc-delivered{background:#f3f0ff;color:#6d28d9;border-color:#e9d5ff}
+.sc-pending{background:#fffbeb;color:#b45309;border-color:#fde68a}
+.sc-cancelled{background:#fef2f2;color:#dc2626;border-color:#fecaca}
+ 
+.priority-row{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.pchip{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700}
+.p-high{background:#fef2f2;color:#dc2626}
+.p-medium{background:#fffbeb;color:#b45309}
+.p-low{background:#ecfdf5;color:#059669}
+ 
+/* ── CHARTS ── */
+.section-label{font-size:11px;font-weight:700;color:#aaa;letter-spacing:.08em;
+  text-transform:uppercase;margin:20px 0 10px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.chart-card{background:#fff;border-radius:12px;padding:16px;
+  box-shadow:var(--shadow);border:.5px solid var(--border)}
+.chart-card.wide{grid-column:span 2}
+.chart-title{font-size:14px;font-weight:700;color:#222;margin-bottom:2px}
+.chart-sub{font-size:12px;color:#888;margin-bottom:10px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:12px;color:#666}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.chart-wrap{position:relative;width:100%}
+ 
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse}
+th,td{padding:11px 12px;text-align:left;border-bottom:1px solid #f2f2f5;font-size:13px}
+th{font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:.04em;background:#fafafa}
+tbody tr:hover{background:#fbfbff}
+.role-badge{padding:3px 10px;border-radius:999px;background:#f3f0ff;color:var(--purple);
+  font-weight:700;font-size:11px;display:inline-block}
+.role-badge.super{background:#fef2f2;color:#dc2626}
+ 
+.sbadge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;display:inline-block}
+.sbadge-active{background:#ecfdf5;color:#059669}
+.sbadge-transit{background:#eff6ff;color:#1d4ed8}
+.sbadge-delivered{background:#f3f0ff;color:#6d28d9}
+.sbadge-pending{background:#fffbeb;color:#b45309}
+.sbadge-cancelled{background:#fef2f2;color:#dc2626}
+.pbadge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block}
+.pbadge-high{background:#fef2f2;color:#dc2626}
+.pbadge-medium{background:#fffbeb;color:#b45309}
+.pbadge-low{background:#ecfdf5;color:#059669}
+.pbadge-critical{background:#4a1ca0;color:#fff}
+ 
+.req-badge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.req-pending{background:#fff3cd;color:#856404}
+.req-approved{background:#d1fae5;color:#065f46}
+.req-rejected{background:#fee2e2;color:#991b1b}
+.req-resolved{background:#e0e7ff;color:#3730a3}
+ 
+/* ── DEVICE BADGES ── */
+.dbadge{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;display:inline-block}
+.dbadge-online{background:#ecfdf5;color:#059669}
+.dbadge-offline{background:#fef2f2;color:#dc2626}
+.dbadge-idle{background:#fffbeb;color:#b45309}
+.temp-hot{color:#dc2626;font-weight:700}
+.temp-warm{color:#b45309;font-weight:600}
+.temp-ok{color:#059669;font-weight:600}
+.bat-low{color:#dc2626;font-weight:700}
+.bat-mid{color:#b45309;font-weight:600}
+.bat-ok{color:#059669;font-weight:600}
+ 
+/* ── MODALS ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);
+  display:flex;align-items:center;justify-content:center;z-index:2000;
+  opacity:0;pointer-events:none;transition:all .18s ease}
+.modal-backdrop.show{opacity:1;pointer-events:auto}
+.modal{width:680px;max-width:96%;background:#fff;border-radius:16px;
+  padding:24px;box-shadow:0 20px 60px rgba(30,12,60,0.2)}
+.modal h4{margin:0 0 6px;color:var(--purple);font-size:16px;font-weight:700}
+.close-btn{background:#f0f0f0;border-radius:8px;padding:6px 10px;border:0;cursor:pointer;font-size:13px;font-weight:600}
+ 
+#editShipmentModal .modal{width:480px}
+#editShipmentModal label{display:block;font-size:12px;font-weight:700;color:#555;margin:12px 0 4px;letter-spacing:.04em;text-transform:uppercase}
+#editShipmentModal select,#editShipmentModal input{
+  width:100%;padding:9px 10px;border-radius:8px;border:1px solid #e0e0e0;
+  font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+#editShipmentModal select:focus,#editShipmentModal input:focus{border-color:var(--purple)}
+ 
+/* Super Admin Panel */
+#panelSuper{border:2px solid rgba(220,38,38,0.3)}
+#panelSuper .panel-title{color:#dc2626}
+.super-section{background:#fef2f2;border-radius:10px;padding:16px;margin-bottom:14px;border:.5px solid #fecaca}
+.super-section h5{color:#dc2626;font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.danger-zone{background:#fff5f5;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-top:10px}
+.danger-zone p{font-size:12px;color:#991b1b;margin-bottom:8px}
+ 
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.detail-row{padding:10px 14px;border-bottom:.5px solid #f0f0f4}
+.detail-row:nth-child(odd){background:#fafafa}
+.detail-key{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.detail-val{font-size:13px;color:#222;font-weight:500}
+ 
+.reply-drawer{
+  position:fixed;right:20px;bottom:22%;z-index:2100;
+  width:310px;background:#fff;border-radius:14px;padding:18px;
+  box-shadow:0 12px 40px rgba(30,12,60,0.16);
+  transform:translateX(420px);opacity:0;
+  transition:transform 260ms cubic-bezier(.2,.9,.2,1),opacity 260ms;
 }
-.dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #4caf50;
-  display: inline-block;
+.reply-drawer.open{transform:translateX(0);opacity:1}
+.reply-drawer h4{margin:0 0 10px;color:var(--purple);font-size:15px;font-weight:700}
+.reply-drawer textarea{width:100%;min-height:100px;padding:10px;border-radius:8px;
+  border:1px solid #e8e8e8;resize:vertical;font-family:'DM Sans',sans-serif;font-size:13px}
+ 
+.request-fab{position:fixed;right:22px;bottom:22px;background:var(--purple);color:#fff;
+  padding:12px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(103,58,183,0.3);
+  cursor:pointer;z-index:2000;border:0;font-weight:700;font-size:14px;font-family:'DM Sans',sans-serif}
+.request-fab:hover{background:#5a2da8}
+.drawer{position:fixed;right:22px;bottom:80px;width:340px;background:#fff;
+  border-radius:14px;padding:16px;box-shadow:0 16px 40px rgba(20,10,40,0.14);
+  display:none;z-index:2000}
+.drawer.open{display:block}
+.drawer h4{margin:0 0 12px;font-size:15px;font-weight:700}
+.drawer textarea{width:100%;height:90px;border:1px solid #e8e8e8;border-radius:8px;padding:8px;resize:vertical;font-family:'DM Sans',sans-serif;font-size:13px}
+.drawer .row{display:flex;gap:8px;margin-top:10px}
+.drawer select,.drawer input{padding:8px;border-radius:8px;border:1px solid #e8e8e8;width:100%;
+  font-family:'DM Sans',sans-serif;font-size:13px;margin-bottom:8px}
+ 
+#toast{position:fixed;top:22px;left:50%;transform:translateX(-50%) translateY(-26px);
+  background:var(--purple);color:#fff;padding:12px 20px;border-radius:10px;
+  box-shadow:0 10px 30px rgba(102,20,170,0.2);opacity:0;transition:all .28s ease;z-index:3000;
+  font-size:14px;font-weight:600}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.toast-danger{background:#dc2626}
+#toast.toast-success{background:#059669}
+ 
+.hidden{display:none!important}
+.fade-in{animation:fadeUp .2s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section-divider{height:1px;background:linear-gradient(to right,transparent,rgba(103,58,183,0.15),transparent);margin:22px 0}
+.perm-table{font-size:12px;max-height:240px;display:block;overflow-y:auto}
+.perm-table thead,.perm-table tbody tr{display:table;width:100%;table-layout:fixed}
+.chip.yes{background:#059669;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px}
+.chip.no{background:#e74c3c;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px}
+.chip.super-yes{background:#dc2626;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px}
+.replies-box{max-height:200px;overflow:auto}
+.reply-row{padding:10px 0;border-bottom:.5px solid #f0f0f3}
+.reply-title{font-weight:700;color:var(--purple);margin-bottom:4px;font-size:13px}
+.reply-body{color:#333;font-size:13px;margin-bottom:3px}
+.reply-meta{font-size:11px;color:#888}
+ 
+/* Device telemetry chart card */
+.device-chart-card{background:#fff;border-radius:12px;padding:16px;
+  box-shadow:var(--shadow);border:.5px solid var(--border);margin-bottom:14px}
+.device-stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.device-stat{flex:1;min-width:90px;background:#f9f8ff;border-radius:8px;
+  padding:10px 12px;border:.5px solid var(--border)}
+.device-stat-label{font-size:10px;color:#aaa;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;margin-bottom:4px}
+.device-stat-val{font-size:18px;font-weight:700;font-family:'DM Mono',monospace}
+ 
+/* IoT Device Stats Cards */
+.iot-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.iot-stat-card{background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);
+  border:.5px solid var(--border);border-left:3px solid var(--iot-color,#673AB7)}
+ 
+.analytics-layout{display:grid;grid-template-columns:1fr 340px;gap:16px}
+@media(max-width:1100px){.analytics-layout{grid-template-columns:1fr}}
+ 
+@media(max-width:980px){
+  .layout{flex-direction:column;margin:10px}
+  .sidebar{width:100%;position:static}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .iot-stats-row{grid-template-columns:repeat(2,1fr)}
+  .chart-grid{grid-template-columns:1fr}
+  .chart-card.wide{grid-column:span 1}
+  .analytics-layout{grid-template-columns:1fr}
 }
-
-/* Section labels */
-.drop-section-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #aaa;
-  letter-spacing: 0.6px;
-  padding: 6px 16px 2px;
-}
-
-/* Items */
-.drop-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 16px;
-  font-size: 14px;
-  color: #222;
-  text-decoration: none;
-  transition: background 0.12s;
-}
-.drop-item:hover { background: #f5f5f5; }
-
-/* Icon circles */
-.drop-icon {
-  width: 30px; height: 30px;
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.purple-icon { background: #ede9fb; color: #7c5cbf; }
-.gray-icon   { background: #f0f0f0; color: #666; }
-.orange-icon { background: #fff3e0; color: #e65100; }
-.blue-icon   { background: #e3f2fd; color: #1565c0; }
-.teal-icon   { background: #e0f2f1; color: #00695c; }
-.pink-icon   { background: #fce4ec; color: #c2185b; }
-.red-icon    { background: #fdecea; color: #c62828; }
-
-.logout-item { color: #c62828; }
-.logout-item:hover { background: #fdecea; }
-
-.drop-divider {
-  height: 0.5px;
-  background: #eeeeee;
-  margin: 4px 0;
-}
-  .nav-menu{display:flex; gap:18px; align-items:center; justify-content:flex-start}
-  .nav-menu a{color:#fff; text-decoration:none; font-weight:600; font-size:14px}
-  .brand{display:flex;align-items:center;gap:12px;color:#fff}
-
-  /* layout */
-  .layout{
-    display:flex;
-    max-width:1200px;
-    margin:28px auto;
-    gap:24px;
-    padding:0 16px;
-  }
-
-  /* Glass sidebar (purple-tinted) */
-  .sidebar{
-  width:260px;
-  background: linear-gradient(180deg, #6a3ecf 0%, #4a1ca0 100%);
-  border-radius:14px;
-  padding:14px;
-  color:#fff;
-  backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%);
-  box-shadow: 0 18px 40px rgba(88,40,160,0.18);
-  border:none;
-}
-  .sidebar h3{
-  margin:0 0 12px;
-  font-size:16px;
-  color:#d6c9ff;
-  font-weight:700;
-}
-  .menu-item{
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  align-items:flex-start;
-  padding:12px 10px;
-  border-radius:10px;
-  cursor:pointer;
-  color:#f3efff;
-  margin-bottom:8px;
-  transition:all .2s ease;
-  background: rgba(255,255,255,0.05);
-}
-  .menu-item:hover{
-  /* background: rgba(255,255,255,0.12);
-  transform:translateX(5px); */
-  background:#ffffff;
-  color:#4a1ca0;
-  font-weight:600;
-} */
- .menu-item small{
-  color: rgba(255,255,255,0.7);
-}
-
-  .main{flex:1}
-  .panel{
-    background:var(--panel);
-    border-radius:12px;
-    padding:18px;
-    box-shadow:0 6px 22px rgba(0,0,0,0.06);
-    margin-bottom:18px;
-    transition:all .12s ease;
-  }
-
-  .header-row{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
-  .title{font-size:20px; color:var(--purple); font-weight:700}
-  .controls{display:flex; gap:8px; align-items:center}
-
-  .small{font-size:13px;color:var(--muted)}
-  .muted{color:var(--muted)}
-
-  /* tables */
-  table{width:100%; border-collapse:collapse}
-  th,td{padding:12px 10px; text-align:left; border-bottom:1px solid #f0f0f3; font-size:14px}
-  th{font-weight:600; color:#444}
-  .user-table tbody tr:hover{background:#fbfbff}
-  .role-badge{padding:6px 10px; border-radius:999px; background:#f3f0ff; color:var(--purple); font-weight:700; font-size:13px; display:inline-block}
-
-  .btn{padding:9px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:700; transition:all .12s ease}
-  .btn.primary{background:var(--purple); color:#fff}
-  .btn.ghost{background:transparent; border:1px solid #eee; color:#222}
-  .btn.warn{background:var(--teal); color:#042}
-  .btn.icon{display:inline-flex; align-items:center; gap:8px; padding:8px 10px}
-  .actions button{margin-right:6px}
-
-  /* two column grid */
-  .grid{display:grid; grid-template-columns:1fr 420px; gap:18px}
-  @media (max-width:980px){ .layout{margin:12px} .grid{grid-template-columns:1fr} .sidebar{display:none} }
-
-  /* modal */
-  .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:all .18s ease}
-  .modal-backdrop.show{opacity:1; pointer-events:auto}
-  .modal{width:760px; max-width:96%; background:var(--panel); border-radius:12px; padding:18px; box-shadow:0 18px 60px rgba(30,12,60,0.18)}
-  .modal h4{margin:0 0 8px; color:var(--purple)}
-  .close-btn{background:#eee; border-radius:8px; padding:6px 8px; border:0; cursor:pointer}
-
- /* Permissions table scroll + row hover */
-#permGrid {
-  font-size: 12.5px;
-  max-height: 280px;
-  display: block;
-  overflow-y: auto;
-}
-  #permGrid thead,
-  #permGrid tbody tr {display: table;width: 100%;table-layout: fixed;}
-  #permGrid tbody tr:hover {background: #f7f4ff;}
-  #permGrid td:first-child {text-align: left;font-weight: 500;color: #333;}
-  .chip.yes{background:var(--success); color:white; padding:6px 8px; border-radius:8px}
-  .chip.no{background:var(--danger); color:white; padding:6px 8px; border-radius:8px}
-
-  /* toast */
-  #toast{
-    position:fixed; top:22px; left:50%; transform:translateX(-50%) translateY(-26px);
-    background:var(--purple); color:#fff; padding:12px 18px; border-radius:10px; box-shadow:0 10px 30px rgba(102,20,170,0.18);
-    opacity:0; transition:all .28s ease; z-index:1200;
-  }
-  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
-
-  /* tiny helpers */
-  .muted-block{color:var(--muted); font-size:13px}
-  .search{padding:8px 10px; border-radius:8px; border:1px solid #eee; width:100%}
-  .flex{display:flex; gap:8px; align-items:center}
-  .gap{height:12px}
-
-  /* small UI niceties */
-  .hidden { display:none !important; opacity:0; transform:translateY(-6px) }
-  .fade-in { animation: fadeInUp .18s ease both }
-  @keyframes fadeInUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
-
-  /* logged-in list */
-  .logged-list { margin-top:10px; border-radius:8px; padding:10px; background:rgba(255,255,255,0.06); font-size:13px; max-height:160px; overflow:auto; color:rgba(255,255,255,0.95) }
-  #loggedList::-webkit-scrollbar { width: 4px; }
-  #loggedList::-webkit-scrollbar-track { background: transparent; }
-  #loggedList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 999px; }
-  #loggedList::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
-  .logout-btn { background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; cursor:pointer }
-  .logout-btn svg { vertical-align:middle }
-
-  /* action menu icon */
-  .three-dots { width:28px; height:28px; border-radius:6px; background:#f6f6fb; display:inline-flex; align-items:center; justify-content:center; cursor:pointer }
-
-  /* Right-side Reply Drawer */
-  .reply-drawer {
-    width:320px;
-    background:var(--panel);
-    border-radius:12px;
-    padding:14px;
-    box-shadow:0 10px 40px rgba(30,12,60,0.12);
-    position:fixed;
-    right:20px;
-    bottom:24%;
-    z-index:1200;
-    transform: translateX(420px);
-    transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 260ms;
-    opacity:0;
-  }
-  .reply-drawer.open { transform: translateX(0); opacity:1; }
-  .reply-drawer h4 { margin:0 0 8px; color:var(--purple); }
-  .reply-drawer textarea { width:100%; min-height:110px; padding:10px; border-radius:8px; border:1px solid #eee; resize:vertical; }
-
-  /* slide-right + fade animation for rows */
-  .animate-out { animation: slideFadeRight 460ms ease forwards; }
-  @keyframes slideFadeRight {
-    from { transform: translateX(0); opacity: 1; }
-    to   { transform: translateX(50px); opacity: 0; height:0; margin:0; padding:0; }
-  }
-
-  /* Floating Request FAB (same as design) */
-  .request-fab{position:fixed;right:22px;bottom:22px;background:var(--purple);color:#fff;padding:12px 16px;border-radius:999px;box-shadow:0 10px 30px rgba(103,58,183,0.2);cursor:pointer;z-index:1200}
-  .drawer{position:fixed;right:22px;bottom:80px;width:360px;background:#fff;border-radius:10px;padding:12px;box-shadow:0 16px 40px rgba(20,10,40,0.12);display:none;z-index:1200}
-  .drawer.open{display:block}
-  .drawer h4{margin:0 0 8px}
-  .drawer textarea{width:100%;height:100px;border:1px solid #eee;border-radius:8px;padding:8px;resize:vertical}
-  .drawer .row{display:flex;gap:8px;margin-top:8px}
-  .drawer select, .drawer input{padding:8px;border-radius:8px;border:1px solid #eee;width:100%}
-
-  /* bottom-left toast (fallback small) */
-  #smallToast { position: fixed; left: 16px; bottom: 16px; min-width:220px; background:#111;color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 8px 26px rgba(0,0,0,0.2); opacity:0; transform: translateY(8px); transition: all 260ms ease; z-index:2000; }
-  #smallToast.show{ opacity:1; transform: translateY(0); }
-
-  .badge { display:inline-block;padding:6px 8px;border-radius:6px;background:#f1f1f1;color:#333;font-weight:700;font-size:12px }
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:18px;">
-
-    <!-- LEFT: BRAND -->
-    <div class="brand">
-  <strong>SCMXPert<span style="color: #45e4ff">Lite</span></strong>
-  <span style="opacity:.8;font-size:13px;margin-left:0px">Admin</span>
+ 
+<!-- AUTH ERROR BANNER -->
+<div id="authBanner" class="auth-banner">
+  ⚠️ Your session has expired or you don't have admin privileges.
+  <a onclick="doLogout()">Login again</a>
+  <a onclick="document.getElementById('authBanner').classList.remove('show')" style="margin-left:12px;color:#666">Dismiss</a>
 </div>
-
-    <!-- OPTIONAL NAV -->
-    <nav class="nav-menu" style="margin-left:18px">
-      <a href="/frontend/shipment_data.html">+ Create Shipment</a>
-    </nav>
-
-    <!-- RIGHT: PROFILE -->
-    <div style="margin-left:auto; display:flex; align-items:center; gap:16px;">
-
-      <!-- Welcome -->
-      <div style="color:#fff; font-weight:600">
-        Welcome — <span id="currentAdmin">...</span>
-      </div>
-
-      <!-- PROFILE DROPDOWN -->
-      <div class="profile-wrap" id="profileWrap">
-        <div class="avatar" id="userAvatar">?</div>
-        <span class="arrow">▼</span>
-
-        <div class="dropdown" id="profileDropdown">
-
-          <div class="drop-header">
-            <div class="drop-avatar" id="dropAvatar">?</div>
-            <div>
-              <div class="drop-name" id="dropName">Username</div>
-              <div class="drop-meta">
-                <span id="dropUsername">user</span> ·
-                <span id="dropRole">ADMIN</span>
-              </div>
-              <div class="drop-status"><span class="dot"></span> Active</div>
-            </div>
+ 
+<!-- SUPER ADMIN BANNER -->
+<div id="superBanner" class="super-banner">
+  🛡️ Super Admin Mode — Full system access active. Actions are irreversible.
+</div>
+ 
+<!-- ══ TOPBAR ══ -->
+<header class="topbar">
+  <div class="nav-left">
+    <div class="brand">SCMXPert<span class="teal">Lite</span><span class="admin-badge" id="adminBadge">Admin</span></div>
+    <a href="/frontend/shipment_data.html" class="nav-link">+ Create Shipment</a>
+  </div>
+  <div class="nav-right">
+    <div class="welcome-text">Welcome — <span id="currentAdmin">...</span></div>
+    <div class="profile-wrap" id="profileWrap">
+      <div class="avatar" id="userAvatar">A</div>
+      <span class="username" id="navName">Admin</span>
+      <span class="arrow">▼</span>
+      <div class="dropdown">
+        <div class="drop-header">
+          <div class="drop-avatar" id="dropAvatar">A</div>
+          <div>
+            <div class="drop-name" id="dropName">Admin User</div>
+            <div class="drop-meta"><span id="dropUsername">admin</span> · <span id="dropRole">ADMIN</span></div>
+            <div class="drop-status"><span class="live-dot-sm"></span> Active</div>
           </div>
-
-          <div class="drop-divider"></div>
-
-          <!-- ACCOUNT -->
-          <a href="/frontend/profile.html" class="drop-item">
-            View Profile
-          </a>
-
-          <a href="/frontend/settings.html" class="drop-item">
-            Settings
-          </a>
-
-          <div class="drop-divider"></div>
-
-          <!-- ADMIN LINKS -->
-          <a href="/frontend/admin_dashboard.html" class="drop-item">
-            Dashboard
-          </a>
-
-          <div class="drop-divider"></div>
-
-          <!-- LOGOUT -->
-          <div class="drop-item logout-item" id="logoutBtn">
-            Logout
-          </div>
-
         </div>
+        <div class="drop-divider"></div>
+        <a href="/frontend/profile.html" class="drop-item">👤 View Profile</a>
+        <a href="/frontend/settings.html" class="drop-item">⚙️ Settings</a>
+        <div class="drop-divider"></div>
+        <a href="/frontend/admin_dashboard.html" class="drop-item">🖥️ Dashboard</a>
+        <div class="drop-divider"></div>
+        <div class="drop-item logout-item" id="logoutBtn">🚪 Logout</div>
       </div>
     </div>
   </div>
 </header>
-  <div class="layout">
-    <aside class="sidebar">
-      <h3>Admin Tools</h3>
-
-      <div id="menuUsers" class="menu-item active" data-section="users">
-        Users
-        <small>manage accounts</small>
+ 
+<div class="layout">
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <h3>Admin Tools</h3>
+    <div class="menu-item active" id="menuDash">📊 Analytics<small>charts & insights</small></div>
+    <div class="menu-item" id="menuUsers">👥 Users<small>manage accounts</small></div>
+    <div class="menu-item" id="menuRequests">📋 Pending Requests<small>access requests</small></div>
+    <div class="menu-item" id="menuRoles">🔐 Roles & Permissions<small>edit roles</small></div>
+    <div class="menu-item" id="menuAudit">📝 Audit & Logs<small>session history</small></div>
+    <div class="menu-item" id="menuShipments">📦 Shipments<small>view, edit, delete</small></div>
+    <div class="menu-item" id="menuDeviceData">📡 Device Data<small>live IoT telemetry</small></div>
+    <!-- Super admin menu — shown only for super_admin role -->
+    <div class="menu-item super-item" id="menuSuper" style="display:none">🛡️ Super Admin<small>critical controls</small></div>
+    <div class="session-label">Logged-in Sessions <span class="session-count" id="sessionCount">0</span></div>
+    <div id="loggedList" class="logged-list"></div>
+  </aside>
+ 
+  <!-- ══ MAIN ══ -->
+  <main class="main">
+ 
+    <div class="stats-row">
+      <div class="stat-card c-purple">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-val" id="statUsers">—</div>
+        <span class="stat-pill pill-purple">Registered</span>
       </div>
-
-      <div id="menuRequests" class="menu-item" data-section="requests">
-        Pending Requests
-        <small>access requests</small>
+      <div class="stat-card c-amber">
+        <div class="stat-label">Pending Requests</div>
+        <div class="stat-val" id="statPending">—</div>
+        <span class="stat-pill pill-amber">Needs review</span>
       </div>
-
-      <div id="menuRoles" class="menu-item" data-section="roles">
-        Roles & Permissions
-        <small>edit roles</small>
+      <div class="stat-card c-blue">
+        <div class="stat-label">Total Shipments</div>
+        <div class="stat-val" id="statShipments">—</div>
+        <span class="stat-pill pill-blue">All records</span>
       </div>
-
-      <div id="menuAudit" class="menu-item" data-section="audit">
-        Audit & Logs
-        <small>history</small>
+      <div class="stat-card c-green">
+        <div class="stat-label">Active Shipments</div>
+        <div class="stat-val" id="statActive">—</div>
+        <span class="stat-pill pill-green">Live</span>
       </div>
-      <div id="menushipments" class="menu-item" data-section="shipments">
-        Shipments
-        <small>manage shipments</small>
+      <div class="stat-card c-teal">
+        <div class="stat-label">IoT Devices</div>
+        <div class="stat-val" id="statDevices">—</div>
+        <span class="stat-pill pill-teal">Tracked</span>
       </div>
-      <div id="menudevicedata" class="menu-item" data-section="devicedata">
-        Device Data
-        <small>view live data</small>
-      </div>
-      <div style="color:#d6c9ff; font-size:13px; font-weight:600; letter-spacing:0.4px; margin-bottom:6px;">
-  Logged in sessions
-  <span id="sessionCount" style="background:rgba(255,255,255,0.15); color:#fff; font-size:11px; padding:2px 7px; border-radius:999px; margin-left:6px; font-weight:700;">0</span>
-</div>
-<div id="loggedList" class="logged-list" style="
-  max-height:200px;
-  overflow-y:auto;
-  scrollbar-width:thin;
-  scrollbar-color:rgba(255,255,255,0.25) transparent;
-  padding-right:4px;
-"></div>
-    </aside>
-
-    <main class="main">
-      <div class="grid">
-
-        <!-- LEFT: Main content area -->
+    </div>
+ 
+    <!-- ══ ANALYTICS PANEL ══ -->
+    <section id="panelAnalytics" class="fade-in">
+      <div class="analytics-layout">
         <div>
-          <!-- USERS PANEL -->
-          <section id="panelUsers" class="panel hidden fade-in">
-            <div class="header-row">
-              <div>
-                <div class="title">Team Members</div>
-                <div class="small">Active users in the system — assign roles & permissions</div>
-              </div>
-
-              <div class="controls">
-                <input id="userSearch" class="search" placeholder="Search users by name or email" />
-                <button class="btn primary" id="refreshAll">Refresh</button>
-                <button class="btn ghost" id="btnShowRequests">Show Requests</button>
-              </div>
-            </div>
-
-            <div style="overflow:auto">
-              <table class="user-table" id="usersTable">
-                <thead>
-                  <tr><th>Username</th><th>Email</th><th>Role</th><th>Admin</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="usersList">
-                  <!-- filled by JS -->
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- PENDING REQUESTS PANEL (prominent on load) -->
-          <section id="panelRequests" class="panel fade-in">
-            <div class="header-row">
-              <div>
-                <div class="title">Pending Admin Requests</div>
-                <div class="small">Users requesting elevated access</div>
-              </div>
-              <div class="controls">
-                <input id="requestsFilter" class="search" placeholder="Filter username or title..." />
-                <button class="btn ghost" id="refreshRequests">Refresh</button>
-              </div>
-            </div>
-
-            <div style="overflow:auto">
-              <table id="requestsTable">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Username</th>
-                    <th>Requested At</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody><!-- filled by JS --></tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- AUDIT PANEL -->
-          <section id="panelAudit" class="panel hidden fade-in">
-            <div class="header-row">
-              <div>
-                <div class="title">Audit & Logs</div>
-                <div class="small">Activity & admin actions</div>
-              </div>
-              <div class="controls">
-                <button class="btn ghost" id="refreshAudit">Refresh</button>
-              </div>
-            </div>
-
-            <div style="overflow:auto">
-              <table id="auditTable">
-                <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
-                <tbody><!-- filled by JS with either real audit logs or fallback --></tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-        <!-- SHIPMENTS PANEL -->
-        <section id="panelShipments" class="panel hidden fade-in">
-          <div class="header-row">
-            <div>
-              <div class="title">Shipments Management</div>
-              <div class="small">View, edit, and delete shipments</div>
-            </div>
-            <div class="controls">
-              <button class="btn ghost" onclick="loadAllShipments()">Refresh</button>
+          <div class="analytics-bar">
+            <div class="analytics-bar-left">📊 Real-time Analytics Dashboard</div>
+            <div class="analytics-bar-right">
+              <div class="live-badge"><span class="pulse-dot"></span> Live data</div>
+              <span class="last-upd" id="lastUpdatedTime">Updating...</span>
+              <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="refreshAnalytics()">↻ Refresh</button>
             </div>
           </div>
-          <div style="overflow:auto">
-            <table id="shipmentTable">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Origin</th>
-                  <th>Destination</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="shipmentTableBody">
-                <!-- JS will inject rows -->
+ 
+          <div class="section-label">Shipment Status Breakdown</div>
+          <div class="status-breakdown">
+            <div class="sc sc-active"><span class="sc-num" id="sc-active">—</span>&nbsp;Active</div>
+            <div class="sc sc-transit"><span class="sc-num" id="sc-transit">—</span>&nbsp;In Transit</div>
+            <div class="sc sc-delivered"><span class="sc-num" id="sc-delivered">—</span>&nbsp;Delivered</div>
+            <div class="sc sc-pending"><span class="sc-num" id="sc-pending">—</span>&nbsp;Pending</div>
+            <div class="sc sc-cancelled"><span class="sc-num" id="sc-cancelled">—</span>&nbsp;Cancelled</div>
+          </div>
+ 
+          <div class="section-label">Priority Distribution</div>
+          <div class="priority-row">
+            <span class="pchip p-high">🔴 High: <span id="pr-high">—</span></span>
+            <span class="pchip p-medium">🟡 Medium: <span id="pr-medium">—</span></span>
+            <span class="pchip p-low">🟢 Low: <span id="pr-low">—</span></span>
+          </div>
+ 
+          <div class="chart-card wide" style="margin-bottom:14px">
+            <div class="chart-title">Shipments created over time</div>
+            <div class="chart-sub" id="shipDaysSub">Loading from database...</div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#7c5cbf"></div>Total</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>Delivered</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#1d4ed8"></div>In Transit</div>
+            </div>
+            <div class="chart-wrap" style="height:190px"><canvas id="shipDays"></canvas></div>
+          </div>
+ 
+          <div class="chart-grid">
+            <div class="chart-card">
+              <div class="chart-title">Shipments by route</div>
+              <div class="chart-sub">Top routes from DB</div>
+              <div class="chart-wrap" style="height:210px"><canvas id="routeBar"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Status distribution</div>
+              <div class="chart-sub">Live snapshot</div>
+              <div class="legend" id="statusLegend"></div>
+              <div class="chart-wrap" style="height:180px"><canvas id="statusPie"></canvas></div>
+            </div>
+          </div>
+ 
+          <div class="section-divider"></div>
+          <div class="section-label">Priority & Goods Analytics</div>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <div class="chart-title">Shipments by priority</div>
+              <div class="chart-sub">From DB shipment_priority field</div>
+              <div class="chart-wrap" style="height:200px"><canvas id="priorityChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Goods type distribution</div>
+              <div class="chart-sub">Top goods categories</div>
+              <div class="chart-wrap" style="height:200px"><canvas id="goodsChart"></canvas></div>
+            </div>
+          </div>
+ 
+          <!-- ══ DEVICE TELEMETRY CHART ══ -->
+          <div class="section-divider"></div>
+          <div class="section-label">📡 IoT Device Telemetry (MONGO_DB_IOT)</div>
+ 
+          <!-- IoT quick stats -->
+          <div class="iot-stats-row" id="iotStatsRow">
+            <div class="iot-stat-card" style="--iot-color:#059669">
+              <div class="stat-label">Online Devices</div>
+              <div class="stat-val" id="iotOnline">—</div>
+              <span class="stat-pill pill-green">Connected</span>
+            </div>
+            <div class="iot-stat-card" style="--iot-color:#dc2626">
+              <div class="stat-label">Low Battery</div>
+              <div class="stat-val" id="iotLowBat">—</div>
+              <span class="stat-pill pill-red">&lt;30%</span>
+            </div>
+            <div class="iot-stat-card" style="--iot-color:#b45309">
+              <div class="stat-label">High Temp</div>
+              <div class="stat-val" id="iotHighTemp">—</div>
+              <span class="stat-pill pill-amber">&gt;30°C</span>
+            </div>
+            <div class="iot-stat-card" style="--iot-color:#03C2E0">
+              <div class="stat-label">Avg Battery</div>
+              <div class="stat-val" id="iotAvgBat">—</div>
+              <span class="stat-pill pill-teal">Average</span>
+            </div>
+          </div>
+ 
+          <div class="device-chart-card">
+            <div class="header-row" style="margin-bottom:8px">
+              <div>
+                <div class="chart-title">📡 Device ID vs Temperature &amp; Battery</div>
+                <div class="chart-sub" id="deviceChartSub">Loading IoT data from MONGO_DB_IOT...</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="legend">
+                  <div class="legend-item"><div class="legend-dot" style="background:#7c5cbf"></div>Temp (°C)</div>
+                  <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>Battery (%)</div>
+                </div>
+                <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="loadDeviceChart()">↻ Refresh</button>
+              </div>
+            </div>
+            <div class="chart-wrap" style="height:260px">
+              <canvas id="deviceTelChart">Device telemetry loading...</canvas>
+            </div>
+            <div class="device-stat-row" id="deviceStatRow">
+              <div class="device-stat"><div class="device-stat-label">Total Devices</div><div class="device-stat-val" id="dStatTotal">—</div></div>
+              <div class="device-stat"><div class="device-stat-label">Online</div><div class="device-stat-val" id="dStatOnline" style="color:#059669">—</div></div>
+              <div class="device-stat"><div class="device-stat-label">Avg Temp</div><div class="device-stat-val" id="dStatTemp">—</div></div>
+              <div class="device-stat"><div class="device-stat-label">Low Battery</div><div class="device-stat-val" id="dStatBat" style="color:#dc2626">—</div></div>
+            </div>
+          </div>
+          <!-- Removed: Device Status Distribution & Battery Level Ranges charts -->
+ 
+        </div>
+ 
+        <div>
+          <div class="panel" style="margin-bottom:14px">
+            <div class="header-row" style="margin-bottom:12px">
+              <div><div class="panel-title">Quick Tools</div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn primary" onclick="showPanel('panelUsers');loadUsers()">👥 Team Members</button>
+              <button class="btn ghost" onclick="showPanel('panelUsers');loadUsers()">🔐 Edit Roles</button>
+              <div id="superAdminQuickTools"></div>
+              <button class="btn warn" onclick="showPanel('panelRequests');loadRequests()">📋 Pending Requests</button>
+              <button class="btn ghost" onclick="showPanel('panelShipments');loadAllShipments()">📦 All Shipments</button>
+              <button class="btn ghost" onclick="showPanel('panelDeviceData');loadDeviceData()">📡 IoT Device Data</button>
+              <button class="btn ghost" onclick="showPanel('panelAudit');loadAudit()">📝 Audit Logs</button>
+            </div>
+            <div style="margin-top:16px">
+              <div style="font-size:11px;color:#aaa;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Permissions Preview</div>
+              <table class="perm-table" id="permGrid">
+                <thead><tr><th style="text-align:left;font-size:11px;color:#888;padding:6px 8px">Permission</th><th style="font-size:11px;color:#888;padding:6px 4px">S.Admin</th><th style="font-size:11px;color:#888;padding:6px 4px">Admin</th><th style="font-size:11px;color:#888;padding:6px 4px">Mgr</th><th style="font-size:11px;color:#888;padding:6px 4px">View</th></tr></thead>
+                <tbody>
+                  <tr><td style="padding:6px 8px;font-size:12px">🖥️ Dashboard</td><td style="padding:6px 4px"><span class="chip super-yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td></tr>
+                  <tr><td style="padding:6px 8px;font-size:12px">📦 Shipments</td><td style="padding:6px 4px"><span class="chip super-yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td></tr>
+                  <tr><td style="padding:6px 8px;font-size:12px">👥 Users</td><td style="padding:6px 4px"><span class="chip super-yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td></tr>
+                  <tr><td style="padding:6px 8px;font-size:12px">🔐 Roles</td><td style="padding:6px 4px"><span class="chip super-yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td></tr>
+                  <tr><td style="padding:6px 8px;font-size:12px">✅ Approve</td><td style="padding:6px 4px"><span class="chip super-yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip yes">✓</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td></tr>
+                  <tr><td style="padding:6px 8px;font-size:12px">🗑 Delete User</td><td style="padding:6px 4px"><span class="chip super-yes">✓</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td></tr>
+                  <tr><td style="padding:6px 8px;font-size:12px">🚪 Force Logout</td><td style="padding:6px 4px"><span class="chip super-yes">✓</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td></tr>
+                  <tr><td style="padding:6px 8px;font-size:12px">🛡️ Assign Super</td><td style="padding:6px 4px"><span class="chip super-yes">✓</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td><td style="padding:6px 4px"><span class="chip no">✕</span></td></tr>
                 </tbody>
               </table>
             </div>
-          </section>
-          <!-- DEVICE DATA PANEL -->
-           <section id="panelDeviceData" class="panel hidden fade-in">
-            <div class="header-row">
-              <div>
-                <div class="title">Device Data</div>
-                <div class="small">Live tracking & telemetry</div>
-              </div>
-              <div class="controls">
-                <button class="btn ghost" onclick="loadDeviceData()">Refresh</button>
-              </div>
-            </div>
-            <div style="overflow:auto">
-              <table id="deviceTable">
-                <thead>
-                  <tr>
-                    <th>Device ID</th>
-                    <th>Shipment ID</th>
-                    <th>Temperature</th>
-                    <th>Location</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="deviceTableBody">
-                  <!-- JS injects -->
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-        <!-- RIGHT: Quick tools + replies -->
-        <aside>
-          <section class="panel">
-            <div class="header-row">
-              <div>
-                <div class="title">Quick Tools</div>
-                <div class="small">Open panels & quick actions</div>
-              </div>
-            </div>
-
-            <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
-              <button id="btnTeamMembers" class="btn primary">Team Members</button>
-              <button id="btnEditRoles" class="btn ghost">Edit Roles</button>
-              <button id="btnShowPendingFull" class="btn warn">Show Pending Requests (Full)</button>
-              <button id="btnViewShipments" class="btn ghost" data-section="shipments">All Shipments</button>
-              <button id="btnViewAuditLogs" class="btn ghost" >View Audit Logs</button>
-              <div class="gap"></div>
-<div class="muted-block">Permissions preview</div>
-<table class="perm-grid" id="permGrid">
-  <thead>
-    <tr>
-      <th>Permission</th>
-      <th>Admin</th>
-      <th>Manager</th>
-      <th>Editor</th>
-      <th>Viewer</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>🖥️ View Dashboard</td>       <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td></tr>
-    <tr><td>📦 Manage Shipments</td>     <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td></tr>
-    <tr><td>📡 Live Device Stream</td>   <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td></tr>
-    <tr><td>👥 Manage Users</td>         <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
-    <tr><td>🔐 Assign Roles</td>         <td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
-    <tr><td>📤 Export Data</td>          <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
-    <tr><td>✅ Approve Requests</td>     <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
-    <tr><td>📝 Create Shipments</td>     <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td></tr>
-    <tr><td>📋 View Audit Logs</td>      <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
-    <tr><td>💬 Reply to Requests</td>    <td><span class="chip yes">✓</span></td><td><span class="chip yes">✓</span></td><td><span class="chip no">✕</span></td><td><span class="chip no">✕</span></td></tr>
-  </tbody>
-</table>
-            </div>
-          </section>
-
-          <!-- REQUEST REPLIES (list of replies sent) -->
-          <section class="panel" id="requestRepliesPanel" aria-live="polite" style="margin-top:14px;">
-            <div class="header-row">
-              <div>
-                <div class="title">Request Replies</div>
-                <div class="small">Recent replies you've sent</div>
-              </div>
-            </div>
-            <div id="repliesList" style="max-height:260px; overflow:auto; font-size:13px;">
-              <div class="muted">No replies yet</div>
-            </div>
-          </section>
-          <section class="panel">
-            <div class="header-row">
-              <div>
-                <div class="title">Admin Messages</div>
-                <div class="small">Messages sent to users</div>
-              </div>
-            </div>
-            <div id="adminMessagesBox">
-              <div class="muted">Loading...</div>
-            </div>
-          </section>
-        </aside>
-
+          </div>
+ 
+          <div class="panel" style="margin-bottom:14px">
+            <div class="header-row" style="margin-bottom:10px"><div class="panel-title">Request Replies</div></div>
+            <div id="repliesList" class="replies-box"><div style="color:#888;font-size:13px">No replies yet</div></div>
+          </div>
+ 
+          <div class="panel">
+            <div class="header-row" style="margin-bottom:10px"><div class="panel-title">Admin Messages</div></div>
+            <div id="adminMessagesBox"><div style="color:#888;font-size:13px">Loading...</div></div>
+          </div>
+        </div>
       </div>
-    </main>
-  </div>
-
-  <!-- Role modal -->
-  <div id="roleModal" class="modal-backdrop" aria-hidden="true">
-    <div class="modal">
-      <div style="display:flex; justify-content:space-between; align-items:center">
-        <h4>Edit Team Member Role</h4>
-        <button class="close-btn" id="closeModal">Close</button>
+    </section>
+ 
+    <!-- ══ USERS PANEL ══ -->
+    <section id="panelUsers" class="panel hidden fade-in">
+      <div class="header-row">
+        <div><div class="panel-title">👥 Team Members</div><div class="panel-sub">Active users — assign roles & permissions</div></div>
+        <div class="controls">
+          <input id="userSearch" class="search" placeholder="Search users..." style="width:200px"/>
+          <button class="btn primary" id="refreshAll">↻ Refresh</button>
+        </div>
       </div>
-
-      <div style="margin-top:12px">
-        <div class="muted-block">User: <strong id="modalUsername">—</strong></div>
-        <div class="muted-block">Email: <span id="modalUserEmail">—</span></div>
-
-        <div style="margin-top:12px">
-          <label style="display:block;margin-bottom:8px">Role</label>
-          <select id="modalRoleSelect" class="search">
-            <option value="">-- choose role --</option>
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-            <option value="editor">Editor</option>
-            <option value="viewer">Viewer</option>
-            <option value="user">User</option>
+      <div style="overflow:auto">
+        <table id="usersTable">
+          <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Admin</th><th>Actions</th></tr></thead>
+          <tbody id="usersList"></tbody>
+        </table>
+      </div>
+    </section>
+ 
+    <!-- ══ REQUESTS PANEL ══ -->
+    <section id="panelRequests" class="panel hidden fade-in">
+      <div class="header-row">
+        <div><div class="panel-title">📋 Pending Requests</div><div class="panel-sub">Users requesting elevated access</div></div>
+        <div class="controls">
+          <input id="requestsFilter" class="search" placeholder="Filter..." style="width:200px"/>
+          <button class="btn ghost" id="refreshRequests">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="overflow:auto">
+        <table id="requestsTable">
+          <thead><tr><th>Title</th><th>Username</th><th>Requested At</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+ 
+    <!-- ══ AUDIT PANEL ══ -->
+    <section id="panelAudit" class="panel hidden fade-in">
+      <div class="header-row">
+        <div><div class="panel-title">📝 Audit & Logs</div><div class="panel-sub">Session history & admin actions</div></div>
+        <div class="controls"><button class="btn ghost" id="refreshAudit">↻ Refresh</button></div>
+      </div>
+      <div style="overflow:auto">
+        <table id="auditTable">
+          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+ 
+    <!-- ══ SHIPMENTS PANEL ══ -->
+    <section id="panelShipments" class="panel hidden fade-in">
+      <div class="header-row">
+        <div><div class="panel-title">📦 Shipments Management</div><div class="panel-sub">View, edit status & priority, delete shipments</div></div>
+        <div class="controls">
+          <select id="filterStatus" class="search" style="width:130px">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="in transit">In Transit</option>
+            <option value="delivered">Delivered</option>
+            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
           </select>
-        </div>
-
-        <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end">
-          <button class="btn ghost" id="modalCancel">Cancel</button>
-          <button class="btn primary" id="modalSave">Save Role</button>
+          <select id="filterPriority" class="search" style="width:130px">
+            <option value="">All Priority</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <input id="shipmentSearch" class="search" placeholder="Search shipments..." style="width:180px"/>
+          <button class="btn ghost" onclick="loadAllShipments()">↻ Refresh</button>
         </div>
       </div>
+      <div id="shipmentLoadMsg" style="text-align:center;padding:14px;color:#888;font-size:13px;display:none">Loading shipments...</div>
+      <div style="overflow:auto">
+        <table id="shipmentTable">
+          <thead><tr><th>Shipment #</th><th>Route</th><th>Goods</th><th>Priority</th><th>Status</th><th>Delivery Date</th><th>Created By</th><th>Actions</th></tr></thead>
+          <tbody id="shipmentTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+ 
+    <!-- ══ DEVICE DATA PANEL (from MONGO_DB_IOT) ══ -->
+    <section id="panelDeviceData" class="panel hidden fade-in">
+      <div class="header-row">
+        <div>
+          <div class="panel-title">📡 IoT Device Data</div>
+          <div class="panel-sub">Live tracking & telemetry — <strong style="color:#03C2E0"></strong></div>
+        </div>
+        <div class="controls">
+          <select id="deviceStatusFilter" class="search" style="width:130px">
+            <option value="">All Devices</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+            <option value="idle">Idle</option>
+          </select>
+          <input id="deviceSearch" class="search" placeholder="Search device ID..." style="width:170px"/>
+          <button class="btn ghost" onclick="loadDeviceData()">↻ Refresh</button>
+        </div>
+      </div>
+      <!-- IoT summary cards in device panel -->
+      <div class="iot-stats-row" id="devicePanelStats" style="margin-bottom:16px">
+        <div class="iot-stat-card" style="--iot-color:#059669">
+          <div class="stat-label">Total Devices</div><div class="stat-val" id="dpTotal">—</div>
+        </div>
+        <div class="iot-stat-card" style="--iot-color:#059669">
+          <div class="stat-label">Online</div><div class="stat-val" id="dpOnline" style="color:#059669">—</div>
+        </div>
+        <div class="iot-stat-card" style="--iot-color:#dc2626">
+          <div class="stat-label">Offline</div><div class="stat-val" id="dpOffline" style="color:#dc2626">—</div>
+        </div>
+        <div class="iot-stat-card" style="--iot-color:#b45309">
+          <div class="stat-label">Avg Temp</div><div class="stat-val" id="dpAvgTemp">—</div>
+        </div>
+      </div>
+      <div style="overflow:auto">
+        <table id="deviceTable">
+          <thead><tr><th>Device ID</th><th>Shipment ID</th><th>Temperature</th><th>Humidity</th><th>Battery</th><th>Route From</th><th>Route To</th><th>TimeStamp</th></tr></thead>
+          <tbody id="deviceTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+ 
+    <!-- ══ SUPER ADMIN PANEL ══ -->
+    <section id="panelSuper" class="panel hidden fade-in" style="border:2px solid rgba(220,38,38,0.3)">
+      <div class="header-row">
+        <div>
+          <div class="panel-title" style="color:#dc2626">🛡️ Super Admin Control Panel</div>
+          <div class="panel-sub">Critical system controls — actions are permanent and irreversible</div>
+        </div>
+        <span style="background:#fef2f2;color:#dc2626;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid #fecaca">⚠️ SUPER ADMIN ONLY</span>
+      </div>
+ 
+      <!-- Danger Zone: Delete Users -->
+      <div class="super-section">
+        <h5>🗑️ User Management (Irreversible)</h5>
+        <div style="overflow:auto">
+          <table id="superUsersTable">
+            <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Danger Actions</th></tr></thead>
+            <tbody id="superUsersList"></tbody>
+          </table>
+        </div>
+        <button class="btn super" style="margin-top:10px" onclick="loadSuperUsers()">↻ Refresh User List</button>
+      </div>
+ 
+      <!-- Force logout all -->
+      <div class="super-section">
+        <h5>🚪 Session Management</h5>
+        <div class="danger-zone">
+          <p>⚠️ Force logout ALL users — clears every active session in the system.</p>
+          <button class="btn danger-solid" onclick="forceLogoutAll()">🚪 Force Logout All Sessions</button>
+        </div>
+      </div>
+ 
+      <!-- System stats -->
+      <div class="super-section">
+        <h5>📊 System Overview</h5>
+        <div id="superSystemStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px">
+          <div class="device-stat"><div class="device-stat-label">Total Users</div><div class="device-stat-val" id="sysUsers">—</div></div>
+          <div class="device-stat"><div class="device-stat-label">Active Sessions</div><div class="device-stat-val" id="sysSessions">—</div></div>
+          <div class="device-stat"><div class="device-stat-label">Total Shipments</div><div class="device-stat-val" id="sysShipments">—</div></div>
+          <div class="device-stat"><div class="device-stat-label">IoT Devices</div><div class="device-stat-val" id="sysDevices">—</div></div>
+          <div class="device-stat"><div class="device-stat-label">Pending Requests</div><div class="device-stat-val" id="sysPending">—</div></div>
+          <div class="device-stat"><div class="device-stat-label">Total Replies</div><div class="device-stat-val" id="sysReplies">—</div></div>
+        </div>
+        <button class="btn super" style="margin-top:10px" onclick="loadSuperStats()">↻ Refresh Stats</button>
+      </div>
+    </section>
+ 
+  </main>
+</div>
+ 
+<!-- ══ ROLE MODAL ══ -->
+<div id="roleModal" class="modal-backdrop">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h4>Edit Team Member Role</h4>
+      <button class="close-btn" id="closeModal">✕ Close</button>
+    </div>
+    <div style="color:#666;font-size:13px;margin-bottom:4px">User: <strong id="modalUsername">—</strong></div>
+    <div style="color:#666;font-size:13px;margin-bottom:16px">Email: <span id="modalUserEmail">—</span></div>
+    <label style="display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase">Role</label>
+    <select id="modalRoleSelect" class="search" style="width:100%;margin-bottom:0">
+      <option value="">-- choose role --</option>
+      <option value="admin">Admin</option>
+      <option value="manager">Manager</option>
+      <option value="user">User</option>
+    </select>
+    <div style="margin-top:18px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn ghost" id="modalCancel">Cancel</button>
+      <button class="btn primary" id="modalSave">Save Role</button>
     </div>
   </div>
-
-  <!-- Floating FAB and Drawer (request sending) -->
-  <button id="fabRequest" class="request-fab">Reply</button>
-
-  <div id="drawer" class="drawer" aria-hidden="true">
-    <h4>Send request to admin</h4>
-    <label class="small">Type</label>
-    <select id="request-type"><option value="shipments">Shipments</option><option value="users">Users</option><option value="device-data">Device Data</option></select>
-    <label class="small" style="margin-top:8px">Title</label>
-    <input id="request-title" placeholder="Short title"/>
-    <label class="small" style="margin-top:8px">Description</label>
-    <textarea id="request-desc" placeholder="Describe what you need..."></textarea>
-    <div class="row" style="margin-top:8px">
-      <button id="sendRequestBtn" class="btn primary" style="flex:1">Send Request</button>
-      <button id="closeDrawer" class="btn ghost" style="flex:1">Close</button>
+</div>
+ 
+<!-- ══ EDIT SHIPMENT MODAL ══ -->
+<div id="editShipmentModal" class="modal-backdrop">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <h4>Edit Shipment</h4>
+      <button class="close-btn" id="closeEditModal">✕ Close</button>
+    </div>
+    <div style="color:#888;font-size:13px;margin-bottom:16px">Shipment #<strong id="editShipId">—</strong></div>
+    <label style="display:block;font-size:12px;font-weight:700;color:#555;margin:12px 0 4px;letter-spacing:.04em;text-transform:uppercase">Status</label>
+    <select id="editStatusSelect" style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid #e0e0e0;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px">
+      <option value="active">Active</option>
+      <option value="in transit">In Transit</option>
+      <option value="delivered">Delivered</option>
+      <option value="pending">Pending</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+    <label style="display:block;font-size:12px;font-weight:700;color:#555;margin:12px 0 4px;letter-spacing:.04em;text-transform:uppercase">Priority</label>
+    <select id="editPrioritySelect" style="width:100%;padding:9px 10px;border-radius:8px;border:1px solid #e0e0e0;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+    <div style="margin-top:20px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn ghost" id="cancelEditModal">Cancel</button>
+      <button class="btn primary" id="saveEditShipment">Save Changes</button>
     </div>
   </div>
-
-  <!-- Right-side Reply Drawer (RB1) -->
-  <div id="replyDrawer" class="reply-drawer" aria-hidden="true">
-    <h4>Reply to Request</h4>
-    <div style="font-size:13px;color:#444;margin-bottom:8px">
-      <div><strong id="replyReqTitle">—</strong></div>
-      <div style="color:var(--muted); font-size:12px" id="replyReqMeta">—</div>
+</div>
+ 
+<!-- ══ VIEW SHIPMENT MODAL ══ -->
+<div id="viewShipmentModal" class="modal-backdrop">
+  <div class="modal" style="max-width:700px;width:95%">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h4>Shipment Details — #<span id="viewShipId">—</span></h4>
+      <button class="close-btn" id="closeViewModal">✕ Close</button>
     </div>
-    <textarea id="replyText" placeholder="Write your message to the user..."></textarea>
-    <div style="display:flex; gap:8px; margin-top:10px">
-      <button id="sendReplyBtn" class="btn primary" style="flex:1">Send Reply</button>
-      <button id="closeReplyBtn" class="btn ghost" style="flex:1">Close</button>
+    <div id="viewShipBody" class="detail-grid"></div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn ghost" id="closeViewModalBtn">Close</button>
     </div>
   </div>
-
-  <div id="toast"></div>
-  <div id="smallToast"></div>
-
+</div>
+ 
+<!-- ══ VIEW DEVICE MODAL ══ -->
+<div id="viewDeviceModal" class="modal-backdrop">
+  <div class="modal" style="max-width:680px;width:95%">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h4>Device Details — <span id="viewDeviceId">—</span></h4>
+      <button class="close-btn" id="closeDeviceModal">✕ Close</button>
+    </div>
+    <div id="viewDeviceBody" class="detail-grid"></div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn ghost" id="closeDeviceModalBtn">Close</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- ══ REPLY DRAWER ══ -->
+<div id="replyDrawer" class="reply-drawer">
+  <h4>Reply to Request</h4>
+  <div style="font-size:12px;color:#555;margin-bottom:10px">
+    <strong id="replyReqTitle">—</strong>
+    <div style="color:#888;font-size:11px;margin-top:2px" id="replyReqMeta">—</div>
+  </div>
+  <textarea id="replyText" placeholder="Write your message to the user..."></textarea>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button id="sendReplyBtn" class="btn primary" style="flex:1">Send Reply</button>
+    <button id="closeReplyBtn" class="btn ghost" style="flex:1">Close</button>
+  </div>
+</div>
+ 
+<!-- FAB -->
+<button id="fabRequest" class="request-fab">✉ Reply</button>
+<div id="drawer" class="drawer">
+  <h4>Send Request to Admin</h4>
+  <label style="font-size:12px;color:#666;display:block;margin-bottom:4px">Type</label>
+  <select id="request-type"><option value="shipments">Shipments</option><option value="users">Users</option><option value="device-data">Device Data</option></select>
+  <label style="font-size:12px;color:#666;display:block;margin-bottom:4px">Title</label>
+  <input id="request-title" placeholder="Short title"/>
+  <label style="font-size:12px;color:#666;display:block;margin-bottom:4px">Description</label>
+  <textarea id="request-desc" placeholder="Describe what you need..."></textarea>
+  <div class="row">
+    <button id="sendRequestBtn" class="btn primary" style="flex:1">Send Request</button>
+    <button id="closeDrawer" class="btn ghost" style="flex:1">Close</button>
+  </div>
+</div>
+ 
+<div id="toast"></div>
+ 
 <script>
-  /* ============================================================
-    AUTH CHECK (redirect to signin if no token)
-============================================================ */
-  //  If no token, redirect to signin immediately
-  (function() {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.replace("/frontend/user.html");
-    }
-  })();
-/* ============================================================
-   BASE HELPERS & CONSTANTS
-   - small changes: requests table uses request._id (string)
-============================================================ */
+/* ══════════════════════════════════════════════════
+   STEP 1 — Token helpers
+══════════════════════════════════════════════════ */
 const API = `${location.protocol}//${location.hostname}:8000`;
-
-function getToken() { return localStorage.getItem("token") || ""; }
-
+ 
+function getToken() {
+  const keys = ["token","access_token","jwt","authToken","auth_token","scmx_token"];
+  for (const k of keys) {
+    const v = localStorage.getItem(k) || sessionStorage.getItem(k);
+    if (v && v.length > 10) return v;
+  }
+  return null;
+}
+ 
 function authHeaders() {
   const t = getToken();
-  return t ? { "Authorization": "Bearer " + t } : {};
+  if (!t) return { "Content-Type":"application/json" };
+  return { "Authorization":"Bearer " + t, "Content-Type":"application/json" };
 }
-
+ 
 function decodeToken() {
   const t = getToken();
   if (!t) return null;
-  try { return JSON.parse(atob(t.split(".")[1])); }
-  catch { return null; }
+  try {
+    const parts = t.split(".");
+    if (parts.length !== 3) return null;
+    const b64 = parts[1].replace(/-/g,"+").replace(/_/g,"/");
+    const padded = b64 + "==".slice(0,(4 - b64.length % 4) % 4);
+    return JSON.parse(atob(padded));
+  } catch(e) {
+    console.warn("Token decode failed:", e);
+    return null;
+  }
 }
-
-function fmt(dt) {
-  try { return new Date(dt).toLocaleString(); }
-  catch { return dt; }
+ 
+function isTokenExpired(decoded) {
+  if (!decoded) return true;
+  if (decoded.exp && Date.now()/1000 > decoded.exp) return true;
+  return false;
 }
-
-const toast = document.getElementById("toast");
-function showToast(msg) {
-  toast.textContent = msg;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2600);
+ 
+/* ══════════════════════════════════════════════════
+   STEP 2 — Auth check
+══════════════════════════════════════════════════ */
+const decoded = decodeToken();
+// Example — if your token has role: "superadmin" (no underscore):
+const isSuperAdmin = !!(decoded && (
+  decoded.role === "super_admin" ||
+  decoded.role === "superadmin" ||   
+  decoded.role === "SUPER_ADMIN" ||  // ← add uppercase variant if needed
+  decoded.is_superadmin === true
+));
+const isAdmin = !!(decoded && (
+  decoded.role === "admin" ||
+  decoded.role === "super_admin" ||
+  decoded.role === "superadmin" ||
+  decoded.is_superadmin === true
+));
+ 
+(function checkAuth() {
+  const t = getToken();
+  if (!t) { window.location.replace("/frontend/user.html"); return; }
+  if (isTokenExpired(decoded)) {
+    console.warn("Token expired — redirecting to login");
+    localStorage.clear(); sessionStorage.clear();
+    window.location.replace("/frontend/user.html");
+    return;
+  }
+  const role = decoded && decoded.role;
+  const allowed = ["admin","super_admin","superadmin","manager","editor"];
+  // Also allow if is_superadmin flag is set
+  if (role && !allowed.includes(role) && !decoded.is_superadmin && !decoded.is_super_admin) {
+    console.warn("Insufficient role:", role);
+    window.location.replace("/frontend/user.html");
+  }
+  console.log("Token payload:", decoded, "isSuperAdmin:", isSuperAdmin);
+})();
+ 
+/* ══════════════════════════════════════════════════
+   STEP 3 — UI setup from decoded token
+══════════════════════════════════════════════════ */
+const adminBadge = document.getElementById("adminBadge");
+if (isSuperAdmin) {
+  adminBadge.textContent = "Super Admin";
+  adminBadge.classList.add("super");
+  document.getElementById("superBanner").classList.add("show");
+  // Show the Super Admin sidebar menu item
+  const menuSuperEl = document.getElementById("menuSuper");
+  if (menuSuperEl) menuSuperEl.style.display = "flex";
+  // Add super_admin option to role modal
+  const opt = document.createElement("option");
+  opt.value = "super_admin"; opt.textContent = "🛡️ Super Admin";
+  document.getElementById("modalRoleSelect").prepend(opt);
+  // Inject super admin quick-tool buttons
+  document.getElementById("superAdminQuickTools").innerHTML = `
+    <button class="btn super" style="width:100%" onclick="showPanel('panelSuper');loadSuperUsers();loadSuperStats()">🛡️ Super Admin Panel</button>
+    <button class="btn danger" style="width:100%" onclick="showPanel('panelUsers');loadUsers()">🗑 Delete / Force Logout Users</button>`;
 }
-
+ 
+const adminName = (decoded && (decoded.username || decoded.sub || decoded.name)) || "Admin";
+const initial = adminName[0].toUpperCase();
+document.getElementById("currentAdmin").textContent = adminName;
+document.getElementById("navName").textContent = adminName;
+["userAvatar","dropAvatar"].forEach(id => {
+  const el = document.getElementById(id); if (el) el.textContent = initial;
+});
+if (document.getElementById("dropName")) document.getElementById("dropName").textContent = adminName;
+if (document.getElementById("dropUsername")) document.getElementById("dropUsername").textContent = adminName;
+if (document.getElementById("dropRole") && decoded) {
+  let roleDisplay = (decoded.role || "ADMIN").toString().toUpperCase();
+  if (isSuperAdmin) roleDisplay = "SUPER ADMIN";
+  document.getElementById("dropRole").textContent = roleDisplay;
+}
+ 
+/* ══════════════════════════════════════════════════
+   STEP 4 — apiFetch
+══════════════════════════════════════════════════ */
+let authFailed = false;
+ 
+async function apiFetch(url, options={}) {
+  if (authFailed) return null;
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers: { ...authHeaders(), ...(options.headers || {}) }
+    });
+    if (res.status === 403 || res.status === 401) {
+      handleAuthFailure(res.status);
+      return null;
+    }
+    return res;
+  } catch(e) {
+    console.error("Fetch error:", url, e);
+    return null;
+  }
+}
+ 
+function handleAuthFailure(status) {
+  if (authFailed) return;
+  authFailed = true;
+  console.error(`Auth failure ${status}`);
+  document.getElementById("authBanner").classList.add("show");
+  if (window._pollInterval) clearInterval(window._pollInterval);
+  showToast(`⛔ Access denied (${status}) — check your admin role`, "danger");
+}
+ 
+function doLogout() {
+  localStorage.clear(); sessionStorage.clear();
+  window.location.href = "/frontend/user.html";
+}
+ 
+/* ── HELPERS ── */
+const toastEl = document.getElementById("toast");
+function showToast(msg, type="") {
+  toastEl.textContent = msg;
+  toastEl.className = "show" + (type ? " toast-"+type : "");
+  setTimeout(()=> toastEl.className = "", 2800);
+}
+function fmt(dt) { try { return new Date(dt).toLocaleString(); } catch { return dt||"—"; } }
+function fmtDate(dt) { try { return new Date(dt).toLocaleDateString(); } catch { return dt||"—"; } }
 function escapeHtml(s) {
   if (!s) return "";
-  return String(s).replace(/[&<>"']/g, t => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-  }[t]));
+  return String(s).replace(/[&<>"']/g,t=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[t]));
 }
-
-/* ============================================================
-   POPULATE CURRENT ADMIN
-============================================================ */
-const decoded = decodeToken();
-document.getElementById("currentAdmin").textContent =
-  (decoded && (decoded.username || decoded.sub)) || "admin";
-
-/* ============================================================
-   PANEL TOGGLING (unchanged)
-============================================================ */
-const panelUsers = document.getElementById("panelUsers");
-const panelRequests = document.getElementById("panelRequests");
-const panelAudit = document.getElementById("panelAudit");
-
-function hidePanels() {
-  panelUsers.classList.add("hidden");
-  panelRequests.classList.add("hidden");
-  panelAudit.classList.add("hidden");
+function tempClass(t) { const n=parseFloat(t); return n>35?"temp-hot":n>28?"temp-warm":"temp-ok"; }
+function batClass(b) { const n=parseFloat(b); return n<20?"bat-low":n<40?"bat-mid":"bat-ok"; }
+ 
+/* ── PROFILE DROPDOWN ── */
+const profileWrap = document.getElementById("profileWrap");
+profileWrap.addEventListener("click", e=>{ e.stopPropagation(); profileWrap.classList.toggle("open"); });
+document.addEventListener("click", ()=>profileWrap.classList.remove("open"));
+document.getElementById("logoutBtn").onclick = ()=>doLogout();
+ 
+/* ── PANELS ── */
+const allPanels = ["panelAnalytics","panelUsers","panelRequests","panelAudit","panelShipments","panelDeviceData","panelSuper"];
+const menuMap = {
+  "panelAnalytics":"menuDash","panelUsers":"menuUsers","panelRequests":"menuRequests",
+  "panelAudit":"menuAudit","panelShipments":"menuShipments","panelDeviceData":"menuDeviceData",
+  "panelSuper":"menuSuper"
+};
+ 
+function showPanel(id) {
+  allPanels.forEach(p=>{ const el=document.getElementById(p); if(el) el.classList.add("hidden"); });
+  const target=document.getElementById(id); if(target) target.classList.remove("hidden");
+  document.querySelectorAll(".menu-item").forEach(m=>m.classList.remove("active"));
+  const menuId=menuMap[id]; if(menuId){ const el=document.getElementById(menuId); if(el) el.classList.add("active"); }
 }
-
-document.getElementById("menuUsers").onclick = () => {
-  hidePanels();
-  panelUsers.classList.remove("hidden");
-};
-
-document.getElementById("menuRequests").onclick = () => {
-  hidePanels();
-  panelRequests.classList.remove("hidden");
-};
-
-document.getElementById("menuAudit").onclick = () => {
-  hidePanels();
-  panelAudit.classList.remove("hidden");
-};
-
-document.getElementById("btnTeamMembers").onclick = () => {
-  hidePanels();
-  panelUsers.classList.remove("hidden");
-};
-
-document.getElementById("btnShowPendingFull").onclick = () => {
-  hidePanels();
-  panelRequests.classList.remove("hidden");
-};
-
-document.getElementById("btnShowRequests").onclick = () => {
-  hidePanels();
-  panelRequests.classList.remove("hidden");
-};
-
-/* ============================================================
-   LOGOUT
-============================================================ */
-document.getElementById("logoutBtn").onclick = () => {
-  localStorage.removeItem("token");
-  showToast("Logged out");
-  setTimeout(() => (window.location.href = "/frontend/user.html"), 700);
-};
-
-/* ============================================================
-   LOAD PENDING REQUESTS (updated to include Title column
-   and to render dataset attributes: data-id and data-json)
-============================================================ */
-async function loadRequests() {
-  const tbody = document.querySelector("#requestsTable tbody");
-  tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
-
-  try {
-    const res = await fetch(`${API}/admin/pending`, { headers: authHeaders() });
-    if (!res.ok) {
-      tbody.innerHTML = `<tr><td colspan="5">Failed to load</td></tr>`;
-      return;
-    }
-    const data = await res.json();
-    let arr = data.requests || data || [];
-
-    if (!Array.isArray(arr)) arr = [];
-
-    if (arr.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5">No pending requests</td></tr>`;
-      return;
-    }
-
-    // Render rows: add data-id (request id string) and include title column
-    tbody.innerHTML = arr
-      .map(r => {
-        const rid = r._id || r.request_id || "";
-        const title = r.title || r.type || "(no title)";
-        const status = r.status || "pending";
-        // escape JSON safely for dataset usage
-        const jsonSafe = JSON.stringify(r).replace(/'/g,"&#39;").replace(/</g,"&lt;");
-        return `
-        <tr data-id="${escapeHtml(String(rid))}" data-json='${jsonSafe}'>
-          <td>${escapeHtml(title)}</td>
-          <td>${escapeHtml(r.username || '')}</td>
-          <td>${fmt(r.requested_at)}</td>
-          <td class="status-cell">${escapeHtml(status)}</td>
-          <td>
-            <button class="btn primary" data-approve="${escapeHtml(String(rid))}">Approve</button>
-            <button class="btn ghost" data-reject="${escapeHtml(String(rid))}">Reject</button>
-            <button class="btn ghost" data-reply="${escapeHtml(String(rid))}">Reply</button>
-          </td>
-        </tr>`;
-      })
-      .join("");
-  } catch (err) {
-    console.error(err);
-    tbody.innerHTML = `<tr><td colspan="5">Error loading requests</td></tr>`;
+ 
+document.getElementById("menuDash").onclick      = ()=>showPanel("panelAnalytics");
+document.getElementById("menuUsers").onclick     = ()=>{ showPanel("panelUsers"); loadUsers(); };
+document.getElementById("menuRequests").onclick  = ()=>{ showPanel("panelRequests"); loadRequests(); };
+document.getElementById("menuRoles").onclick     = ()=>{ showPanel("panelUsers"); loadUsers(); };
+document.getElementById("menuAudit").onclick     = ()=>{ showPanel("panelAudit"); loadAudit(); };
+document.getElementById("menuShipments").onclick = ()=>{ showPanel("panelShipments"); loadAllShipments(); };
+document.getElementById("menuDeviceData").onclick= ()=>{ showPanel("panelDeviceData"); loadDeviceData(); };
+const menuSuper = document.getElementById("menuSuper");
+if (menuSuper) menuSuper.onclick = ()=>{ showPanel("panelSuper"); loadSuperUsers(); loadSuperStats(); };
+ 
+/* ══════════════════════════════════
+   SUPER ADMIN ACTIONS
+══════════════════════════════════ */
+async function deleteUser(username) {
+  if (!isSuperAdmin) return showToast("⛔ Super admin only", "danger");
+  if (!confirm(`⚠️ Permanently delete user "${username}"? This CANNOT be undone.`)) return;
+  const res = await apiFetch(`${API}/superadmin/delete-user/${encodeURIComponent(username)}`, { method:"DELETE" });
+  if (res && res.ok) { showToast("🗑 User deleted", "success"); loadUsers(); loadSuperUsers(); }
+  else showToast("Failed to delete user", "danger");
+}
+ 
+async function forceLogout(username) {
+  if (!isSuperAdmin) return showToast("⛔ Super admin only", "danger");
+  if (!confirm(`Force logout "${username}"?`)) return;
+  const res = await apiFetch(`${API}/superadmin/force-logout/${encodeURIComponent(username)}`, { method:"POST" });
+  if (res && res.ok) { showToast("🚪 User logged out", "success"); updateLoggedList(); }
+  else showToast("Failed to logout user", "danger");
+}
+ 
+async function forceLogoutAll() {
+  if (!isSuperAdmin) return showToast("⛔ Super admin only", "danger");
+  if (!confirm("⚠️ Force logout ALL users? This clears every active session.")) return;
+  const res = await apiFetch(`${API}/superadmin/force-logout-all`, { method:"POST" });
+  if (res && res.ok) { showToast("🚪 All sessions cleared", "success"); updateLoggedList(); }
+  else {
+    const sRes = await apiFetch(`${API}/admin/loggedin`);
+    if (sRes && sRes.ok) {
+      const d = await sRes.json();
+      const sessions = d.sessions||[];
+      let count = 0;
+      for (const s of sessions) {
+        const r = await apiFetch(`${API}/superadmin/force-logout/${encodeURIComponent(s.username)}`,{method:"POST"});
+        if (r && r.ok) count++;
+      }
+      showToast(`🚪 Logged out ${count} sessions`, "success");
+      updateLoggedList();
+    } else showToast("Failed to clear sessions", "danger");
   }
 }
-
-/* ============================================================
-   APPROVE / REJECT / OPEN REPLY — updated to use request_id
-============================================================ */
-document.addEventListener("click", async e => {
-  const approveId = e.target.dataset.approve;
-  if (approveId) return approveRequest(approveId);
-
-  const rejectId = e.target.dataset.reject;
-  if (rejectId) return rejectRequest(rejectId);
-
-  const replyId = e.target.dataset.reply;
-  if (replyId) return openReplyDrawer(replyId);
-
-  // edit buttons etc handled below as before
-});
-
-async function approveRequest(request_id) {
+ 
+async function loadSuperUsers() {
+  const tbody = document.getElementById("superUsersList");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">Loading...</td></tr>`;
+  const res = await apiFetch(`${API}/admin/users`);
+  if (!res || !res.ok) { tbody.innerHTML=`<tr><td colspan="4">Access denied</td></tr>`; return; }
+  const data = await res.json();
+  const users = data.users||[];
+  if (!users.length) { tbody.innerHTML=`<tr><td colspan="4">No users found</td></tr>`; return; }
+  tbody.innerHTML = users.map(u => {
+    const username = escapeHtml(u.username);
+    const role     = escapeHtml(u.role||"user");
+    const email    = escapeHtml(u.email||"(no email)");
+    const isSelf   = u.username === adminName;
+    const isSuper  = u.role === "super_admin" || u.role === "superadmin";
+    const badgeCls = isSuper ? "role-badge super" : "role-badge";
+    const actions  = isSelf
+      ? `<span style="color:#aaa;font-size:12px">(yourself)</span>`
+      : `<button class="btn danger sm" onclick="deleteUser('${username}')">🗑 Delete</button>
+         <button class="btn ghost sm" onclick="forceLogout('${username}')">🚪 Logout</button>`;
+    return `<tr>
+      <td style="font-weight:600">${username} ${isSelf?"<span style='font-size:11px;color:#888'>(you)</span>":""}</td>
+      <td style="color:#666;font-size:12px">${email}</td>
+      <td><span class="${badgeCls}">${role}</span></td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">${actions}</td>
+    </tr>`;
+  }).join("");
+}
+ 
+async function loadSuperStats() {
+  const [uR,rR,sR,shR] = await Promise.allSettled([
+    apiFetch(`${API}/admin/users`),
+    apiFetch(`${API}/admin/pending`),
+    apiFetch(`${API}/admin/loggedin`),
+    apiFetch(`${API}/api/shipments`)
+  ]);
+  const get = (r) => r.status==="fulfilled"&&r.value&&r.value.ok ? r.value : null;
+  if (get(uR)) { const d=await get(uR).json(); document.getElementById("sysUsers").textContent=(d.users||[]).length; document.getElementById("statUsers").textContent=(d.users||[]).length; }
+  if (get(rR)) { const d=await get(rR).json(); document.getElementById("sysPending").textContent=(d.requests||[]).length; document.getElementById("statPending").textContent=(d.requests||[]).length; }
+  if (get(sR)) { const d=await get(sR).json(); document.getElementById("sysSessions").textContent=(d.sessions||[]).length; }
+  if (get(shR)) { const d=await get(shR).json(); const arr=d.records||d.shipments||d||[]; document.getElementById("sysShipments").textContent=arr.length; }
+  const repR = await apiFetch(`${API}/admin/replies`);
+  if (repR && repR.ok) { const d=await repR.json(); document.getElementById("sysReplies").textContent=(d.replies||[]).length; }
+}
+ 
+/* ══════════════════════════════════
+   ANALYTICS
+══════════════════════════════════ */
+let chartInstances = {};
+function destroyChart(id) { if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
+ 
+function statusBadgeClass(s) {
+  const sl=(s||"").toLowerCase().trim();
+  if(sl==="active") return "sbadge-active";
+  if(sl.includes("transit")) return "sbadge-transit";
+  if(sl==="delivered") return "sbadge-delivered";
+  if(sl==="pending") return "sbadge-pending";
+  if(sl==="cancelled"||sl==="canceled") return "sbadge-cancelled";
+  return "sbadge-pending";
+}
+function statusLabel(s) {
+  const sl=(s||"").toLowerCase().trim();
+  if(sl.includes("transit")) return "In Transit";
+  return s ? s.charAt(0).toUpperCase()+s.slice(1) : "—";
+}
+function priorityBadgeClass(p) {
+  const pl=(p||"").toLowerCase().trim();
+  if(pl==="high") return "pbadge-high";
+  if(pl==="medium") return "pbadge-medium";
+  if(pl==="low") return "pbadge-low";
+  return "pbadge-medium";
+}
+ 
+async function refreshAnalytics() {
   try {
-    const res = await fetch(`${API}/admin/requests/${encodeURIComponent(request_id)}/approve`, {
-      method: "POST",
-      headers: { ...authHeaders(), "Content-Type": "application/json" },
-      body: "{}"
+    // Try multiple shipment endpoints
+    let shipments = null;
+    for (const url of [`${API}/api/shipments`, `${API}/shipments`, `${API}/admin/shipments`]) {
+      const res = await apiFetch(url);
+      if (res && res.ok) {
+        const data = await res.json();
+        const arr = data.records || data.shipments || (Array.isArray(data) ? data : null);
+        if (arr && Array.isArray(arr)) { shipments = arr; break; }
+      }
+      if (authFailed) break;
+    }
+    if (!shipments) {
+      document.getElementById("shipDaysSub").textContent = "Could not load from database";
+      return;
+    }
+ 
+    const sc={active:0,"in transit":0,delivered:0,pending:0,cancelled:0};
+    shipments.forEach(s=>{
+      const st=(s.status||"").toLowerCase().trim();
+      if(st==="active") sc.active++;
+      else if(st.includes("transit")) sc["in transit"]++;
+      else if(st==="delivered") sc.delivered++;
+      else if(st==="pending") sc.pending++;
+      else if(st==="cancelled"||st==="canceled") sc.cancelled++;
     });
-    if (!res.ok) { showToast("Approve failed"); return; }
-    showToast("Approved");
-    await loadRequests();
-    await loadReplies();
-  } catch (err) {
-    console.error(err);
-    showToast("Approve failed");
-  }
-}
-
-async function rejectRequest(request_id) {
-  try {
-    const res = await fetch(`${API}/admin/requests/${encodeURIComponent(request_id)}/reject`, {
-      method: "POST",
-      headers: { ...authHeaders(), "Content-Type": "application/json" },
-      body: "{}"
+    document.getElementById("sc-active").textContent=sc.active;
+    document.getElementById("sc-transit").textContent=sc["in transit"];
+    document.getElementById("sc-delivered").textContent=sc.delivered;
+    document.getElementById("sc-pending").textContent=sc.pending;
+    document.getElementById("sc-cancelled").textContent=sc.cancelled;
+ 
+    const pc={high:0,medium:0,low:0};
+    shipments.forEach(s=>{
+      const p=(s.shipment_priority||s.priority||"").toLowerCase().trim();
+      if(pc[p]!==undefined) pc[p]++;
     });
-    if (!res.ok) { showToast("Reject failed"); return; }
-    showToast("Rejected");
-    await loadRequests();
-    await loadReplies();
-  } catch (err) {
-    console.error(err);
-    showToast("Reject failed");
-  }
-}
-
-/* ============================================================
-   REPLY DRAWER + SEND REPLY
-   - uses POST /admin/requests/{request_id}/reply
-   - on success: mark row status = "resolved" in UI, refresh lists
-   - replies panel refreshed (formatted as requested)
-============================================================ */
-const replyDrawer = document.getElementById("replyDrawer");
-const replyTitle = document.getElementById("replyReqTitle");
-const replyMeta = document.getElementById("replyReqMeta");
-const replyMsg = document.getElementById("replyText");
-let currentReplyRequestId = null;
-
-function openReplyDrawer(request_id) {
-  const tr = document.querySelector(`tr[data-id="${CSS.escape(request_id)}"]`);
-  if (!tr) return showToast("Request not found");
-
-  const data = JSON.parse(tr.dataset.json || "{}");
-  currentReplyRequestId = request_id;
-
-  replyTitle.textContent = data.title || data.type || "User Request";
-  replyMeta.textContent = `${data.username || "user"} • ${fmt(data.requested_at)}`;
-
-  replyMsg.value = "";
-  replyDrawer.classList.add("open");
-}
-
-document.getElementById("closeReplyBtn").onclick = () =>
-  replyDrawer.classList.remove("open");
-
-document.getElementById("sendReplyBtn").onclick = async () => {
-  const text = replyMsg.value.trim();
-  if (!text) return showToast("Write a reply");
-
-  if (!currentReplyRequestId) return showToast("No request selected");
-
-  const payload = { reply: text };
-
-  try {
-    const res = await fetch(`${API}/admin/requests/${encodeURIComponent(currentReplyRequestId)}/reply`, {
-      method: "POST",
-      headers: { ...authHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+    document.getElementById("pr-high").textContent=pc.high;
+    document.getElementById("pr-medium").textContent=pc.medium;
+    document.getElementById("pr-low").textContent=pc.low;
+ 
+    const elS=document.getElementById("statShipments"); if(elS) elS.textContent=shipments.length;
+    const elA=document.getElementById("statActive"); if(elA) elA.textContent=sc.active;
+    if(document.getElementById("sysShipments")) document.getElementById("sysShipments").textContent=shipments.length;
+ 
+    // Line chart: shipments over time
+    const dateMap={},delivMap={},transitMap={};
+    shipments.forEach(s=>{
+      const d=s.expected_delivery_date||s.created_at;
+      if(!d) return;
+      const day=new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"short"});
+      dateMap[day]=(dateMap[day]||0)+1;
+      const st=(s.status||"").toLowerCase().trim();
+      if(st==="delivered") delivMap[day]=(delivMap[day]||0)+1;
+      if(st.includes("transit")) transitMap[day]=(transitMap[day]||0)+1;
     });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(()=>"");
-      console.error("Reply failed:", res.status, txt);
-      return showToast("Reply failed");
-    }
-
-    showToast("Reply sent");
-
-    // Mark the row status 'resolved' in the UI immediately
-    const tr = document.querySelector(`tr[data-id="${CSS.escape(currentReplyRequestId)}"]`);
-    if (tr) {
-      const statusCell = tr.querySelector(".status-cell");
-      if (statusCell) statusCell.textContent = "resolved";
-    }
-
-    // Optionally attempt to persist status change server-side if endpoint exists.
-    // NOTE: backend currently doesn't have /admin/requests/{id}/resolve — below call is safe to attempt and ignored if 404.
-    fetch(`${API}/admin/requests/${encodeURIComponent(currentReplyRequestId)}/resolve`, {
-      method: "POST",
-      headers: { ...authHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    }).catch(()=>{}); // ignore error if not implemented
-
-    replyDrawer.classList.remove("open");
-    replyMsg.value = "";
-
-    await loadReplies();
-    await loadRequests();
-  } catch (err) {
-    console.error(err);
-    showToast("Reply failed");
+    const sortedDays=Object.keys(dateMap).sort((a,b)=>new Date("1 "+a)-new Date("1 "+b)).slice(-14);
+    document.getElementById("shipDaysSub").textContent=`${shipments.length} total shipments from database`;
+    destroyChart("shipDays");
+    chartInstances["shipDays"]=new Chart(document.getElementById("shipDays"),{
+      type:"line",
+      data:{labels:sortedDays,datasets:[
+        {label:"Total",data:sortedDays.map(d=>dateMap[d]||0),borderColor:"#7c5cbf",backgroundColor:"rgba(124,92,191,0.10)",borderWidth:2,pointRadius:3,fill:true,tension:0.35},
+        {label:"Delivered",data:sortedDays.map(d=>delivMap[d]||0),borderColor:"#059669",backgroundColor:"rgba(5,150,105,0.07)",borderWidth:2,pointRadius:3,fill:true,tension:0.35,borderDash:[5,3]},
+        {label:"In Transit",data:sortedDays.map(d=>transitMap[d]||0),borderColor:"#1d4ed8",backgroundColor:"rgba(29,78,216,0.05)",borderWidth:2,pointRadius:3,fill:true,tension:0.35,borderDash:[3,2]}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:"rgba(0,0,0,0.04)"},ticks:{color:"#999",font:{size:11},maxTicksLimit:8,maxRotation:30}},y:{grid:{color:"rgba(0,0,0,0.04)"},ticks:{color:"#999",font:{size:11}},beginAtZero:true}}}
+    });
+ 
+    // Route bar chart — supports both route_from/route_to and Route_From/Route_To
+    const routeMap={};
+    shipments.forEach(s=>{
+      const from=s.route_from||s.Route_From||s.origin||"";
+      const to=s.route_to||s.Route_To||s.destination||"";
+      if(!from&&!to) return;
+      const key=`${from}→${to}`; routeMap[key]=(routeMap[key]||0)+1;
+    });
+    const topRoutes=Object.entries(routeMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    destroyChart("routeBar");
+    chartInstances["routeBar"]=new Chart(document.getElementById("routeBar"),{
+      type:"bar",
+      data:{labels:topRoutes.map(r=>r[0].length>22?r[0].slice(0,22)+"…":r[0]),datasets:[{data:topRoutes.map(r=>r[1]),backgroundColor:["#7c5cbf","#9b7dd6","#b89de3","#03C2E0","#4ecfde","#d0bcf0"],borderRadius:5,borderSkipped:false}]},
+      options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:"rgba(0,0,0,0.04)"},ticks:{color:"#999",font:{size:11}}},y:{grid:{display:false},ticks:{color:"#555",font:{size:11}}}}}
+    });
+ 
+    // Status donut
+    const sColors={active:"#059669","in transit":"#1d4ed8",delivered:"#7c5cbf",pending:"#EF9F27",cancelled:"#E24B4A"};
+    const sKeys=Object.keys(sc).filter(k=>sc[k]>0);
+    const sVals=sKeys.map(k=>sc[k]);
+    const sColArr=sKeys.map(k=>sColors[k]||"#ccc");
+    document.getElementById("statusLegend").innerHTML=sKeys.map((k,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${sColArr[i]}"></div>${statusLabel(k)} (${sVals[i]})</div>`).join("");
+    destroyChart("statusPie");
+    chartInstances["statusPie"]=new Chart(document.getElementById("statusPie"),{
+      type:"doughnut",
+      data:{labels:sKeys.map(statusLabel),datasets:[{data:sVals,backgroundColor:sColArr,borderWidth:0,hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{display:false}}}
+    });
+ 
+    // Priority donut
+    const pKeys=Object.keys(pc).filter(k=>pc[k]>0);
+    const pVals=pKeys.map(k=>pc[k]);
+    const pColMap={high:"#dc2626",medium:"#b45309",low:"#059669"};
+    destroyChart("priorityChart");
+    chartInstances["priorityChart"]=new Chart(document.getElementById("priorityChart"),{
+      type:"doughnut",
+      data:{labels:pKeys.map(l=>l.charAt(0).toUpperCase()+l.slice(1)),datasets:[{data:pVals,backgroundColor:pKeys.map(k=>pColMap[k]||"#ccc"),borderWidth:0,hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:"58%",plugins:{legend:{display:true,position:"right",labels:{font:{size:12},color:"#555"}}}}
+    });
+ 
+    // Goods bar chart — support goods_type or goods_type field
+    const goodsMap={};
+    shipments.forEach(s=>{
+      const g=((s.goods_type||s.goods||"Unknown")).trim();
+      const gl=g.charAt(0).toUpperCase()+g.slice(1).toLowerCase();
+      goodsMap[gl]=(goodsMap[gl]||0)+1;
+    });
+    const topGoods=Object.entries(goodsMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    destroyChart("goodsChart");
+    chartInstances["goodsChart"]=new Chart(document.getElementById("goodsChart"),{
+      type:"bar",
+      data:{labels:topGoods.map(g=>g[0]),datasets:[{data:topGoods.map(g=>g[1]),backgroundColor:["#03C2E0","#7c5cbf","#EF9F27","#059669","#E24B4A","#1d4ed8"],borderRadius:5,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:"#555",font:{size:11}}},y:{grid:{color:"rgba(0,0,0,0.04)"},ticks:{color:"#999",font:{size:11}},beginAtZero:true}}}
+    });
+ 
+    document.getElementById("lastUpdatedTime").textContent="Updated "+new Date().toLocaleTimeString();
+  } catch(err) {
+    console.error("Analytics error:", err);
+    document.getElementById("shipDaysSub").textContent="Could not load from database";
   }
-};
-/* ============================================================
-   FIXED LOAD REPLIES (right-side panel)
-============================================================ */
-async function loadReplies() {
-  const box = document.getElementById("repliesList");
-  box.innerHTML = `<div>Loading...</div>`;
-
+}
+ 
+/* ══════════════════════════════════
+   IoT FIELD NORMALIZER
+   Handles both camelCase/snake_case and PascalCase DB fields:
+   Device_ID, Battery_Level, First_Sensor_temperature, Route_From, Route_To
+══════════════════════════════════ */
+function normalizeDevice(d) {
+  return {
+    device_id:   d.device_id   || d.Device_ID   || d.deviceId   || d._id || "—",
+    shipment_id: d.shipment_id || d.Shipment_ID  || d.shipmentId || "—",
+    temperature: d.temperature ?? d.First_Sensor_temperature ?? d.Temperature ?? d.temp ?? null,
+    humidity:    d.humidity    ?? d.Humidity     ?? d.humidity_level ?? null,
+    battery:     d.battery     ?? d.Battery_Level ?? d.battery_level ?? d.battery_percentage ?? null,
+    route_from:  d.route_from  || d.Route_From   || d.origin || "—",
+    route_to:    d.route_to    || d.Route_To     || d.destination || "—",
+    location:    d.location    || (d.latitude ? `${d.latitude}, ${d.longitude}` : null),
+    status:      d.status      || d.Status       || "—",
+    updated_at:  d.updated_at  || d.timestamp    || d.last_seen || d.updatedAt || "",
+  };
+}
+ 
+/* ══════════════════════════════════
+   DEVICE TELEMETRY CHART 
+══════════════════════════════════ */
+let deviceTelChart = null;
+ 
+async function loadDeviceChart() {
+  const canvas = document.getElementById("deviceTelChart");
+  if (!canvas) return;
   try {
-    const res = await fetch(`${API}/admin/replies`, { headers: authHeaders() });
-    const data = await res.json();
-
-    console.log("Replies from backend:", JSON.stringify(data, null, 2));
-
-    const list = data.replies || [];
-
-    if (!list.length) {
-      box.innerHTML = `<div>No replies yet</div>`;
-      return;
+    let records = null;
+    for (const url of [`${API}/device-data/recent`]) {
+      const res = await apiFetch(url);
+      if (res && res.ok) {
+        const data = await res.json();
+        const raw = data.records || data.devices || data.data || (Array.isArray(data) ? data : null);
+        if (raw && raw.length) { records = raw.map(normalizeDevice); break; }
+      }
     }
-
-    box.innerHTML = list.map(r => {
-      const title = r.request_title || "(no title)";
-      const replyText = r.reply || "";
-      const admin = r.admin || "admin";
-      const sentAt = r.sent_at ? fmt(r.sent_at) : "";
-
-      return `
-        <div style="padding:10px 0; border-bottom:1px solid #f0f0f3">
-          <div style="font-weight:700; color:var(--purple)">
-            Title: ${escapeHtml(title)}
-          </div>
-
-          <div style="margin-top:6px">
-            Reply: ${escapeHtml(replyText)}
-          </div>
-
-          <div style="font-size:12px; color:#666; margin-top:6px">
-            Sent by ${escapeHtml(admin)} at ${sentAt}
-          </div>
-        </div>
-      `;
-    }).join("");
-
-  } catch (err) {
-    console.error("Replies load error:", err);
-    box.innerHTML = `<div>Error loading replies</div>`;
+    if (!records || !records.length) throw new Error("empty");
+    renderDeviceChart(records);
+    document.getElementById("deviceChartSub").textContent = `${records.length} IoT devices — updated ${new Date().toLocaleTimeString()}`;
+    const el = document.getElementById("statDevices"); if(el) el.textContent = records.length;
+    if(document.getElementById("sysDevices")) document.getElementById("sysDevices").textContent = records.length;
+  } catch {
+    document.getElementById("deviceChartSub").textContent = "Could not load IoT device data — check MONGO_DB_IOT connection";
   }
 }
-
-/* ============================================================
-   ADMIN STATS (Hero badges)
-============================================================ */
-async function loadAdminStats() {
-  try {
-    // USERS
-    const usersRes = await fetch(`${API}/admin/users`, { headers: authHeaders() });
-    const usersData = await usersRes.json();
-    const usersCount = (usersData.users || []).length;
-
-    // REQUESTS
-    const reqRes = await fetch(`${API}/admin/pending`, { headers: authHeaders() });
-    const reqData = await reqRes.json();
-    const pendingCount = (reqData.requests || []).length;
-
-    // SHIPMENTS
-    const shipRes = await fetch(`${API}/api/shipments`, { headers: authHeaders() });
-    const shipData = await shipRes.json();
-    const shipmentCount = (shipData.records || shipData.shipments || []).length;
-
-    // SESSIONS
-    const sessRes = await fetch(`${API}/admin/loggedin`, { headers: authHeaders() });
-    const sessData = await sessRes.json();
-    const sessionCount = (sessData.sessions || []).length;
-
-    // UPDATE UI (safe checks)
-    document.getElementById("statUsers") && (document.getElementById("statUsers").textContent = usersCount);
-    document.getElementById("statPending") && (document.getElementById("statPending").textContent = pendingCount);
-    document.getElementById("statShipments") && (document.getElementById("statShipments").textContent = shipmentCount);
-    document.getElementById("statSessions") && (document.getElementById("statSessions").textContent = sessionCount);
-
-  } catch (err) {
-    console.error("Stats load error:", err);
-  }
-}
-/* ============================================================
-   ADMIN MESSAGES PANEL (clean version)
-============================================================ */
-async function loadAdminMessages() {
-  const box = document.getElementById("adminMessagesBox");
-  if (!box) return;
-
-  box.innerHTML = `<div class="muted">Loading...</div>`;
-
-  try {
-    const res = await fetch(`${API}/admin/replies`, { headers: authHeaders() });
-    const data = await res.json();
-
-    const list = (data.replies || []).slice(0, 5); // latest 5 only
-
-    if (!list.length) {
-      box.innerHTML = `<div class="muted">No messages sent yet</div>`;
-      return;
+ 
+function renderDeviceChart(devices) {
+  const labels = devices.map(d => String(d.device_id));
+  const temps  = devices.map(d => d.temperature !== null ? parseFloat(d.temperature) : 0);
+  const bats   = devices.map(d => d.battery    !== null ? parseFloat(d.battery)    : 0);
+  
+  if (deviceTelChart) { deviceTelChart.destroy(); deviceTelChart = null; }
+ 
+  deviceTelChart = new Chart(document.getElementById("deviceTelChart"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Temperature (°C)",
+          data: temps,
+          backgroundColor: temps.map(t => t > 35 ? "rgba(220,38,38,0.82)" : t > 28 ? "rgba(180,83,9,0.75)" : "rgba(124,92,191,0.75)"),
+          borderRadius: 5,
+          borderSkipped: false,
+          yAxisID: "yTemp",
+          order: 2
+        },
+        {
+          label: "Battery (%)",
+          data: bats,
+          type: "line",
+          borderColor: "#059669",
+          backgroundColor: "rgba(5,150,105,0.10)",
+          borderWidth: 2,
+          pointRadius: 5,
+          pointBackgroundColor: bats.map(b => b < 20 ? "#dc2626" : b < 40 ? "#b45309" : "#059669"),
+          fill: true,
+          tension: 0.35,
+          yAxisID: "yBat",
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:"index", intersect:false },
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label === "Battery (%)"
+              ? ` Battery: ${ctx.raw.toFixed(0)}%`
+              : ` Temp: ${ctx.raw.toFixed(1)}°C`
+          }
+        }
+      },
+      scales: {
+        x: { grid:{color:"rgba(0,0,0,0.04)"}, ticks:{color:"#999",font:{size:11},autoSkip:true,maxRotation:35,maxTicksLimit:12} },
+        yTemp: {
+          position:"left", beginAtZero:true,
+          title:{display:true,text:"°C",color:"#7c5cbf",font:{size:11}},
+          grid:{color:"rgba(0,0,0,0.04)"}, ticks:{color:"#999",font:{size:11}}
+        },
+        yBat: {
+          position:"right", min:0, max:100,
+          title:{display:true,text:"%",color:"#059669",font:{size:11}},
+          grid:{drawOnChartArea:false}, ticks:{color:"#999",font:{size:11}}
+        }
+      }
     }
-
-    box.innerHTML = list.map(r => `
-      <div class="admin-msg">
-        <h4>${escapeHtml(r.request_title || "Request")}</h4>
-        <p>${escapeHtml(r.reply || "")}</p>
-        <div style="font-size:11px;color:#888;margin-top:6px">
-          ${escapeHtml(r.admin || "admin")} • ${r.sent_at ? fmt(r.sent_at) : ""}
-        </div>
-      </div>
-    `).join("");
-
-  } catch (err) {
-    console.error(err);
-    box.innerHTML = `<div class="muted">Error loading messages</div>`;
-  }
+  });
+ 
+  // Stat cards
+  const online   = devices.filter(d=>(d.status||"").toLowerCase()==="online").length;
+  const avgTemp  = devices.length ? (temps.reduce((a,b)=>a+b,0)/temps.length).toFixed(1) : "—";
+  const avgBat   = devices.length ? Math.round(bats.reduce((a,b)=>a+b,0)/bats.length) : "—";
+  const lowBat   = bats.filter(b=>b<30).length;
+  const highTemp = temps.filter(t=>t>30).length;
+ 
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  set("dStatTotal", devices.length);
+  set("dStatOnline", `${online}/${devices.length}`);
+  set("dStatTemp", avgTemp !== "—" ? `${avgTemp}°C` : "—");
+  set("dStatBat", lowBat);
+  set("iotOnline", online);
+  set("iotLowBat", lowBat);
+  set("iotHighTemp", highTemp);
+  set("iotAvgBat", avgBat !== "—" ? `${avgBat}%` : "—");
+  const tempEl = document.getElementById("dStatTemp");
+  if(tempEl) tempEl.style.color = parseFloat(avgTemp) > 30 ? "#dc2626" : "#673AB7";
 }
-/* ============================================================
-   AUTO REFRESH DASHBOARD
-============================================================ */
-function startAdminAutoRefresh() {
-  loadAdminStats();
-  loadAdminMessages();
-
-  setInterval(() => {
-    loadAdminStats();
-    loadAdminMessages();
-  }, 15000); // every 15 sec
-}
-/* ============================================================
-   LOAD USERS  (uses /admin/users)
-============================================================ */
+ 
+/* ── USERS ── */
 async function loadUsers() {
   const tbody = document.getElementById("usersList");
-  tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
-
-  try {
-    const res = await fetch(`${API}/admin/users`, { headers: authHeaders() });
-    if (!res.ok) {
-      tbody.innerHTML = `<tr><td colspan="5">Error loading users</td></tr>`;
-      return;
-    }
-
-    const data = await res.json();
-    const users = data.users || [];
-
-    if (users.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5">No users found</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = users.map(u => `
-      <tr>
-        <td>${escapeHtml(u.username)}</td>
-        <td>${escapeHtml(u.email || "(no email)")}</td>
-        <td><span class="role-badge">${escapeHtml(u.role)}</span></td>
-        <td>${u.role === "admin" ? "Yes" : "No"}</td>
-        <td>
-          <button class="btn ghost"
-            data-edit="${escapeHtml(u.username)}"
-            data-role="${escapeHtml(u.role)}"
-            data-email="${escapeHtml(u.email || "")}">
-            Edit
-          </button>
-        </td>
-      </tr>
-    `).join("");
-
-  } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="5">Error loading users</td></tr>`;
-  }
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">Loading...</td></tr>`;
+  const res = await apiFetch(`${API}/admin/users`);
+  if(!res){ tbody.innerHTML=`<tr><td colspan="5">Access denied or unavailable</td></tr>`; return; }
+  if(!res.ok){ tbody.innerHTML=`<tr><td colspan="5">Error loading users (${res.status})</td></tr>`; return; }
+  const data = await res.json();
+  const users = data.users||[];
+  if(!users.length){ tbody.innerHTML=`<tr><td colspan="5">No users found</td></tr>`; return; }
+  tbody.innerHTML = users.map(u => {
+    const username = escapeHtml(u.username);
+    const role     = escapeHtml(u.role||"user");
+    const email    = escapeHtml(u.email||"(no email)");
+    const isAdminRole = ["admin","super_admin","superadmin"].includes(u.role);
+    const isSelf   = u.username === adminName;
+    const isSuper  = u.role === "super_admin" || u.role === "superadmin";
+    const badgeCls = isSuper ? "role-badge super" : "role-badge";
+    const superBtns = (isSuperAdmin && !isSelf)
+      ? `<button class="btn danger sm" onclick="deleteUser('${username}')">🗑 Del</button>
+         <button class="btn ghost sm" onclick="forceLogout('${username}')">🚪 Logout</button>`
+      : "";
+    return `<tr>
+      <td style="font-weight:600">${username}</td>
+      <td style="color:#666">${email}</td>
+      <td><span class="${badgeCls}">${role}</span></td>
+      <td>${isAdminRole ? "✅" : "—"}</td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn ghost sm" data-edit="${username}" data-role="${role}" data-email="${escapeHtml(u.email||'')}">✏️ Role</button>
+        ${superBtns}
+      </td>
+    </tr>`;
+  }).join("");
+  const el=document.getElementById("statUsers"); if(el) el.textContent=users.length;
 }
-/* ============================================================
-   ROLE MODAL + /admin/set-role/{username}
-============================================================ */
-const roleModal = document.getElementById("roleModal");
-const modalUsername = document.getElementById("modalUsername");
-const modalUserEmail = document.getElementById("modalUserEmail");
-const modalRoleSelect = document.getElementById("modalRoleSelect");
-
-document.getElementById("modalCancel").onclick =
-document.getElementById("closeModal").onclick = () =>
-  roleModal.classList.remove("show");
-
-document.addEventListener("click", e => {
-  if (e.target.dataset.edit) {
-    const user = e.target.dataset.edit;
-    const role = e.target.dataset.role;
-    const email = e.target.dataset.email;
-
-    modalUsername.textContent = user;
-    modalUserEmail.textContent = email || "(no email)";
-    modalRoleSelect.value = role;
-
-    roleModal.classList.add("show");
+ 
+/* ── REQUESTS ── */
+async function loadRequests() {
+  const tbody = document.querySelector("#requestsTable tbody");
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#888;padding:20px">Loading...</td></tr>`;
+  const res = await apiFetch(`${API}/admin/pending`);
+  if(!res){ tbody.innerHTML=`<tr><td colspan="5">Access denied or unavailable</td></tr>`; return; }
+  if(!res.ok){ tbody.innerHTML=`<tr><td colspan="5">Failed (${res.status})</td></tr>`; return; }
+  const data = await res.json();
+  let arr = data.requests||data||[];
+  if(!Array.isArray(arr)) arr=[];
+  if(!arr.length){ tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:20px;color:#888">No pending requests</td></tr>`; return; }
+  tbody.innerHTML = arr.map(r=>{
+    const rid    = r._id||r.request_id||"";
+    const status = r.status||"pending";
+    const sc2    = status==="approved"?"req-approved":status==="rejected"?"req-rejected":status==="resolved"?"req-resolved":"req-pending";
+    const jsonSafe = JSON.stringify(r).replace(/'/g,"&#39;").replace(/</g,"&lt;");
+    return `<tr data-id="${escapeHtml(String(rid))}" data-json='${jsonSafe}'>
+      <td style="font-weight:600">${escapeHtml(r.title||r.type||"(no title)")}</td>
+      <td>${escapeHtml(r.username||"")}</td>
+      <td style="color:#888;font-size:12px">${fmt(r.requested_at)}</td>
+      <td><span class="req-badge ${sc2}">${escapeHtml(status)}</span></td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn primary sm" data-approve="${escapeHtml(String(rid))}">✅ Approve</button>
+        <button class="btn ghost sm" data-reject="${escapeHtml(String(rid))}">❌ Reject</button>
+        <button class="btn ghost sm" data-reply="${escapeHtml(String(rid))}">✉ Reply</button>
+      </td>
+    </tr>`;
+  }).join("");
+  const el=document.getElementById("statPending"); if(el) el.textContent=arr.length;
+}
+ 
+document.addEventListener("click", async e=>{
+  if(e.target.dataset.approve) return approveRequest(e.target.dataset.approve);
+  if(e.target.dataset.reject)  return rejectRequest(e.target.dataset.reject);
+  if(e.target.dataset.reply)   return openReplyDrawer(e.target.dataset.reply);
+  if(e.target.dataset.edit) {
+    document.getElementById("modalUsername").textContent  = e.target.dataset.edit;
+    document.getElementById("modalUserEmail").textContent = e.target.dataset.email||"(no email)";
+    document.getElementById("modalRoleSelect").value      = e.target.dataset.role;
+    document.getElementById("roleModal").classList.add("show");
   }
 });
-
-document.getElementById("modalSave").onclick = async () => {
-  const username = modalUsername.textContent;
-  const role = modalRoleSelect.value;
-
-  if (!role) return showToast("Choose a role");
-
-  try {
-    const res = await fetch(`${API}/admin/set-role/${encodeURIComponent(username)}`, {
-      method: "POST",
-      headers: { ...authHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ role })
-    });
-
-    if (!res.ok) return showToast("Update failed");
-
-    showToast("Role updated");
-    roleModal.classList.remove("show");
-    loadUsers();
-    document.getElementById("panelUsers").classList.remove("hidden");
-
-  } catch {
-    showToast("Update failed");
-  }
+ 
+async function approveRequest(id) {
+  const res = await apiFetch(`${API}/admin/requests/${encodeURIComponent(id)}/approve`,{method:"POST"});
+  if(!res||!res.ok){ showToast("Approve failed","danger"); return; }
+  showToast("✅ Approved","success"); loadRequests(); loadReplies();
+}
+async function rejectRequest(id) {
+  const res = await apiFetch(`${API}/admin/requests/${encodeURIComponent(id)}/reject`,{method:"POST"});
+  if(!res||!res.ok){ showToast("Reject failed","danger"); return; }
+  showToast("❌ Rejected"); loadRequests(); loadReplies();
+}
+ 
+/* ── REPLY DRAWER ── */
+const replyDrawer = document.getElementById("replyDrawer");
+let currentReplyId = null;
+function openReplyDrawer(rid) {
+  const tr = document.querySelector(`tr[data-id="${CSS.escape(rid)}"]`);
+  if(!tr) return showToast("Request not found","danger");
+  const data = JSON.parse(tr.dataset.json||"{}");
+  currentReplyId = rid;
+  document.getElementById("replyReqTitle").textContent = data.title||data.type||"User Request";
+  document.getElementById("replyReqMeta").textContent  = `${data.username||"user"} • ${fmt(data.requested_at)}`;
+  document.getElementById("replyText").value = "";
+  replyDrawer.classList.add("open");
+}
+document.getElementById("closeReplyBtn").onclick = ()=>replyDrawer.classList.remove("open");
+document.getElementById("sendReplyBtn").onclick = async ()=>{
+  const text = document.getElementById("replyText").value.trim();
+  if(!text) return showToast("Write a reply first");
+  if(!currentReplyId) return showToast("No request selected","danger");
+  const res = await apiFetch(`${API}/admin/requests/${encodeURIComponent(currentReplyId)}/reply`,{
+    method:"POST", body:JSON.stringify({reply:text})
+  });
+  if(!res||!res.ok){ showToast("Reply failed","danger"); return; }
+  showToast("✉ Reply sent","success"); replyDrawer.classList.remove("open"); loadReplies(); loadRequests();
 };
-/* ============================================================
-   ROLES & PERMISSIONS — sidebar + quick tools button fix
-============================================================ */
-document.getElementById("menuRoles").onclick = () => {
-  hidePanels();
-  panelUsers.classList.remove("hidden");
+ 
+/* ── REPLIES ── */
+async function loadReplies() {
+  const box = document.getElementById("repliesList");
+  box.innerHTML = `<div style="color:#888;font-size:13px">Loading...</div>`;
+  const res = await apiFetch(`${API}/admin/replies`);
+  if(!res){ box.innerHTML=`<div style="color:#888;font-size:13px">Access denied</div>`; return; }
+  const data = await res.json();
+  const list = data.replies||[];
+  if(!list.length){ box.innerHTML=`<div style="color:#888;font-size:13px">No replies yet</div>`; return; }
+  box.innerHTML = list.map(r=>`
+    <div class="reply-row">
+      <div class="reply-title">${escapeHtml(r.request_title||"(no title)")}</div>
+      <div class="reply-body">${escapeHtml(r.reply||"")}</div>
+      <div class="reply-meta">By ${escapeHtml(r.admin||"admin")} · ${r.sent_at?fmt(r.sent_at):""}</div>
+    </div>`).join("");
+}
+ 
+/* ── ROLE MODAL ── */
+document.getElementById("modalCancel").onclick =
+document.getElementById("closeModal").onclick  = ()=>document.getElementById("roleModal").classList.remove("show");
+document.getElementById("roleModal").addEventListener("click", e=>{ if(e.target===document.getElementById("roleModal")) document.getElementById("roleModal").classList.remove("show"); });
+document.getElementById("modalSave").onclick = async ()=>{
+  const username = document.getElementById("modalUsername").textContent;
+  const role     = document.getElementById("modalRoleSelect").value;
+  if(!role) return showToast("Choose a role");
+  if(role==="super_admin" && !isSuperAdmin) return showToast("⛔ Only super admin can assign that role","danger");
+  const res = await apiFetch(`${API}/admin/set-role/${encodeURIComponent(username)}`,{
+    method:"POST", body:JSON.stringify({role})
+  });
+  if(!res||!res.ok) return showToast("Update failed","danger");
+  showToast("Role updated","success");
+  document.getElementById("roleModal").classList.remove("show");
   loadUsers();
 };
-
-document.getElementById("btnEditRoles").onclick = () => {
-  hidePanels();
-  panelUsers.classList.remove("hidden");
-  loadUsers();
-};
-
-/* ============================================================
-   AUDIT LOGS — reads from logged_sessions via /admin/loggedin
-============================================================ */
+ 
+/* ── AUDIT ── */
 async function loadAudit() {
   const tbody = document.querySelector("#auditTable tbody");
-  tbody.innerHTML = `<tr><td colspan="4">Loading...</td></tr>`;
-
-  try {
-    const res = await fetch(`${API}/admin/loggedin`, { headers: authHeaders() });
-
-    if (!res.ok) {
-      tbody.innerHTML = `<tr><td colspan="4">Failed to load sessions</td></tr>`;
-      return;
-    }
-
-    const data = await res.json();
-    const logs = data.sessions || data.users || data || [];
-
-    if (!Array.isArray(logs) || logs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4">No session logs found</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = logs.map(m => `
-      <tr>
-        <td>${fmt(m.ts || m.timestamp || m.created_at || "")}</td>
-        <td>${escapeHtml(m.username || m.user || "—")}</td>
-        <td><span class="role-badge" style="background:#f0fff4;color:#27ae60">Login Session</span></td>
-        <td>${escapeHtml(m._id || "—")}</td>
-      </tr>
-    `).join("");
-
-  } catch (err) {
-    console.error("Audit load error:", err);
-    tbody.innerHTML = `<tr><td colspan="4">Error loading session logs</td></tr>`;
-  }
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">Loading...</td></tr>`;
+  const res = await apiFetch(`${API}/admin/loggedin`);
+  if(!res){ tbody.innerHTML=`<tr><td colspan="4">Access denied or unavailable</td></tr>`; return; }
+  if(!res.ok){ tbody.innerHTML=`<tr><td colspan="4">Failed to load (${res.status})</td></tr>`; return; }
+  const data = await res.json();
+  const logs = data.sessions||data.users||data||[];
+  if(!Array.isArray(logs)||!logs.length){ tbody.innerHTML=`<tr><td colspan="4">No logs found</td></tr>`; return; }
+  tbody.innerHTML = logs.map(m=>`
+    <tr>
+      <td style="color:#888;font-size:12px">${fmt(m.ts||m.timestamp||m.logged_at||m.created_at||"")}</td>
+      <td style="font-weight:600">${escapeHtml(m.username||m.user||"—")}</td>
+      <td><span class="role-badge" style="background:#f0fff4;color:#27ae60">Login Session</span></td>
+      <td style="color:#aaa;font-size:11px;font-family:'DM Mono',monospace">${escapeHtml(m._id||"—")}</td>
+    </tr>`).join("");
 }
-/* ============================================================
-   REQUEST DRAWER + /requests
-============================================================ */
-const fabRequest = document.getElementById("fabRequest");
-const drawer = document.getElementById("drawer");
-const closeDrawer = document.getElementById("closeDrawer");
-const sendRequestBtn = document.getElementById("sendRequestBtn");
-
-fabRequest.onclick = () => drawer.classList.toggle("open");
-closeDrawer.onclick = () => drawer.classList.remove("open");
-
-sendRequestBtn.onclick = async () => {
-  const type = document.getElementById("request-type").value;
-  const title = document.getElementById("request-title").value.trim();
-  const desc = document.getElementById("request-desc").value.trim();
-
-  if (!title || !desc) return showToast("Fill all fields");
-
-  try {
-    const res = await fetch(`${API}/requests`, {
-      method: "POST",
-      headers: { ...authHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ type, title, description: desc })
-    });
-
-    if (!res.ok) return showToast("Failed");
-
-    showToast("Request sent");
-    drawer.classList.remove("open");
-    loadRequests();
-  } catch {
-    showToast("Failed");
-  }
-};
-
-/* ============================================================
-   LOGGED SESSION HANDLING
-============================================================ */
-function getSessions() {
-  try { return JSON.parse(localStorage.getItem("scmx_sessions") || "[]"); }
-  catch { return []; }
-}
-function saveSessions(arr) {
-  localStorage.setItem("scmx_sessions", JSON.stringify(arr));
-}
-
-function updateLoggedList() {
-  const list = document.getElementById("loggedList");
-  const arr = getSessions();
-  if (!arr.length) {
-    list.innerHTML = "<div>No sessions</div>";
-    return;
-  }
-  list.innerHTML = arr
-    .map(s => `
-      <div style="padding:6px 8px;background:rgba(255,255,255,0.12);border-radius:8px;margin-bottom:8px;">
-        <div><strong>${escapeHtml(s.username)}</strong></div>
-        <div style="font-size:12px">${fmt(s.ts)}</div>
-      </div>`)
-    .join("");
-}
-function addSession() {
-  const u = (decodeToken() && (decodeToken().username || decodeToken().sub)) || "guest";
-  const arr = getSessions().filter(s => s.username !== u);
-  arr.unshift({ username: u, ts: new Date().toISOString() });
-  saveSessions(arr.slice(0, 20));
-  updateLoggedList();
-
-  fetch(`${API}/admin/loggedin`, {
-    method: "POST",
-    headers: { ...authHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ username: u, ts: new Date().toISOString() })
-  }).catch(() => {});
-}
-async function updateLoggedList() {
-  const list = document.getElementById("loggedList");
-  const countBadge = document.getElementById("sessionCount");
-  list.innerHTML = `<div style="opacity:.7;font-size:12px">Loading...</div>`;
-
-  try {
-    const res = await fetch(`${API}/admin/loggedin`, { headers: authHeaders() });
-
-    if (!res.ok) {
-      list.innerHTML = `<div style="opacity:.7;font-size:12px">Failed to load</div>`;
-      return;
-    }
-
-    const data = await res.json();
-    const sessions = data.sessions || [];
-
-    countBadge.textContent = sessions.length; // ← update count
-
-    if (!sessions.length) {
-      list.innerHTML = `<div style="opacity:.7;font-size:12px">No sessions</div>`;
-      return;
-    }
-
-    list.innerHTML = sessions
-      .sort((a, b) => new Date(b.ts) - new Date(a.ts))
-      .map(s => `
-        <div style="padding:6px 8px;background:rgba(255,255,255,0.12);border-radius:8px;margin-bottom:8px;">
-          <div><strong>${escapeHtml(s.username)}</strong></div>
-          <div style="font-size:12px;opacity:.8">${fmt(s.ts)}</div>
-        </div>`)
-      .join("");
-
-  } catch (err) {
-    console.error("Sessions load error:", err);
-    list.innerHTML = `<div style="opacity:.7;font-size:12px">Error loading sessions</div>`;
-  }
-}
-/* ============================================================
-    LOAD SHIPMENTS (new panel, uses /api/shipments)
-============================================================ */
+ 
+/* ══════════════════════════════════════════════
+   SHIPMENTS — tries multiple endpoints
+══════════════════════════════════════════════ */
+let allShipmentData = [];
+ 
 async function loadAllShipments() {
-  const tbody = document.getElementById("shipmentTableBody"); 
-  if (!tbody) {
-    console.error("shipmentTableBody not found");
+  const tbody = document.getElementById("shipmentTableBody");
+  if(!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#888;padding:28px">⏳ Loading shipments from database...</td></tr>`;
+ 
+  let shipments = null;
+  const endpoints = [
+    `${API}/api/shipments`,
+    `${API}/shipments`,
+    `${API}/admin/shipments`
+  ];
+  for (const url of endpoints) {
+    try {
+      const res = await apiFetch(url);
+      if (res && res.ok) {
+        const data = await res.json();
+        // Handle all possible response shapes
+        let arr = null;
+        if (Array.isArray(data)) arr = data;
+        else if (Array.isArray(data.records)) arr = data.records;
+        else if (Array.isArray(data.shipments)) arr = data.shipments;
+        else if (Array.isArray(data.data)) arr = data.data;
+        if (arr !== null) { shipments = arr; break; }
+      }
+    } catch(e) { console.warn("Shipment endpoint failed:", url, e); }
+    if (authFailed) break;
+  }
+ 
+  if (shipments === null) {
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:#dc2626;padding:28px">❌ Failed to load shipments. Check API connection.</td></tr>`;
     return;
   }
-
-  tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
-
-  try {
-    console.log("Calling API:", `${API}/api/shipments`);
-
-    const res = await fetch(`${API}/api/shipments`, {
-      headers: authHeaders()
-    });
-
-    console.log("Response status:", res.status);
-
-    if (!res.ok) {
-      const txt = await res.text();
-      console.error("Error response:", txt);
-      tbody.innerHTML = `<tr><td colspan="5">Failed to load shipments</td></tr>`;
-      return;
-    }
-
-    const data = await res.json();
-    console.log("API DATA:", data);
-
-    const shipments = data.records || data.shipments || data;
-
-    if (!Array.isArray(shipments) || shipments.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5">No shipments found</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = shipments.map(s => {
-      const id = s.shipment_number || s._id || "N/A";
-
-      return `
-        <tr>
-          <td>${escapeHtml(id)}</td>
-          <td>${escapeHtml(s.route_from || s.origin)}</td>
-          <td>${escapeHtml(s.route_to || s.destination)}</td>
-          <td>${escapeHtml(s.status)}</td>
-          <td>
-            <button class="btn primary" onclick="editShipment('${id}')">Edit</button>
-            <button class="btn ghost" onclick="deleteShipment('${id}')">Delete</button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-  } catch (err) {
-    console.error("FETCH ERROR:", err);
-    tbody.innerHTML = `<tr><td colspan="5">Error loading shipments</td></tr>`;
+  if (!shipments.length) {
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:#888;padding:28px">No shipments found in database</td></tr>`;
+    return;
   }
+ 
+  allShipmentData = shipments;
+  const el=document.getElementById("statShipments"); if(el) el.textContent=shipments.length;
+  renderShipments();
 }
-/* ============================================================
-   device data management and other admin actions
-============================================================ */
-document.querySelectorAll(".menu-item").forEach(item => {
-    item.addEventListener("click", () => {
-        const sectionId = item.getAttribute("data-section");
-
-        // Special case: redirect page
-        if (sectionId === "devicedata") {
-            window.location.href = "/frontend/device_data.html";
-            return;
-        }
-
-        // Normal section logic
-        document.querySelectorAll(".section").forEach(sec => {
-            sec.style.display = "none";
-        });
-
-        document.getElementById(sectionId).style.display = "block";
-    });
-});
-/* ============================================================
-   INIT LOAD
-============================================================ */
-loadRequests();
-loadUsers();
-loadAudit();
-loadReplies();
-addSession();
-startAdminAutoRefresh();
-document.getElementById("refreshAll").onclick = () => {
-  loadRequests();
-  loadUsers();
-  loadAudit();
-  loadReplies();
-};
-document.getElementById("refreshRequests").onclick = loadRequests;
-document.getElementById("refreshAudit").onclick = loadAudit;
-
-document.getElementById("userSearch").oninput = e => {
-  const q = e.target.value.toLowerCase();
-  document.querySelectorAll("#usersTable tbody tr").forEach(tr => {
-    tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
+ 
+function renderShipments() {
+  const tbody    = document.getElementById("shipmentTableBody");
+  if (!tbody) return;
+  const filterSt  = (document.getElementById("filterStatus")?.value||"").toLowerCase();
+  const filterPr  = (document.getElementById("filterPriority")?.value||"").toLowerCase();
+  const searchVal = (document.getElementById("shipmentSearch")?.value||"").toLowerCase();
+ 
+  let data = allShipmentData;
+  if(filterSt) data=data.filter(s=>{
+    const st=(s.status||"").toLowerCase().trim();
+    return filterSt==="in transit" ? st.includes("transit") : st===filterSt;
   });
-};
-document.getElementById("requestsFilter").oninput = e => {
-  const q = e.target.value.toLowerCase();
-  document.querySelectorAll("#requestsTable tbody tr").forEach(tr => {
-    tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
+  if(filterPr) data=data.filter(s=>(s.shipment_priority||s.priority||"").toLowerCase().trim()===filterPr);
+  if(searchVal) data=data.filter(s=>{
+    const searchable = JSON.stringify(s).toLowerCase();
+    return searchable.includes(searchVal);
   });
-};
-/* ============================================================
-    NAVBAR USER INFO + DROPDOWN
-============================================================ */
-(function () {
-  const token = localStorage.getItem("token");
-  if (!token) return;
-
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const username = payload.username || payload.sub || "User";
-    const role = (payload.role || "user").toUpperCase();
-    const initial = username[0].toUpperCase();
-
-    // Navbar
-    document.getElementById("userAvatar").textContent = initial;
-    document.getElementById("usernameDisplay").textContent = username;
-
-    // Dropdown header
-    document.getElementById("dropAvatar").textContent = initial;
-    document.getElementById("dropName").textContent = username;
-    document.getElementById("dropUsername").textContent = username;
-    document.getElementById("dropRole").textContent = role;
-
-    // Show admin links only for admin
-    if (role === "ADMIN") {
-      document.getElementById("adminDashLink").style.display = "flex";
-      document.getElementById("adminReqLink").style.display = "flex";
-      document.getElementById("adminUsersLink").style.display = "flex";
-    }
-
-  } catch (e) {
-    console.error("Token parse error", e);
+ 
+  if(!data.length){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:#888;padding:28px">No shipments match filter</td></tr>`;
+    return;
   }
-
-  // Toggle dropdown on click
-  const wrap = document.getElementById("profileWrap");
-  wrap.addEventListener("click", function (e) {
-    e.stopPropagation();
-    wrap.classList.toggle("open");
-  });
-
-  // Close when clicking outside
-  document.addEventListener("click", function () {
-    wrap.classList.remove("open");
-  });
+ 
+  tbody.innerHTML = data.map(s=>{
+    // Support both snake_case and PascalCase field names
+    const id       = s.shipment_number || s.Shipment_Number || s._id || "N/A";
+    const from     = s.route_from  || s.Route_From  || s.origin      || "—";
+    const to       = s.route_to    || s.Route_To    || s.destination  || "—";
+    const route    = `${from} → ${to}`;
+    const goods    = s.goods_type  || s.Goods_Type  || s.goods        || "—";
+    const priority = s.shipment_priority || s.Shipment_Priority || s.priority || "medium";
+    const status   = s.status      || s.Status      || "pending";
+    const delivDate= s.expected_delivery_date || s.Expected_Delivery_Date || s.delivery_date || "";
+    const createdBy= s.created_by  || s.Created_By  || "—";
+    const idSafe   = escapeHtml(String(id));
+    const statusSafe=escapeHtml(status);
+    const prioSafe = escapeHtml(priority);
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-weight:700;color:#4a1ca0;font-size:12px">${idSafe}</td>
+      <td style="font-size:12px;color:#444">${escapeHtml(route)}</td>
+      <td style="font-size:13px">${escapeHtml(goods)}</td>
+      <td><span class="pbadge ${priorityBadgeClass(priority)}">${escapeHtml(statusLabel(priority))}</span></td>
+      <td><span class="sbadge ${statusBadgeClass(status)}">${escapeHtml(statusLabel(status))}</span></td>
+      <td style="font-size:12px;color:#888">${delivDate?fmtDate(delivDate):"—"}</td>
+      <td style="font-size:12px;color:#666">${escapeHtml(String(createdBy))}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn view sm" onclick="openViewShipment('${idSafe}')">👁 View</button>
+          <button class="btn primary sm" onclick="openEditShipment('${idSafe}','${statusSafe}','${prioSafe}')">✏️ Edit</button>
+          <button class="btn danger sm" onclick="deleteShipment('${idSafe}')">🗑 Del</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+ 
+document.getElementById("filterStatus").onchange   = renderShipments;
+document.getElementById("filterPriority").onchange = renderShipments;
+document.getElementById("shipmentSearch").oninput  = renderShipments;
+ 
+/* ── VIEW SHIPMENT ── */
+function openViewShipment(id) {
+  const s = allShipmentData.find(x=>String(x.shipment_number||x.Shipment_Number||x._id||"")=== String(id));
+  if(!s) return showToast("Shipment not found","danger");
+  document.getElementById("viewShipId").textContent = id;
+  const fields=[
+    ["Shipment Number", s.shipment_number||s.Shipment_Number],
+    ["Container Number",s.container_number||s.Container_Number],
+    ["Route From",      s.route_from||s.Route_From||s.origin],
+    ["Route To",        s.route_to||s.Route_To||s.destination],
+    ["Goods Type",      s.goods_type||s.Goods_Type||s.goods],
+    ["Priority",        s.shipment_priority||s.Shipment_Priority||s.priority],
+    ["Status",          s.status||s.Status],
+    ["Device",          s.device||s.Device],
+    ["PO Number",       s.po_number||s.PO_Number],
+    ["NDC Number",      s.ndc_number||s.NDC_Number],
+    ["Serial Number",   s.serial_number_goods||s.Serial_Number_Goods],
+    ["Delivery Number", s.delivery_number||s.Delivery_Number],
+    ["Batch ID",        s.batch_id||s.Batch_ID],
+    ["Expected Delivery",s.expected_delivery_date?fmtDate(s.expected_delivery_date):"—"],
+    ["Created By",      s.created_by||s.Created_By],
+    ["Created At",      s.created_at?fmt(s.created_at):"—"],
+    ["Description",     s.shipment_description||s.Shipment_Description],
+    ["Health",          s.shipment_health||s.Shipment_Health],
+  ];
+  document.getElementById("viewShipBody").innerHTML = fields.map(([k,v])=>`
+    <div class="detail-row">
+      <div class="detail-key">${k}</div>
+      <div class="detail-val">${escapeHtml(String(v||"—"))}</div>
+    </div>`).join("");
+  document.getElementById("viewShipmentModal").classList.add("show");
+}
+document.getElementById("closeViewModal").onclick    =
+document.getElementById("closeViewModalBtn").onclick = ()=>document.getElementById("viewShipmentModal").classList.remove("show");
+document.getElementById("viewShipmentModal").addEventListener("click",e=>{ if(e.target===document.getElementById("viewShipmentModal")) document.getElementById("viewShipmentModal").classList.remove("show"); });
+ 
+/* ── EDIT SHIPMENT ── */
+let currentEditId = null;
+function openEditShipment(id, status, priority) {
+  currentEditId = id;
+  document.getElementById("editShipId").textContent = id;
+  const st=(status||"active").toLowerCase().trim();
+  document.getElementById("editStatusSelect").value   = st.includes("transit")?"in transit":st;
+  document.getElementById("editPrioritySelect").value = (priority||"medium").toLowerCase().trim();
+  document.getElementById("editShipmentModal").classList.add("show");
+}
+document.getElementById("closeEditModal").onclick  =
+document.getElementById("cancelEditModal").onclick = ()=>document.getElementById("editShipmentModal").classList.remove("show");
+ 
+document.getElementById("saveEditShipment").onclick = async ()=>{
+  if(!currentEditId) return;
+  const newStatus   = document.getElementById("editStatusSelect").value;
+  const newPriority = document.getElementById("editPrioritySelect").value;
+  const body = JSON.stringify({ status:newStatus, shipment_priority:newPriority, priority:newPriority });
+  const endpoints=[
+    {url:`${API}/admin/shipments/${encodeURIComponent(currentEditId)}`,method:"PATCH"},
+    {url:`${API}/admin/shipments/${encodeURIComponent(currentEditId)}`,method:"PUT"},
+    {url:`${API}/api/shipments/${encodeURIComponent(currentEditId)}`,  method:"PATCH"},
+    {url:`${API}/api/shipments/${encodeURIComponent(currentEditId)}`,  method:"PUT"},
+  ];
+  let success=false;
+  for(const ep of endpoints){
+    const res=await apiFetch(ep.url,{method:ep.method,body});
+    if(res&&res.ok){ success=true; break; }
+    if(authFailed) break;
+  }
+  if(!success){ showToast("Update failed","danger"); return; }
+  showToast("Shipment updated","success");
+  document.getElementById("editShipmentModal").classList.remove("show");
+  await loadAllShipments();
+  await refreshAnalytics();
+};
+ 
+/* ── DELETE SHIPMENT ── */
+async function deleteShipment(id) {
+  if(!id) return;
+  if(!confirm(`⚠️ Delete shipment ${id}? This cannot be undone.`)) return;
+  let res = await apiFetch(`${API}/admin/shipments/${encodeURIComponent(id)}`,{method:"DELETE"});
+  if(!res||!res.ok) res = await apiFetch(`${API}/api/shipments/${encodeURIComponent(id)}`,{method:"DELETE"});
+  if(!res||!res.ok){ showToast("Delete failed","danger"); return; }
+  showToast("🗑 Shipment deleted","success");
+  await loadAllShipments();
+  await refreshAnalytics();
+}
+ 
+/* ══════════════════════════════════════════════
+   DEVICE DATA TABLE 
+   Handles: Device_ID, Battery_Level, First_Sensor_temperature, Route_From, Route_To
+══════════════════════════════════════════════ */
+let allDeviceData = [];
+ 
+async function loadDeviceData() {
+  const tbody = document.getElementById("deviceTableBody");
+  if(!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#888;padding:28px">⏳ Loading IoT device data...</td></tr>`;
+ 
+  let records = null;
+  const endpoints = [
+    `${API}/device-data/recent`
+];
+for (const url of endpoints) {
+    try {
+      const res = await apiFetch(url);
+      if (res && res.ok) {
+        const data = await res.json();
+        const raw = data.records||data.devices||data.data||(Array.isArray(data)?data:null);
+        if (raw !== null) { records = raw.map(normalizeDevice); break; }
+      }
+    } catch(e) { console.warn("Device endpoint failed:", url, e); }
+    if (authFailed) break;
+  }
+ 
+  if (records === null) {
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:#dc2626;padding:28px"> Check MONGOdb connection.</td></tr>`;
+    return;
+  }
+  if (!records.length) {
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:#888;padding:28px">No IoT device records found</td></tr>`;
+    return;
+  }
+ 
+  allDeviceData = records;
+ 
+  // Update panel summary stats
+  const temps   = records.map(d=>d.temperature !== null ? parseFloat(d.temperature) : 0);
+  const online  = records.filter(d=>(d.status||"").toLowerCase()==="online").length;
+  const offline = records.filter(d=>(d.status||"").toLowerCase()==="offline").length;
+  const avgTemp = temps.length ? (temps.reduce((a,b)=>a+b,0)/temps.length).toFixed(1) : "—";
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  set("dpTotal",records.length); set("dpOnline",online);
+  set("dpOffline",offline); set("dpAvgTemp",avgTemp !== "—" ? `${avgTemp}°C` : "—");
+  set("statDevices",records.length);
+  if(document.getElementById("sysDevices")) set("sysDevices",records.length);
+ 
+  renderDeviceTable();
+}
+ 
+function renderDeviceTable() {
+  const tbody  = document.getElementById("deviceTableBody");
+  const sfilt  = (document.getElementById("deviceStatusFilter")?.value||"").toLowerCase();
+  const search = (document.getElementById("deviceSearch")?.value||"").toLowerCase();
+  let data = allDeviceData;
+  if (sfilt) data = data.filter(d=>(d.status||"").toLowerCase()===sfilt);
+  if (search) data = data.filter(d=>JSON.stringify(d).toLowerCase().includes(search));
+ 
+  if (!data.length) { tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:#888">No devices match filter</td></tr>`; return; }
+ 
+  tbody.innerHTML = data.map(d=>{
+    const temp    = d.temperature !== null ? parseFloat(d.temperature).toFixed(1)+"°C" : "—";
+    const humidity= d.humidity    !== null ? parseFloat(d.humidity).toFixed(1)+"%" : "—";
+    const battery = d.battery     !== null ? parseFloat(d.battery).toFixed(0)+"%" : "—";
+    const status  = d.status || "—";
+    const sClass  = `dbadge dbadge-${(status||"").toLowerCase().trim()}`;
+    const tClass  = d.temperature !== null ? tempClass(d.temperature) : "";
+    const bClass  = d.battery     !== null ? batClass(d.battery) : "";
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-weight:700;color:#4a1ca0;font-size:12px">${escapeHtml(String(d.device_id))}</td>
+      <td style="font-size:12px;color:#666">${escapeHtml(String(d.shipment_id))}</td>
+      <td class="${tClass}" style="font-family:'DM Mono',monospace">${temp}</td>
+      <td style="font-family:'DM Mono',monospace">${humidity}</td>
+      <td class="${bClass}" style="font-family:'DM Mono',monospace">${battery}</td>
+      <td style="font-size:12px;color:#666">${escapeHtml(String(d.route_from))}</td>
+      <td style="font-size:12px;color:#666">${escapeHtml(String(d.route_to))}</td>
+      <td style="font-size:11px;color:#aaa">${d.updated_at?fmt(d.updated_at):"—"}</td>
+    </tr>`;
+  }).join("");
+}
+ 
+document.getElementById("deviceStatusFilter").onchange = renderDeviceTable;
+document.getElementById("deviceSearch").oninput        = renderDeviceTable;
+ 
+/* View Device Modal */
+document.getElementById("closeDeviceModal").onclick    =
+document.getElementById("closeDeviceModalBtn").onclick = ()=>document.getElementById("viewDeviceModal").classList.remove("show");
+document.getElementById("viewDeviceModal").addEventListener("click",e=>{ if(e.target===document.getElementById("viewDeviceModal")) document.getElementById("viewDeviceModal").classList.remove("show"); });
+ 
+/* ── SESSIONS ── */
+async function updateLoggedList() {
+  const list        = document.getElementById("loggedList");
+  const countBadge  = document.getElementById("sessionCount");
+  const res = await apiFetch(`${API}/admin/loggedin`);
+  if(!res){
+    if(countBadge) countBadge.textContent="0";
+    list.innerHTML=`<div style="opacity:.7;font-size:12px;color:#ccc;padding:4px">Unavailable</div>`;
+    return;
+  }
+  const data = await res.json();
+  const sessions = data.sessions||[];
+  if(countBadge) countBadge.textContent=sessions.length;
+  const el=document.getElementById("statSessions"); if(el) el.textContent=sessions.length;
+  if(document.getElementById("sysSessions")) document.getElementById("sysSessions").textContent=sessions.length;
+  list.innerHTML=sessions.length
+    ?sessions.sort((a,b)=>new Date(b.ts)-new Date(a.ts)).map(s=>`
+        <div class="session-row"><strong>${escapeHtml(s.username)}</strong><span>${fmt(s.ts||s.logged_at)}</span></div>`).join("")
+    :`<div style="opacity:.7;font-size:12px;color:#ccc;padding:4px">No sessions</div>`;
+}
+ 
+/* ── ADMIN STATS ── */
+async function loadAdminStats() {
+  if(authFailed) return;
+  const [uR,rR,sR] = await Promise.allSettled([
+    apiFetch(`${API}/admin/users`),
+    apiFetch(`${API}/admin/pending`),
+    apiFetch(`${API}/admin/loggedin`)
+  ]);
+  const getJ = async r => r.status==="fulfilled"&&r.value&&r.value.ok ? r.value.json() : null;
+  const uD=await getJ(uR); if(uD){ const el=document.getElementById("statUsers"); if(el) el.textContent=(uD.users||[]).length; }
+  const rD=await getJ(rR); if(rD){ const el=document.getElementById("statPending"); if(el) el.textContent=(rD.requests||[]).length; }
+  const sD=await getJ(sR); if(sD){ const el=document.getElementById("sessionCount"); if(el) el.textContent=(sD.sessions||[]).length; }
+}
+ 
+/* ── ADMIN MESSAGES ── */
+async function loadAdminMessages() {
+  const box=document.getElementById("adminMessagesBox"); if(!box) return;
+  const res=await apiFetch(`${API}/admin/replies`);
+  if(!res){ box.innerHTML=`<div style="color:#888;font-size:13px">Access denied</div>`; return; }
+  const data=await res.json();
+  const list=(data.replies||[]).slice(0,5);
+  box.innerHTML=list.length?list.map(r=>`
+    <div style="padding:9px 0;border-bottom:.5px solid #f0f0f3">
+      <div style="font-weight:700;font-size:13px;color:#222">${escapeHtml(r.request_title||"Request")}</div>
+      <div style="font-size:13px;color:#444;margin-top:3px">${escapeHtml(r.reply||"")}</div>
+      <div style="font-size:11px;color:#888;margin-top:3px">${escapeHtml(r.admin||"admin")} · ${r.sent_at?fmt(r.sent_at):""}</div>
+    </div>`).join("")
+    :`<div style="color:#888;font-size:13px">No messages sent yet</div>`;
+}
+ 
+/* ── FAB ── */
+document.getElementById("fabRequest").onclick = ()=>document.getElementById("drawer").classList.toggle("open");
+document.getElementById("closeDrawer").onclick= ()=>document.getElementById("drawer").classList.remove("open");
+document.getElementById("sendRequestBtn").onclick = async ()=>{
+  const type  = document.getElementById("request-type").value;
+  const title = document.getElementById("request-title").value.trim();
+  const desc  = document.getElementById("request-desc").value.trim();
+  if(!title||!desc) return showToast("Fill all fields");
+  const res=await apiFetch(`${API}/requests`,{method:"POST",body:JSON.stringify({type,title,description:desc})});
+  if(!res||!res.ok) return showToast("Failed to send","danger");
+  showToast("Request sent","success"); document.getElementById("drawer").classList.remove("open"); loadRequests();
+};
+ 
+/* ── SEARCH ── */
+document.getElementById("userSearch").oninput=e=>{
+  const q=e.target.value.toLowerCase();
+  document.querySelectorAll("#usersTable tbody tr").forEach(tr=>{tr.style.display=tr.innerText.toLowerCase().includes(q)?"":"none";});
+};
+document.getElementById("requestsFilter").oninput=e=>{
+  const q=e.target.value.toLowerCase();
+  document.querySelectorAll("#requestsTable tbody tr").forEach(tr=>{tr.style.display=tr.innerText.toLowerCase().includes(q)?"":"none";});
+};
+document.getElementById("refreshAll").onclick      = ()=>{ loadRequests(); loadUsers(); loadAudit(); loadReplies(); };
+document.getElementById("refreshRequests").onclick = loadRequests;
+document.getElementById("refreshAudit").onclick    = loadAudit;
+ 
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
+updateLoggedList();
+loadAdminStats();
+loadReplies();
+loadAdminMessages();
+refreshAnalytics();
+loadDeviceChart();
+ 
+// Auto-poll every 30 seconds
+window._pollInterval = setInterval(()=>{
+  if(authFailed) return;
+  loadAdminStats();
+  loadAdminMessages();
+  updateLoggedList();
+  refreshAnalytics();
+  loadDeviceChart();
+}, 30000);
+// TEMP DEBUG — remove after fixing
+(async function debugShipments() {
+  const token = getToken();
+  const endpoints = [
+    `${API}/api/shipments`,
+    `${API}/shipments`,
+    `${API}/admin/shipments`,
+  ];
+  for (const url of endpoints) {
+    try {
+      const r = await fetch(url, { headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" } });
+      const text = await r.text();
+      console.log(`[DEBUG] ${url} → ${r.status}`, text.slice(0, 200));
+    } catch(e) {
+      console.log(`[DEBUG] ${url} → ERROR`, e.message);
+    }
+  }
 })();
 </script>
 </body>

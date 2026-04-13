@@ -5,8 +5,10 @@ from pymongo import MongoClient
 import os
 import random
 import smtplib
+from asyncio.log import logger
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
+from backend.models import ForgotPass, ResetPassword, VerifyOTP
 from backend.user import pbkdf2_hash
 load_dotenv()
 
@@ -24,18 +26,6 @@ MAIL_USERNAME = os.getenv("MAIL_USERNAME")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_SERVER = os.getenv("MAIL_SERVER")
 MAIL_PORT = int(os.getenv("MAIL_PORT")) # type: ignore
-
-# Payload models
-class ForgotPass(BaseModel):
-    email: str
-
-class VerifyOTP(BaseModel):
-    email: str
-    otp: str
-
-class ResetPassword(BaseModel):
-    email: str
-    new_password: str
 
 
 def send_email(to_email: str, subject: str, body: str):
@@ -193,4 +183,5 @@ def reset_password(data: ResetPassword):
     otp_col.delete_one({"email": email})
 
     return {"message": "Password updated successfully"}
-print("DEBUG EMAIL VALUES:", MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM)
+#print("DEBUG EMAIL VALUES:", MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM)
+logger.info("Login attempt for user")

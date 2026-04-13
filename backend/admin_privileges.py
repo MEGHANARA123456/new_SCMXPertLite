@@ -6,6 +6,7 @@ import smtplib
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 from bson import ObjectId
+from backend import shipments_da
 from backend.auth_utils import get_current_user, require_role
 
 load_dotenv()
@@ -20,7 +21,7 @@ db = client[os.getenv("MONGO_DB_APP")]  # type: ignore
 requests_col = db["admin_requests"]
 users_col = db["user"]
 sessions_col = db["logged_sessions"]
-replies_col = db["adminreplies"]   # ✅ FIXED: matches actual MongoDB collection name
+replies_col = db["adminreplies"]  
 
 # ======================================================
 #  SMTP CONFIG
@@ -48,7 +49,62 @@ def send_email(to_email: str, subject: str, body: str):
         return True, None
     except Exception as e:
         return False, str(e)
+#========================================
+# SUPER ADMIN CHECK (for critical actions)
+#========================================
+def require_super_admin(user):
+    if user.get("role") != "super_admin":
+        raise HTTPException(status_code=403, detail="Super admin access required")
+# ======================================================
+#  ADMIN — GET LOGGED SESSIONS
+# ======================================================
+@router.delete("/superadmin/delete-user/{username}")
+def delete_user(username: str, current_user=Depends(get_current_user)):
+    require_super_admin(current_user)
 
+    user = users_col.find_one({"username": username})
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    users_col.delete_one({"username": username})
+
+    # also delete sessions
+    sessions_col.delete_many({"username": username})
+
+    return {"success": True, "message": f"{username} deleted"}  
+# ======================================================
+#  ADMIN — DELETE ADMIN USER
+# ======================================================
+@router.delete("/superadmin/delete-admin/{username}")
+def delete_admin(username: str, current_user=Depends(get_current_user)):
+    require_super_admin(current_user)
+
+    user = users_col.find_one({"username": username})
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    if user.get("role") != "admin":
+        raise HTTPException(400, "User is not admin")
+
+    users_col.delete_one({"username": username})
+    sessions_col.delete_many({"username": username})
+
+    return {"success": True, "message": "Admin deleted"}  
+# ======================================================
+#  ADMIN — FORCE LOGOUT USER
+# ======================================================
+
+@router.post("/superadmin/force-logout/{username}")
+def force_logout(username: str, current_user=Depends(get_current_user)):
+    require_super_admin(current_user)
+
+    result = sessions_col.delete_many({"username": username})
+
+    return {
+        "success": True,
+        "message": f"{username} logged out",
+        "sessions_removed": result.deleted_count
+    }
 
 # ======================================================
 #  UNIVERSAL FIND FUNCTION (string ID + old ObjectId)
@@ -90,7 +146,7 @@ def create_request(data: dict, user=Depends(get_current_user)):
 # ======================================================
 @router.get("/admin/requests")
 def get_all_requests(current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
     reqs = []
     for r in requests_col.find({}):
         r["_id"] = str(r["_id"])
@@ -103,7 +159,7 @@ def get_all_requests(current_user=Depends(get_current_user)):
 # ======================================================
 @router.get("/admin/pending")
 def get_pending(current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
     data = []
     for r in requests_col.find({"status": "pending"}):
         r["_id"] = str(r["_id"])
@@ -116,7 +172,7 @@ def get_pending(current_user=Depends(get_current_user)):
 # ======================================================
 @router.get("/admin/users")
 def get_users(current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
     users = list(users_col.find({}, {"_id": 0}))
     return {"users": users}
 
@@ -126,7 +182,7 @@ def get_users(current_user=Depends(get_current_user)):
 # ======================================================
 @router.post("/admin/requests/{request_id}/approve")
 def approve_request(request_id: str, current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
 
     req = requests_col.find_one({"_id": request_id})
     if not req:
@@ -154,7 +210,7 @@ def approve_request(request_id: str, current_user=Depends(get_current_user)):
 # ======================================================
 @router.post("/admin/requests/{request_id}/reject")
 def reject_request(request_id: str, current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
 
     req = requests_col.find_one({"_id": request_id})
     if not req:
@@ -174,12 +230,12 @@ def reject_request(request_id: str, current_user=Depends(get_current_user)):
 
 
 # ======================================================
-#  ADMIN — SEND REPLY  ✅ stores in "adminreplies" collection
+#  ADMIN — SEND REPLY   stores in "adminreplies" collection
 # ======================================================
 @router.post("/admin/requests/{request_id}/reply")
 def reply_to_request(request_id: str, payload: dict,
                      current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
 
     req = requests_col.find_one({"_id": request_id})
     if not req:
@@ -198,7 +254,7 @@ def reply_to_request(request_id: str, payload: dict,
         "sent_at": datetime.utcnow()
     }
 
-    replies_col.insert_one(reply_doc)   # ✅ now saves to correct collection
+    replies_col.insert_one(reply_doc)   
 
     requests_col.update_one(
         {"_id": request_id},
@@ -213,7 +269,7 @@ def reply_to_request(request_id: str, payload: dict,
 # ======================================================
 @router.get("/admin/replies")
 def get_replies(current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
     data = []
     for r in replies_col.find().sort("sent_at", -1):
         r["_id"] = str(r["_id"])
@@ -238,7 +294,7 @@ def get_user_replies(current_user=Depends(get_current_user)):
 # ======================================================
 @router.post("/admin/set-role/{username}")
 def set_role(username: str, payload: dict, current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin", "super_admin"])
 
     new_role = payload.get("role")
     if not new_role:
@@ -248,21 +304,44 @@ def set_role(username: str, payload: dict, current_user=Depends(get_current_user
     if not user:
         raise HTTPException(404, "User not found")
 
-    users_col.update_one({"username": username}, {"$set": {"role": new_role}})
+    current_role = user.get("role")
+
+    #  RULE 1: Admin cannot create super_admin
+    if new_role == "super_admin" and current_user.get("role") != "super_admin":
+        raise HTTPException(403, "Only super admin can assign super_admin role")
+
+    #  RULE 2: Admin cannot modify super_admin
+    if current_role == "super_admin" and current_user.get("role") != "super_admin":
+        raise HTTPException(403, "Cannot modify super admin")
+
+    #  RULE 3: Prevent self-downgrade accident
+    if username == current_user.get("username") and new_role != "super_admin":
+        raise HTTPException(400, "You cannot downgrade yourself")
+
+    users_col.update_one(
+        {"username": username},
+        {"$set": {"role": new_role}}
+    )
 
     if user.get("email"):
-        send_email(user["email"], "Role Changed",
-                   f"Your role is now: {new_role}")
+        send_email(
+            user["email"],
+            "Role Changed",
+            f"Your role has been updated to: {new_role}"
+        )
 
-    return {"success": True}
+    return {
+        "success": True,
+        "message": f"{username} role updated to {new_role}"
+    }
 
 
 # ======================================================
-#  ADMIN — GET LOGGED SESSIONS  ✅ duplicate removed
+#  ADMIN — GET LOGGED SESSIONS  
 # ======================================================
 @router.get("/admin/loggedin")
 def get_logged_sessions(current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
 
     sessions = list(
         sessions_col.find({}, {"_id": 1, "username": 1, "ts": 1, "logged_at": 1})
@@ -280,7 +359,7 @@ def get_logged_sessions(current_user=Depends(get_current_user)):
 # ======================================================
 @router.post("/admin/requests/{request_id}/resolve")
 def resolve_request(request_id: str, current_user=Depends(get_current_user)):
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
 
     req = requests_col.find_one({"_id": request_id})
     if not req:
@@ -292,3 +371,6 @@ def resolve_request(request_id: str, current_user=Depends(get_current_user)):
     )
 
     return {"success": True}
+ 
+
+ 

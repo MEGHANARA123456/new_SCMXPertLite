@@ -4,39 +4,31 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, FileResponse
 from dotenv import load_dotenv
 from pathlib import Path
-import requests
-from fastapi import HTTPException
 import os
 import logging
 import sys
 import uvicorn
-# Add backend directory to path for imports
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from backend import db
 import user
 import shipments_da
 import device_data
 import admin_privileges
 import role_management
 import backend.auth_utils as auth_utils
+import backend.db as db
 import backend.models as models
 import backend.forgetpassword as forgetpassword
-import backend.user as user_module
-# -------------------- ENV + DATABASE --------------------
+
+
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
-# -------------------- FASTAPI APP ------------------------
+
 app = FastAPI(title="SCMXpertLite Backend", version="1.0.0")
 
-# -------------------- ROUTERS ------------------------
-app.include_router(forgetpassword.router)
-app.include_router(user.router)
-app.include_router(shipments_da.router)
-app.include_router(device_data.router)
-app.include_router(admin_privileges.router)
-app.include_router(role_management.router)
-
-# -------------------- CORS ------------------------
+#  CORS MUST come first — before routers and static mounts
 origins = [
     "http://127.0.0.1:5500",
     "http://localhost:5500",
@@ -52,71 +44,59 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# -------------------- ROUTERS ------------------------
+app.include_router(forgetpassword.router)
+app.include_router(user.router)
+app.include_router(shipments_da.router)
+app.include_router(device_data.router)
+app.include_router(admin_privileges.router)
+app.include_router(role_management.router)
+
 # -------------------- FRONTEND PATH ------------------------
-from pathlib import Path
-
-# main.py is inside /backend
-# So parent.parent = project root
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+print("FRONTEND_DIR:", FRONTEND_DIR)
 
-print("FRONTEND_DIR:", FRONTEND_DIR)  # DEBUG LINE
-
-# serve static files
 app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR)), name="frontend")
 
-def page(name: str):
-    path = FRONTEND_DIR / name
-    print("Loading page:", path)  # DEBUG LINE
-    return FileResponse(path)
-
-
-# -------------------- PAGE ROUTES (FRIENDLY URLS) ------------------------
+# -------------------- PAGE ROUTES ------------------------
 
 @app.get("/")
 async def root():
-    return RedirectResponse("/frontend/home.html")      # default page is home page
+    return RedirectResponse("/frontend/user.html", status_code=302)
 
-@app.get("/home")
-async def home(): # type: ignore
-    return RedirectResponse("/frontend/home.html")
 @app.get("/login")
 async def login_page():
-    return RedirectResponse("/frontend/user.html")
+    return RedirectResponse("/frontend/user.html", status_code=302)
+
 @app.get("/admin")
 async def admin_page():
-    return RedirectResponse("/frontend/admin_dashboard.html")
+    return RedirectResponse("/frontend/admin_dashboard.html", status_code=302)
 
 @app.get("/dashboard")
 async def dashboard_page():
-    return RedirectResponse("/frontend/dashboard.html")
+    return RedirectResponse("/frontend/dashboard.html", status_code=302)
 
 @app.get("/shipments")
 async def shipments_page():
-    return RedirectResponse("/frontend/shipments.html")
+    return RedirectResponse("/frontend/shipments.html", status_code=302)
 
 @app.get("/create-shipment")
 async def create_shipment_page():
-    return RedirectResponse("/frontend/shipment_data.html")
+    return RedirectResponse("/frontend/shipment_data.html", status_code=302)
 
 @app.get("/device-data")
 async def device_data_page():
-    return RedirectResponse("/frontend/device_data.html")
+    return RedirectResponse("/frontend/device_data.html", status_code=302)
 
 @app.get("/logout")
 async def logout_page():
-    return RedirectResponse("/frontend/logout.html")
+    return RedirectResponse("/frontend/logout.html", status_code=302)
 
-
-# Simple health endpoint for connectivity checks
-@app.get("/")
-def home():
-    return {"status": "OK", "message": "Backend Running Successfully"}
 
 if __name__ == "__main__":
     uvicorn.run(
         "backend.main:app",
         host="127.0.0.1",
         port=8000,
-        reload=True,
-        reload_excludes=["backend/shipment_data.py"]     # ⬅ ignore this file
+        reload=True  # optional but helpful during dev
     )

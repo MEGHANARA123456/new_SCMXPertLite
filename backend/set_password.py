@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 import sys
 
-sys.path.insert(0, 'd:\\scmxpertlite')
+sys.path.insert(0, 'd:\\scmxpertlite')   #add parent dir to path for imports
 from backend.user import pbkdf2_hash
 load_dotenv()
 
@@ -14,7 +13,7 @@ users = db['user']
 
 # Create hash for password "Meghan@123"
 password_hash = pbkdf2_hash("Meghan@123")
-print(f"Password hash: {password_hash[:80]}...")
+print(f"Password hash: {password_hash[:80]}...") 
 
 # Update all meghana users with this hash
 result = users.update_many(

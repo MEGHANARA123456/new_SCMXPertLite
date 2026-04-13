@@ -26,7 +26,7 @@ ALLOWED = ["admin", "manager", "editor", "viewer", "user"]
 async def set_role(username: str, data: dict = Body(...), current_user=Depends(get_current_user)):
 
     # only admin can edit roles
-    require_role(current_user, ["admin"])
+    require_role(current_user, ["admin","super_admin"])
 
     new_role = data.get("role", "").lower().strip()
 

@@ -1,4 +1,3 @@
-#producer.py
 from kafka import KafkaProducer
 import json
 import time
@@ -27,7 +26,7 @@ while True:
         print(f"Kafka brokers not available yet (attempt {attempt}). Retrying in {wait}s...")
         time.sleep(wait)
 
-route = ['Newyork,USA', 'Chennai, India', 'Bengaluru, India', 'London,UK']
+route = ['Newyork,USA', 'Chennai, India', 'Bengaluru, India', 'London,UK', 'Berlin, Germany', 'Tokyo, Japan', 'Sydney, Australia', 'Toronto, Canada']
 
 while True:
     routefrom = random.choice(route)
@@ -39,10 +38,11 @@ while True:
             "Device_ID": random.randint(1150, 1158),
             "First_Sensor_temperature": round(random.uniform(10, 40.0), 1),
             "Route_From": routefrom,
-            "Route_To": routeto
+            "Route_To": routeto,
+            "Timestamp": time.time()
         }
 
-        # send to Kafka topic 'est_topic'
+        # send to Kafka topic 'test_topic'
         producer.send('test_topic', value=data)
         producer.flush()   # optional, but good while debugging
 

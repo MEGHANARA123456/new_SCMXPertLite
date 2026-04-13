@@ -12,6 +12,8 @@ from google.oauth2 import id_token
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional
+
+from backend.models import SignupOtpRequest, SignupVerifyOtpRequest
 load_dotenv()
 
 router = APIRouter()
@@ -225,19 +227,6 @@ def get_my_dashboard(current_user: dict = Depends(get_current_user)):
         "delivered": delivered,
         "total_devices": total_devices
     }
-# ============================================================
-# Pydantic models for signup OTP flow
-# ============================================================
-class SignupOtpRequest(BaseModel):
-    firstname: str
-    lastname: str
-    username: str
-    email: str
-    password: str
-
-class SignupVerifyOtpRequest(BaseModel):
-    email: str
-    otp: str
 
 # ============================================================
 # Helper: send OTP email
@@ -557,9 +546,9 @@ Hi {username},
 
 Here is your SCMXpertLite account data export:
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ACCOUNT INFO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ============================================================
+# USER PROFILE
+# ============================================================
 Username   : {username}
 Email      : {email}
 Role       : {current_user.get("role", "user")}
@@ -567,17 +556,19 @@ First Name : {current_user.get("firstname", "—")}
 Last Name  : {current_user.get("lastname", "—")}
 Joined     : {current_user.get("created_at", "—")}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SHIPMENTS ({len(my_shipments)} total)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ============================================================
+# SHIPMENTS ({len(my_shipments)} total)
+# ============================================================
 {shipment_lines}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DEVICES ({len(my_devices)} total)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ============================================================
+# DEVICES ({len(my_devices)} total)
+# ============================================================
 {device_lines}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ============================================================
+# DATA EXPORT — sends user data to their email
+# ============================================================
 This export was requested from your account settings.
 — SCMXpertLite Team
 """

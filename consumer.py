@@ -40,7 +40,7 @@ MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB = os.getenv("MONGO_DB_IOT")
 
 client = MongoClient(MONGO_URI)
-db = client[MONGO_DB]
+db = client[MONGO_DB] # type: ignore
 
 # Main IoT collection
 device_data_collection = db["sensor_readings"]

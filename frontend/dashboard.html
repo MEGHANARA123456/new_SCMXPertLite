@@ -3,387 +3,159 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- 1. Disable cache -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <script>
-    // 2. Instant check on normal load
     if (!localStorage.getItem("token")) {
       window.location.replace("/frontend/user.html");
     }
-
-    // 3. Check on back button (bfcache restore)
     window.addEventListener("pageshow", function(event) {
       if (!localStorage.getItem("token")) {
         window.location.replace("/frontend/user.html");
       }
     });
   </script>
-
+ 
   <title>SCMXPertLite — Dashboard</title>
-
-  <!-- keep your stylesheet -->
   <link rel="stylesheet" href="/frontend/style.css">
-
+ 
   <style>
-    /* --- small inline styles to match your UI --- */
-     :root {
-    --neon-blue: #45e4ff;
-  }
-
-  body { font-family: Roboto, Arial, Helvetica, sans-serif; margin: 0; }
-
-  /* Topbar */
-  .topbar {
-    background: rgba(108, 39, 217, 0.85);
-    padding: 12px 20px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.22);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    display: flex;                        
-    align-items: center;                  
-    justify-content: center; 
-  }
-  .topbar-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-}
-
-  .nav-menu {
-    display: flex;
-    align-items: center;
-    gap: 0;
-  
-  }
-
-  .nav-menu a {
-    color: white;
-    margin-right: 20px;
-    font-weight: 500;
-    position: relative;
-    transition: 0.3s ease;
-    text-decoration: none;
-  }
-
-  .nav-menu a:hover {
-    color: var(--neon-blue);
-  }
-
-  .nav-menu a::after {
-    content: "";
-    width: 0;
-    height: 2px;
-    background: var(--neon-blue);
-    position: absolute;
-    left: 0;
-    bottom: -3px;
-    transition: 0.3s;
-  }
-
-  .nav-menu a:hover::after {
-    width: 100%;
-  }
-  .welcome{padding:28px;text-align:center;font-size:28px;color: #673AB7;font-weight:700}
-  .split-bg{display:flex;height:420px}
-  .left-side,.right-side{flex:1;display:flex;align-items:center;justify-content:center}
-  .left-side{background:#bfe9ff}
-  .right-side{background:#e9cfff}
-  .box-content{text-align:center}
-  .btn-blue{display:inline-block;background:#0aa1ff;color:white;padding:12px 26px;border-radius:24px;text-decoration:none;font-weight:800}
-  .btn-purple{display:inline-block;background:#7a33c7;color:white;padding:12px 26px;border-radius:24px;text-decoration:none;font-weight:800}
-    
-  /* ── Profile Button ── */
-  .profile-wrapper { position: relative; margin-left: auto; 
-  position: relative; }
-
-  .profile-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      color: white;
-      padding: 0;
+    :root { --neon-blue: #45e4ff; }
+ 
+    body { font-family: Roboto, Arial, Helvetica, sans-serif; margin: 0; }
+ 
+    .topbar {
+      background: rgba(108, 39, 217, 0.85);
+      padding: 12px 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
     }
-
-  .avatar-circle {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #45e4ff, #7c3aed);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 13px;
-      color: white;
-      border: 2px solid rgba(255,255,255,0.6);
-      flex-shrink: 0;
-    }
-
-  .profile-btn-name {
-      font-size: 14px;
-      font-weight: 500;
-      color: white;
-    }
-
-  .chevron {
-      font-size: 10px;
-      color: white;
-      transition: transform 0.2s;
-    }
-
-  .profile-btn.open .chevron { transform: rotate(180deg); }
-
-    /* ── Dropdown ── */
-    .profile-dropdown {
-      position: absolute;
-      top: calc(100% + 12px);
-      right: 0;
-      width: 260px;
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 16px 48px rgba(30,10,70,0.18), 0 2px 8px rgba(0,0,0,0.08);
-      overflow: hidden;
-      z-index: 9999;
-      opacity: 0;
-      transform: translateY(-6px) scale(0.97);
-      pointer-events: none;
-      transition: opacity 0.18s ease, transform 0.18s ease;
-    }
-
-    .profile-dropdown.show {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      pointer-events: all;
-    }
-
-    .pd-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px 16px 12px;
-      border-bottom: 1px solid #f0eeff;
-    }
-
-    .pd-avatar {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #45e4ff, #7c3aed);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 16px;
-      color: white;
-      flex-shrink: 0;
-    }
-
-    .pd-info { flex: 1; min-width: 0; }
-
-    .pd-name {
-      font-weight: 700;
-      font-size: 14px;
-      color: #1e1135;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .pd-sub {
-      font-size: 12px;
-      color: #888;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 1px;
-    }
-
-    .pd-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 5px;
-      background: #ecfdf5;
-      color: #059669;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 8px;
-    }
-
-    .pd-badge::before {
-      content: "";
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #059669;
-    }
-
-    .pd-section {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #aaa;
-      padding: 10px 16px 3px;
-    }
-
-    .pd-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 9px 16px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #2d1f5e;
-      text-decoration: none;
-      transition: background 0.13s;
-    }
-
-    .pd-item:hover { background: #f5f3ff; }
-
-    .pd-icon {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      flex-shrink: 0;
-    }
-
-    .ic-blue   { background: #eff6ff; }
-    .ic-purple { background: #f5f3ff; }
-    .ic-green  { background: #f0fdf4; }
-    .ic-red    { background: #fff1f2; }
-
-    .pd-divider { height: 1px; background: #f0eeff; margin: 4px 0; }
-
-    .pd-signout {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 16px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #dc2626;
-      cursor: pointer;
-      transition: background 0.13s;
-    }
-
-    .pd-signout:hover { background: #fff5f5; }
-
-    /* Floating Request button */
-    #requestAccessBtn {
-      position: fixed;
-      bottom: 22px;
-      right: 22px;
-      background: linear-gradient(135deg,#6a11cb,#2575fc);
-      color: #fff;
-      border:none;padding:12px 14px;border-radius:999px;box-shadow:0 8px 30px rgba(103,58,183,0.25);cursor:pointer;z-index:9999;
-    }
-
-    /* Modal */
-    #requestModalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:99999}
-    #requestModal{width:420px;background:#fff;border-radius:12px;padding:18px;box-shadow:0 20px 40px rgba(0,0,0,0.3)}
-    #requestDescription{width:100%;height:120px;border:1px solid #ddd;border-radius:8px;padding:10px;resize:vertical}
-
-    /* small toast */
-    #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#222;color:#fff;padding:12px 18px;border-radius:8px;opacity:0;transition:all .24s;z-index:999999}
-    #toast.show{opacity:1}
-
-    /* replies box (bottom-right) */
-    #replyBox{
-      position:fixed;
-      bottom:110px;
-      right:28px;
-      width:320px;
-      max-height:300px;
-      overflow:auto;
-      background:#fff;
-      border-radius:12px;
-      padding:14px;
-      box-shadow:0 18px 60px rgba(20,10,40,0.12);
-      z-index:1200;
-      display:none;
-    }
-    .replyItem{background:#f8f6ff;border-radius:8px;padding:10px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.04)}
-    .replyItem time{display:block;color:#666;font-size:12px;margin-bottom:6px}
     .topbar-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-/* brand */
-.brand {
-  display: flex;
-  align-items:center;
-  gap: 6px;
-  color: #fff;
-  font-weight: 700;
-  font-size: 18px;
-}
-/* center nav */
-.nav-menu {
-  display: flex;
-  gap: 24px;
-  margin-left: 0px;
-}
-
-.nav-menu a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-/* push profile to right */
-.profile-wrapper {
-  margin-left: auto;
-  position: relative;
-}
+      max-width: 1200px; margin: 0 auto; width: 100%;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #fff; font-weight: 700; font-size: 18px; }
+    .nav-menu { display: flex; gap: 24px; margin-left: 0px; }
+    .nav-menu a { color: #fff; text-decoration: none; font-weight: 500; position: relative; transition: 0.3s ease; }
+    .nav-menu a:hover { color: var(--neon-blue); }
+    .nav-menu a::after { content: ""; width: 0; height: 2px; background: var(--neon-blue); position: absolute; left: 0; bottom: -3px; transition: 0.3s; }
+    .nav-menu a:hover::after { width: 100%; }
+ 
+    .welcome { padding: 24px 28px; text-align: center; font-size: 26px; color: #673AB7; font-weight: 700; }
+    .split-bg { display: flex; min-height: 420px; }
+    .left-side, .right-side { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 20px; }
+    .left-side { background: #bfe9ff; }
+    .right-side { background: linear-gradient(145deg, #e4d4ff 0%, #d8b4fe 100%); }
+    .box-content { text-align: center; width: 100%; max-width: 360px; }
+    .btn-blue { display: inline-block; background: #0aa1ff; color: white; padding: 12px 26px; border-radius: 24px; text-decoration: none; font-weight: 800; }
+ 
+    /* Status cards grid */
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 0 auto 16px;
+      max-width: 320px;
+    }
+    .status-card {
+      border-radius: 14px;
+      padding: 14px 10px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s, opacity 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .status-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.13); }
+    .status-card .card-icon { font-size: 20px; margin-bottom: 5px; line-height: 1; }
+    .status-card .card-count { font-size: 30px; font-weight: 800; line-height: 1; }
+    .status-card .card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-top: 4px; }
+ 
+    /* Total pill */
+    .total-pill {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, #6C27D9, #4a1aaa);
+      color: white; border-radius: 999px;
+      padding: 9px 20px; font-size: 14px; font-weight: 700;
+      box-shadow: 0 4px 14px rgba(108,39,217,0.35);
+      margin-bottom: 16px;
+    }
+    .total-pill .pill-num {
+      background: rgba(255,255,255,0.22);
+      border-radius: 999px; padding: 2px 12px;
+      font-size: 17px; font-weight: 800;
+    }
+    /* Doughnut wrapper */
+    .donut-wrap {
+      position: relative; width: 130px; height: 130px; margin: 0 auto;
+    }
+    .donut-label {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      text-align: center; pointer-events: none; line-height: 1.4;
+    }
+    .donut-label span { font-size: 10px; color: #7c3aed; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+ 
+    .profile-wrapper { margin-left: auto; position: relative; overflow: visible; }
+    .profile-btn { display: flex; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; color: white; padding: 0; }
+    .avatar-circle { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #45e4ff, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: white; border: 2px solid rgba(255,255,255,0.6); flex-shrink: 0; }
+    .profile-btn-name { font-size: 14px; font-weight: 500; color: white; }
+    .chevron { font-size: 10px; color: white; transition: transform 0.2s; }
+    .profile-btn.open .chevron { transform: rotate(180deg); }
+ 
+    .profile-dropdown { position: absolute; top: calc(100% + 12px); right: 0; width: 260px; background: #fff; border-radius: 14px; box-shadow: 0 16px 48px rgba(30,10,70,0.18), 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; z-index: 1; opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease; }
+    .profile-dropdown.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+    .pd-header { display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; border-bottom: 1px solid #f0eeff; }
+    .pd-avatar { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #45e4ff, #7c3aed); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: white; flex-shrink: 0; }
+    .pd-info { flex: 1; min-width: 0; }
+    .pd-name { font-weight: 700; font-size: 14px; color: #1e1135; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pd-sub { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .pd-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; background: #ecfdf5; color: #059669; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 2px 8px; }
+    .pd-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #059669; }
+    .pd-section { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #aaa; padding: 10px 16px 3px; }
+    .pd-item { display: flex; align-items: center; gap: 12px; padding: 9px 16px; font-size: 14px; font-weight: 500; color: #2d1f5e; text-decoration: none; transition: background 0.13s; }
+    .pd-item:hover { background: #f5f3ff; }
+    .pd-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .ic-blue { background: #eff6ff; } .ic-purple { background: #f5f3ff; } .ic-green { background: #f0fdf4; } .ic-red { background: #fff1f2; }
+    .pd-divider { height: 1px; background: #f0eeff; margin: 4px 0; }
+    .pd-signout { display: flex; align-items: center; gap: 12px; padding: 11px 16px; font-size: 14px; font-weight: 600; color: #dc2626; cursor: pointer; transition: background 0.13s; }
+    .pd-signout:hover { background: #fff5f5; }
+ 
+    #requestAccessBtn { position: fixed; bottom: 22px; right: 22px; background: linear-gradient(135deg,#6a11cb,#2575fc); color: #fff; border: none; padding: 12px 14px; border-radius: 999px; box-shadow: 0 8px 30px rgba(103,58,183,0.25); cursor: pointer; z-index: 9999; }
+    #requestModalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 99999; }
+    #requestModal { width: 420px; background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    #requestDescription { width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; resize: vertical; }
+    #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; background: #222; color: #fff; padding: 12px 18px; border-radius: 8px; opacity: 0; transition: all .24s; z-index: 999999; }
+    #toast.show { opacity: 1; }
+    #replyBox { position: fixed; bottom: 110px; right: 28px; width: 320px; max-height: 300px; overflow: auto; background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 18px 60px rgba(20,10,40,0.12); z-index: 1200; display: none; }
+    .replyItem { background: #f8f6ff; border-radius: 8px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    .replyItem time { display: block; color: #666; font-size: 12px; margin-bottom: 6px; }
+ 
+ 
   </style>
 </head>
 <body>
+ 
 <header class="topbar">
   <div class="topbar-inner">
-
-    <!-- BRAND (LEFT) -->
     <div class="brand">
       <strong>SCMXPert<span style="color:#45e4ff">Lite</span></strong>
-      <span style="opacity:.8;font-size:13px;margin-left:6px"></span>
     </div>
-
-    <!-- NAV (CENTER) -->
     <nav class="nav-menu">
       <a href="/frontend/home.html">Home</a>
-      <a href="/frontend/shipments (1).html">My Shipments</a>
+      <a href="/frontend/shipments.html">My Shipments</a>
       <a href="/frontend/shipment_data.html">Create Shipment</a>
     </nav>
-
-    <!-- PROFILE (RIGHT) -->
     <div class="profile-wrapper">
       <button class="profile-btn" id="profileBtn">
         <div class="avatar-circle" id="navAvatar">??</div>
         <span class="profile-btn-name" id="navName">Loading...</span>
         <span class="chevron">▼</span>
       </button>
-
       <div class="profile-dropdown" id="profileDropdown">
-
         <div class="pd-header">
           <div class="pd-avatar" id="dropAvatar">??</div>
           <div class="pd-info">
@@ -392,91 +164,124 @@
             <div class="pd-badge">Active</div>
           </div>
         </div>
-
         <div class="pd-section">Account</div>
-        <a href="/frontend/profile.html" class="pd-item">
-          <div class="pd-icon ic-blue">👤</div> View &amp; Edit Profile
-        </a>
-        <a href="/frontend/settings.html" class="pd-item">
-          <div class="pd-icon ic-purple">⚙️</div> Settings &amp; Privacy
-        </a>
-
+        <a href="/frontend/profile.html" class="pd-item"><div class="pd-icon ic-blue">👤</div> View &amp; Edit Profile</a>
+        <a href="/frontend/settings.html" class="pd-item"><div class="pd-icon ic-purple">⚙️</div> Settings &amp; Privacy</a>
         <div class="pd-section">Manage</div>
-        <a href="/frontend/shipments.html" class="pd-item">
-          <div class="pd-icon ic-green">📦</div> My Shipments
-        </a>
-
+        <a href="/frontend/shipments.html" class="pd-item"><div class="pd-icon ic-green">📦</div> My Shipments</a>
         <div class="pd-divider"></div>
-
-        <div class="pd-signout" id="signOutBtn">
-          <div class="pd-icon ic-red">🚪</div> Sign Out
-        </div>
-
+        <div class="pd-signout" id="signOutBtn"><div class="pd-icon ic-red">🚪</div> Sign Out</div>
       </div>
     </div>
-
   </div>
 </header>
-
-  <div class="welcome" id="welcomeText">Hi user, Welcome to SCMXPertLite</div>
-
-  <div class="split-bg">
-    <div class="left-side">
-      <div class="box-content">
-        <h2>Create a New Shipment</h2>
-        <p>Start tracking by creating your shipment.</p>
-        <a href="/frontend/shipment_data.html" class="btn-blue" id="createShipmentBtn">CREATE SHIPMENT</a>
-      </div>
-    </div>
-    <div class="right-side">
-      <div class="box-content">
-        <h2>To see Device Data Stream</h2>
-        <p>Monitor your real-time device activity.</p>
-        <a href="/frontend/profile.html" class="btn-purple">MY ACCOUNT</a>
-      </div>
+ 
+<div class="welcome" id="welcomeText">Hi user, Welcome to SCMXPertLite</div>
+ 
+<div class="split-bg">
+  <!-- LEFT -->
+  <div class="left-side">
+    <div class="box-content">
+      <h2>Create a New Shipment</h2>
+      <p>Start tracking by creating your shipment.</p>
+      <a href="/frontend/shipment_data.html" class="btn-blue">CREATE SHIPMENT</a>
     </div>
   </div>
-
-  <!-- Floating Request Button -->
-  <button id="requestAccessBtn">Raise a Ticket</button>
-
-  <!-- Request Modal -->
-  <div id="requestModalOverlay">
-    <div id="requestModal" role="dialog" aria-modal="true">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <h3 style="margin:0;color:#5a1bb3">Request Access</h3>
-        <button id="closeModal" title="Close" style="background:transparent;border:0;font-size:18px;cursor:pointer">&times;</button>
+ 
+  <!-- RIGHT -->
+  <div class="right-side">
+    <div class="box-content">
+ 
+      <h2 style="color:#4c1d95;margin:0 0 16px;font-size:18px;font-weight:800;letter-spacing:.01em">
+        My Shipment Status
+      </h2>
+ 
+      <!-- 2×2 Status Cards -->
+      <div class="status-grid">
+ 
+        <div class="status-card" id="card-transit"
+             style="background:#eff6ff;border:1.5px solid #93c5fd"
+             onclick="filterByStatus('transit')">
+          <div class="card-icon">🚢</div>
+          <div class="card-count" style="color:#1d4ed8" id="countTransit">0</div>
+          <div class="card-label" style="color:#2563eb">In Transit</div>
+        </div>
+ 
+        <div class="status-card" id="card-pending"
+             style="background:#fefce8;border:1.5px solid #fcd34d"
+             onclick="filterByStatus('pending')">
+          <div class="card-icon">⏳</div>
+          <div class="card-count" style="color:#b45309" id="countPending">0</div>
+          <div class="card-label" style="color:#d97706">Pending</div>
+        </div>
+ 
+        <div class="status-card" id="card-active"
+             style="background:#f0fdf4;border:1.5px solid #86efac"
+             onclick="filterByStatus('active')">
+          <div class="card-icon">✅</div>
+          <div class="card-count" style="color:#047857" id="countActive">0</div>
+          <div class="card-label" style="color:#059669">Active</div>
+        </div>
+ 
+        <div class="status-card" id="card-cancelled"
+             style="background:#fff1f2;border:1.5px solid #fda4af"
+             onclick="filterByStatus('cancelled')">
+          <div class="card-icon">❌</div>
+          <div class="card-count" style="color:#b91c1c" id="countCancelled">0</div>
+          <div class="card-label" style="color:#dc2626">Cancelled</div>
+        </div>
+ 
       </div>
-
-      <p style="color:#555;margin:0 0 8px 0">Describe the access you need (Shipments, Users, Device Data, Live streaming, etc.)</p>
-      <textarea id="requestDescription" placeholder="Type your request..."></textarea>
-      <button id="submitRequestBtn" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#6a11cb,#2575fc);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer">Submit</button>
+ 
+      <!-- Total pill -->
+      <div class="total-pill">
+        <span>Total Shipments</span>
+        <span class="pill-num" id="totalCount">0</span>
+      </div>
+ 
+      <!-- Doughnut -->
+      <div class="donut-wrap">
+        <canvas id="statusChart" role="img" aria-label="Doughnut chart of your shipment statuses">Shipment status breakdown.</canvas>
+        <div class="donut-label">
+          <span>my<br>shipments</span>
+        </div>
+      </div>
+ 
     </div>
   </div>
-
-  <!-- Replies Box (user) -->
-  <div id="replyBox" aria-live="polite">
-    <div style="font-weight:700;color:#673AB7;font-size:16px;margin-bottom:6px">Replies</div>
-    <div style="font-size:13px;color:#777;margin-bottom:8px">Admin responses</div>
-    <div id="replyBoxList"></div>
+</div>
+ 
+<!-- Floating Request Button -->
+<button id="requestAccessBtn">Raise a Ticket</button>
+ 
+<!-- Request Modal -->
+<div id="requestModalOverlay">
+  <div id="requestModal" role="dialog" aria-modal="true">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0;color:#5a1bb3">Request Access</h3>
+      <button id="closeModal" style="background:transparent;border:0;font-size:18px;cursor:pointer">&times;</button>
+    </div>
+    <p style="color:#555;margin:0 0 8px 0">Describe the access you need (Shipments, Users, Device Data, Live streaming, etc.)</p>
+    <textarea id="requestDescription" placeholder="Type your request..."></textarea>
+    <button id="submitRequestBtn" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#6a11cb,#2575fc);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer">Submit</button>
   </div>
-
-  <div id="toast"></div>
-
+</div>
+ 
+<!-- Replies Box -->
+<div id="replyBox" aria-live="polite">
+  <div style="font-weight:700;color:#673AB7;font-size:16px;margin-bottom:6px">Replies</div>
+  <div style="font-size:13px;color:#777;margin-bottom:8px">Admin responses</div>
+  <div id="replyBoxList"></div>
+</div>
+ 
+<div id="toast"></div>
+ 
 <script>
-  /* ============================================================
-    AUTH CHECK (redirect to signin if no token)
-  ============================================================ */
   (function() {
     const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.replace("/frontend/user.html");
-    }
+    if (!token) window.location.replace("/frontend/user.html");
   })();
-
-  /* ============================
-     Config & helpers
-  ============================ */
+ 
   const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
   function getToken(){ return localStorage.getItem("token") || ""; }
   function authHeaders(){ const t=getToken(); return t ? { "Authorization":"Bearer "+t } : {}; }
@@ -484,171 +289,231 @@
     try{ const t=getToken(); if(!t) return null; return JSON.parse(atob(t.split('.')[1])); }
     catch{ return null; }
   }
-
-  function showToast(msg, t = 3000){
-    const el = document.getElementById("toast");
-    el.textContent = msg;
-    el.classList.add("show");
-    setTimeout(()=> el.classList.remove("show"), t);
+  function showToast(msg, t=3000){
+    const el=document.getElementById("toast");
+    el.textContent=msg; el.classList.add("show");
+    setTimeout(()=>el.classList.remove("show"), t);
   }
-
-  /* ============================
-     Populate profile from JWT — runs immediately on load
-  ============================ */
+ 
+  /* Profile */
   document.addEventListener("DOMContentLoaded", () => {
     const p = decodeToken();
     if (p) {
       const username = p.username || p.sub || "";
       const fullName = p.full_name || p.name || username;
-      const email    = p.email || "";
       const role     = (p.role || "user").toUpperCase();
-
-      // Build initials (up to 2 letters)
-      const initials = fullName
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(w => w[0].toUpperCase())
-        .join("") || username.slice(0, 2).toUpperCase();
-
-      // ── Welcome message ──
+      const initials = fullName.split(" ").filter(Boolean).slice(0,2)
+        .map(w=>w[0].toUpperCase()).join("") || username.slice(0,2).toUpperCase();
       document.getElementById("welcomeText").innerHTML =
-        `Hi <span class="welcome-username">${username}</span> (${role}), Welcome to SCMXPertLite. Ready to dive in?`;
-
-      // ── Nav bar: avatar initials + username ──
-      document.getElementById("navAvatar").textContent = initials;
-      document.getElementById("navName").textContent   = username;
-
-      // ── Dropdown header ──
+        `Hi <strong>${username}</strong> (${role}), Welcome to SCMXPertLite. Ready to dive in?`;
+      document.getElementById("navAvatar").textContent    = initials;
+      document.getElementById("navName").textContent      = username;
       document.getElementById("dropAvatar").textContent   = initials;
       document.getElementById("dropFullName").textContent = fullName;
       document.getElementById("dropSub").textContent      = `${username} · ${role}`;
     }
   });
-
-  /* Dropdown toggle */
+ 
   const profileBtn      = document.getElementById("profileBtn");
   const profileDropdown = document.getElementById("profileDropdown");
-
   profileBtn.addEventListener("click", e => {
     e.stopPropagation();
     const open = profileDropdown.classList.toggle("show");
     profileBtn.classList.toggle("open", open);
   });
-
   document.addEventListener("click", e => {
     if (!profileDropdown.contains(e.target) && e.target !== profileBtn) {
       profileDropdown.classList.remove("show");
       profileBtn.classList.remove("open");
     }
   });
-
-  /* Sign Out */
   document.getElementById("signOutBtn").addEventListener("click", () => {
     localStorage.removeItem("token");
     window.location.replace("/frontend/user.html");
   });
-
-  /* ===== Request Modal ===== */
+ 
+  /* Request Modal */
   const requestBtn   = document.getElementById("requestAccessBtn");
   const modalOverlay = document.getElementById("requestModalOverlay");
   const closeModal   = document.getElementById("closeModal");
   const submitBtn    = document.getElementById("submitRequestBtn");
-
   requestBtn.onclick = () => modalOverlay.style.display = "flex";
   closeModal.onclick = () => modalOverlay.style.display = "none";
-  modalOverlay.onclick = (e) => { if(e.target === modalOverlay) modalOverlay.style.display = "none"; };
-
+  modalOverlay.onclick = (e) => { if(e.target===modalOverlay) modalOverlay.style.display="none"; };
   submitBtn.onclick = async () => {
     const desc = document.getElementById("requestDescription").value.trim();
-    if(!desc) { showToast("Please enter a request"); return; }
-
+    if(!desc){ showToast("Please enter a request"); return; }
     try {
       let res = await fetch(`${API_BASE_URL}/requests`, {
-        method: "POST",
-        headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
-        body: JSON.stringify({ type: "user_request", description: desc })
+        method:"POST", headers:Object.assign({"Content-Type":"application/json"},authHeaders()),
+        body:JSON.stringify({type:"user_request",description:desc})
       });
-
       if(!res.ok){
         res = await fetch(`${API_BASE_URL}/admin/request-access`, {
-          method: "POST",
-          headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
-          body: JSON.stringify({ description: desc })
+          method:"POST", headers:Object.assign({"Content-Type":"application/json"},authHeaders()),
+          body:JSON.stringify({description:desc})
         });
       }
-
       const j = await res.json().catch(()=>({}));
-      if(!res.ok) { showToast(j.detail || j.message || "Request failed"); return; }
-
+      if(!res.ok){ showToast(j.detail||j.message||"Request failed"); return; }
       showToast("Request submitted!");
       document.getElementById("requestDescription").value = "";
       modalOverlay.style.display = "none";
-    } catch(err){
-      console.error(err);
-      showToast("Network error");
-    }
+    } catch(err){ showToast("Network error"); }
   };
-
-  const token = localStorage.getItem("token");
-
-  /* ===== Replies (user) ===== */
+ 
+  /* Replies */
   let lastReplyTime = 0;
-
   async function loadReplies(){
-    const box  = document.getElementById("replyBox");
-    const list = document.getElementById("replyBoxList");
+    const box=document.getElementById("replyBox"), list=document.getElementById("replyBoxList");
     try {
-      const res = await fetch(`${API_BASE_URL}/user/replies`, { headers: authHeaders() });
-      if(!res.ok){ box.style.display = "none"; return; }
-
-      const data    = await res.json();
-      const replies = data.replies || [];
-      if(!replies.length){ box.style.display = "none"; return; }
-
-      const rendered = replies.slice().reverse().map(r => {
-        const ts  = r.sent_at ? new Date(r.sent_at).toLocaleString() : '';
-        const msg = escapeHtml(r.message || r.reply || '');
+      const res = await fetch(`${API_BASE_URL}/user/replies`,{headers:authHeaders()});
+      if(!res.ok){ box.style.display="none"; return; }
+      const data=await res.json(), replies=data.replies||[];
+      if(!replies.length){ box.style.display="none"; return; }
+      list.innerHTML = replies.slice().reverse().map(r=>{
+        const ts=r.sent_at?new Date(r.sent_at).toLocaleString():'';
+        const msg=escapeHtml(r.message||r.reply||'');
         return `<div class="replyItem"><time>${escapeHtml(ts)}</time><div>${msg}</div></div>`;
       }).join("");
-
-      list.innerHTML = rendered;
-      box.style.display = "block";
-
-      const latest = new Date(replies[replies.length-1]?.sent_at || 0).getTime();
-      if(latest && latest > lastReplyTime) lastReplyTime = latest;
-
-    } catch(err) {
-      console.error("loadReplies error", err);
-    }
+      box.style.display="block";
+      const latest=new Date(replies[replies.length-1]?.sent_at||0).getTime();
+      if(latest&&latest>lastReplyTime) lastReplyTime=latest;
+    } catch(err){ console.error("loadReplies error",err); }
   }
-
   async function pollReplies(){
     try {
-      const res = await fetch(`${API_BASE_URL}/user/replies`, { headers: authHeaders() });
+      const res=await fetch(`${API_BASE_URL}/user/replies`,{headers:authHeaders()});
       if(!res.ok) return;
-      const data    = await res.json();
-      const replies = data.replies || [];
+      const data=await res.json(), replies=data.replies||[];
       if(!replies.length) return;
-      const latest = new Date(replies[replies.length-1].sent_at || 0).getTime();
-      if(latest > lastReplyTime){
-        if(lastReplyTime !== 0) showToast("New reply from Admin!");
-        lastReplyTime = latest;
-        loadReplies();
+      const latest=new Date(replies[replies.length-1].sent_at||0).getTime();
+      if(latest>lastReplyTime){
+        if(lastReplyTime!==0) showToast("New reply from Admin!");
+        lastReplyTime=latest; loadReplies();
       }
-    } catch(e){ /* silent */ }
+    } catch(e){}
   }
-
   function escapeHtml(str){
-    if(str === undefined || str === null) return '';
-    return String(str).replace(/[&<>"']/g, function(m){
-      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]);
-    });
+    if(str===undefined||str===null) return '';
+    return String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
-
+ 
+  /* ============================
+     Shipment Stats
+  ============================ */
+  let statusChart = null;
+  let allShipments = [];
+ 
+  async function loadShipmentStats() {
+    try {
+      const token = getToken();
+      const payload = (() => { try{ return JSON.parse(atob(token.split('.')[1])); } catch{ return {}; } })();
+      const currentUsername = (payload.username || payload.sub || payload.user || "").toLowerCase();
+      const currentRole     = (payload.role || payload.user_role || "user").toLowerCase();
+ 
+      const res = await fetch(`${API_BASE_URL}/api/shipments`, { headers: authHeaders() });
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        console.error("Non-JSON from /api/shipments — check backend is running");
+        return;
+      }
+      if (!res.ok) return;
+ 
+      const data = await res.json();
+      let shipments = Array.isArray(data) ? data : (data.records || data.shipments || []);
+ 
+      /* Only show this user's shipments unless admin */
+      if (currentRole !== "admin") {
+        shipments = shipments.filter(s =>
+          (s.created_by || "").toLowerCase() === currentUsername
+        );
+      }
+ 
+      allShipments = shipments;
+ 
+      let transit=0, pending=0, active=0, cancelled=0;
+      shipments.forEach(s => {
+        const st = (s.status || "").toLowerCase().replace(" ","_").trim();
+        if      (st === "in_transit" || st.includes("transit"))  transit++;
+        else if (st === "pending"    || st.includes("pending"))  pending++;
+        else if (st === "active"     || st.includes("active"))   active++;
+        else if (st === "cancelled"  || st.includes("cancel"))   cancelled++;
+      });
+ 
+      const total = shipments.length;
+ 
+      document.getElementById("countTransit").textContent   = transit;
+      document.getElementById("countPending").textContent   = pending;
+      document.getElementById("countActive").textContent    = active;
+      document.getElementById("countCancelled").textContent = cancelled;
+      document.getElementById("totalCount").textContent     = total;
+ 
+      /* Dim cards with 0 shipments */
+      [["card-transit",transit],["card-pending",pending],
+       ["card-active",active],  ["card-cancelled",cancelled]
+      ].forEach(([id,count]) => {
+        const el = document.getElementById(id);
+        if (el) el.style.opacity = count > 0 ? "1" : "0.42";
+      });
+ 
+      const chartData    = [transit, pending, active, cancelled];
+      const placeholder  = chartData.every(v => v === 0);
+      const displayData  = placeholder ? [1,0,0,0] : chartData;
+      const colors       = placeholder
+        ? ["#ddd6fe","#ddd6fe","#ddd6fe","#ddd6fe"]
+        : ["#2563eb","#d97706","#059669","#dc2626"];
+ 
+      if (!statusChart) {
+        statusChart = new Chart(document.getElementById("statusChart"), {
+          type: "doughnut",
+          data: {
+            labels: ["In Transit","Pending","Active","Cancelled"],
+            datasets: [{ data: displayData, backgroundColor: colors, borderWidth: 0, hoverOffset: 7 }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "70%",
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                enabled: !placeholder,
+                callbacks: {
+                  label: ctx => {
+                    const t = ctx.dataset.data.reduce((a,b)=>a+b,0)||1;
+                    return " "+ctx.parsed+" ("+Math.round(ctx.parsed/t*100)+"%)";
+                  }
+                }
+              }
+            },
+            onClick: (e, els) => {
+              if (!els.length || placeholder) return;
+              filterByStatus(["transit","pending","active","cancelled"][els[0].index]);
+            }
+          }
+        });
+      } else {
+        statusChart.data.datasets[0].data            = displayData;
+        statusChart.data.datasets[0].backgroundColor = colors;
+        statusChart.options.plugins.tooltip.enabled  = !placeholder;
+        statusChart.update("none");
+      }
+ 
+    } catch(e) {
+      console.error("shipment stats error", e);
+    }
+  }
+ 
+  function filterByStatus(status){
+    window.location.href = `/frontend/shipments.html?status=${status}`;
+  }
+ 
+  loadShipmentStats();
+  setInterval(loadShipmentStats, 5000);
+ 
   loadReplies();
   setInterval(pollReplies, 4000);
 </script>
-
 </body>
 </html>

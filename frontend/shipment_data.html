@@ -32,6 +32,8 @@
     --text-dark: #222;
     --text-light: #777;
     --card-bg: rgba(255,255,255,0.4);
+    --error-red: #e53935;
+    --error-bg: rgba(229,57,53,0.06);
 }
 
 body {
@@ -103,9 +105,7 @@ body {
     text-decoration: none;
 }
 
-.nav-menu a:hover {
-    color: var(--neon-blue);
-}
+.nav-menu a:hover { color: var(--neon-blue); }
 
 .nav-menu a::after {
     content: "";
@@ -118,12 +118,10 @@ body {
     transition: 0.3s;
 }
 
-.nav-menu a:hover::after {
-    width: 100%;
-}
+.nav-menu a:hover::after { width: 100%; }
 
 /* ── Profile Button ── */
-.profile-wrapper { margin-left: auto; position: relative;overflow: visible; }
+.profile-wrapper { margin-left: auto; position: relative; overflow: visible; }
 
 .profile-btn {
     display: flex;
@@ -151,27 +149,15 @@ body {
     flex-shrink: 0;
 }
 
-.profile-btn-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: white;
-}
-
-.chevron {
-    font-size: 10px;
-    color: white;
-    transition: transform 0.2s;
-}
-
+.profile-btn-name { font-size: 14px; font-weight: 500; color: white; }
+.chevron { font-size: 10px; color: white; transition: transform 0.2s; }
 .profile-btn.open .chevron { transform: rotate(180deg); }
 
 /* ── Dropdown ── */
 .profile-dropdown {
-  position: fixed;
-    top: 60px;       
-    right: 8px; 
-   /* top: calc(100% + 12px);
-    right: 0;*/
+    position: fixed;
+    top: 60px;
+    right: 8px;
     width: 240px;
     background: #fff;
     border-radius: 14px;
@@ -199,96 +185,36 @@ body {
 }
 
 .pd-avatar {
-    width: 46px;
-    height: 46px;
+    width: 46px; height: 46px;
     border-radius: 50%;
     background: linear-gradient(135deg, #45e4ff, #7c3aed);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 16px;
-    color: white;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; color: white; flex-shrink: 0;
 }
 
 .pd-info { flex: 1; min-width: 0; }
 
-.pd-name {
-    font-weight: 700;
-    font-size: 14px;
-    color: #1e1135;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pd-sub {
-    font-size: 12px;
-    color: #888;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 1px;
-}
+.pd-name { font-weight: 700; font-size: 14px; color: #1e1135; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pd-sub { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 
 .pd-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 5px;
-    background: #ecfdf5;
-    color: #059669;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 5px; background: #ecfdf5; color: #059669;
+    border-radius: 999px; font-size: 11px; font-weight: 700; padding: 2px 8px;
 }
 
-.pd-badge::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #059669;
-}
+.pd-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #059669; }
 
-.pd-section {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #aaa;
-    padding: 10px 16px 3px;
-    overflow: visible; 
-    white-space: nowrap;
-}
+.pd-section { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #aaa; padding: 10px 16px 3px; }
 
 .pd-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #2d1f5e;
-    text-decoration: none;
-    transition: background 0.13s;
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 16px; font-size: 14px; font-weight: 500; color: #2d1f5e;
+    text-decoration: none; transition: background 0.13s;
 }
-
 .pd-item:hover { background: #f5f3ff; }
 
-.pd-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
-    flex-shrink: 0;
-}
-
+.pd-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
 .ic-blue   { background: #eff6ff; }
 .ic-purple { background: #f5f3ff; }
 .ic-green  { background: #f0fdf4; }
@@ -297,17 +223,10 @@ body {
 .pd-divider { height: 1px; background: #f0eeff; margin: 4px 0; }
 
 .pd-signout {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 11px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #dc2626;
-    cursor: pointer;
-    transition: background 0.13s;
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px; font-size: 14px; font-weight: 600; color: #dc2626;
+    cursor: pointer; transition: background 0.13s;
 }
-
 .pd-signout:hover { background: #fff5f5; }
 
 /* ------------------------------------------
@@ -344,19 +263,33 @@ body {
     font-weight: 700;
     text-align: center;
     letter-spacing: 0.4px;
-    margin-bottom: 25px;
+    margin-bottom: 6px;
     font-size: 24px;
 }
 
+.sub-note { font-size: 13px; color: var(--text-light); text-align: center; margin-bottom: 25px; }
 .small { font-size:13px; color:var(--text-light); }
+
+/* ------------------------------------------
+   ERROR SUMMARY BANNER
+-------------------------------------------*/
+.error-banner {
+    display: none;
+    background: rgba(229,57,53,0.1);
+    border: 1px solid rgba(229,57,53,0.4);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #c62828;
+}
+.error-banner.show { display: block; }
+.error-banner strong { display: block; margin-bottom: 4px; font-size: 14px; }
 
 /* ------------------------------------------
    INPUTS
 -------------------------------------------*/
-.field {
-    margin-bottom: 20px;
-    width: 100%;
-}
+.field { margin-bottom: 20px; width: 100%; }
 
 .input {
     width: 100%;
@@ -367,6 +300,7 @@ body {
     font-size: 15px;
     transition: 0.2s ease;
     box-sizing: border-box;
+    font-family: "Roboto", sans-serif;
 }
 
 .input:focus {
@@ -376,10 +310,24 @@ body {
     outline: none;
 }
 
-textarea.input {
-    min-height: 100px;
-    resize: vertical;
+textarea.input { min-height: 100px; resize: vertical; }
+
+/* Error state */
+.input.error {
+    border: 2px solid var(--error-red) !important;
+    background: var(--error-bg) !important;
+    box-shadow: 0 0 0 3px rgba(229,57,53,0.12);
 }
+
+.field-error-msg {
+    display: none;
+    color: var(--error-red);
+    font-size: 12px;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+.field-error-msg.show { display: block; }
 
 /* ------------------------------------------
    SPLIT WRAPPER
@@ -394,6 +342,17 @@ textarea.input {
     .split-wrapper { grid-template-columns: 1fr; }
     .card { padding: 20px !important; margin: 20px !important; }
 }
+
+/* ------------------------------------------
+   ROUTE ROW
+-------------------------------------------*/
+.route-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+}
+.route-arrow { text-align: center; color: var(--purple); font-size: 18px; font-weight: 600; }
 
 /* ------------------------------------------
    BUTTONS
@@ -412,6 +371,7 @@ textarea.input {
     border: none;
     border-radius: 6px;
     font-size: 16px;
+    font-family: "Roboto", sans-serif;
     cursor: pointer;
     transition: 0.25s ease;
     box-shadow: 0 4px 12px rgba(108,39,217,0.4);
@@ -423,6 +383,12 @@ textarea.input {
     box-shadow: 0 6px 18px rgba(108,39,217,0.55);
 }
 
+.btn-main:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .btn-clear {
     background: var(--neon-blue);
     color: black;
@@ -430,6 +396,7 @@ textarea.input {
     border: none;
     border-radius: 6px;
     font-size: 16px;
+    font-family: "Roboto", sans-serif;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.18);
     transition: 0.25s ease;
@@ -445,10 +412,9 @@ textarea.input {
 -------------------------------------------*/
 #toast {
     position: fixed;
-    top: 22px;
+    bottom: 20px;
     left: 50%;
-    transform: translateX(-50%) translateY(-40px);
-    background: #4caf50;
+    transform: translateX(-50%) translateY(40px);
     color: white;
     padding: 14px 26px;
     font-size: 1rem;
@@ -457,12 +423,16 @@ textarea.input {
     transition: 0.4s ease;
     box-shadow: 0 6px 14px rgba(0,0,0,0.25);
     z-index: 99999;
+    pointer-events: none;
 }
 
 #toast.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+
+#toast.success { background: #4caf50; }
+#toast.error   { background: #e53935; }
 </style>
 </head>
 <body>
@@ -473,20 +443,15 @@ textarea.input {
 <header class="topbar">
   <div class="topbar-inner">
 
-    <!-- BRAND (LEFT) -->
     <div class="brand">
       <strong>SCMXPert<span style="color:#45e4ff">Lite</span></strong>
     </div>
 
-    <!-- NAV (CENTER) -->
     <nav class="nav-menu">
-      <a href="/frontend/home.html">Home</a>
       <a href="/frontend/dashboard.html">My Dashboard</a>
-      <a href="/frontend/shipments (1).html">My Shipments</a>
-      <a href="/frontend/shipment_data.html">Create Shipment</a>
+      <a href="/frontend/shipments.html">My Shipments</a>
     </nav>
 
-    <!-- PROFILE (RIGHT) -->
     <div class="profile-wrapper">
       <button class="profile-btn" id="profileBtn">
         <div class="avatar-circle" id="navAvatar">??</div>
@@ -495,7 +460,6 @@ textarea.input {
       </button>
 
       <div class="profile-dropdown" id="profileDropdown">
-
         <div class="pd-header">
           <div class="pd-avatar" id="dropAvatar">??</div>
           <div class="pd-info">
@@ -523,7 +487,6 @@ textarea.input {
         <div class="pd-signout" id="signOutBtn">
           <div class="pd-icon ic-red">🚪</div> Sign Out
         </div>
-
       </div>
     </div>
 
@@ -533,155 +496,181 @@ textarea.input {
 <!-- ═══════════════════════════════════════
      FORM
 ════════════════════════════════════════ -->
-  <div class="card form-container">
-    <h3 class="center">Create New Shipment</h3>
-    <p class="small center text-muted">Please fill all required fields</p>
+<div class="card form-container">
+  <h3>Create New Shipment</h3>
+  <p class="sub-note">Please fill all required fields — <span style="color:#e53935;">*</span> marks required</p>
 
-    <form id="shipmentForm">
-
-      <div class="split-wrapper">
-
-        <!-- LEFT SIDE -->
-        <div class="split-box">
-          <h4>Shipment Details</h4>
-
-          <div class="field">
-            <label>Shipment Number<span class="required">*</span></label>
-            <input type="text" id="shipment_number" class="input" placeholder="Enter Shipment Number" required>
-            <small style="color:#777; font-size:12px;">Must be exactly 6 digits (e.g. 123456)</small>
-          </div>
-
-         <div class="field">
-          <label>Route Details<span class="required">*</span></label>
-          <div style="display:flex; gap:12px;">
-             <select id="route_from" class="input" required>
-                <option value="">From</option>
-                <option value="Newyork,USA">Newyork, USA</option>
-                <option value="Chennai, India">Chennai, India</option>
-                <option value="Bengaluru, India">Bengaluru, India</option>
-                <option value="London, UK">London, UK</option>
-              </select>
-               <select id="route_to" class="input" required>
-                <option value="">To</option>
-                <option value="Newyork,USA">Newyork, USA</option>
-                <option value="Chennai, India">Chennai, India</option>
-                <option value="Bengaluru, India">Bengaluru, India</option>
-                <option value="London, UK">London, UK</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Device<span class="required">*</span></label>
-            <select id="device_data" class="input" required>
-              <option value="">Select Device</option>
-              <option value="Tracking">Tracking Devices</option>
-              <option value="Tracking - GPS">- GPS Tracker</option>
-              <option value="Tracking - RFID">- RFID Tag</option>
-              <option value="Sensors">Sensors</option>
-              <option value="Sensors - Temperature">- Temperature Sensor</option>
-              <option value="Sensors - Humidity">- Humidity Sensor</option>
-              <option value="Sensors - Pressure">- Pressure Sensor</option>
-              <option value="Monitoring">Monitoring Devices</option>
-              <option value="Monitoring - IoT">- IoT Gateway</option>
-              <option value="Monitoring - Smart Logger">- Data Logger</option>
-              <option value="Other">Other</option>
-            </select>
-            <small style="color:#777; font-size:12px;">Select device type (subcategories shown with "-")</small>
-          </div>
-
-          <div class="field">
-            <label>PO Number<span class="required">*</span></label>
-            <input type="text" id="po_number" class="input" required>
-            <small style="color:#777; font-size:12px;">Letters, numbers, and hyphens only (e.g. ABC-123)</small>
-          </div>
-
-          <div class="field">
-            <label>NDC Number<span class="required">*</span></label>
-            <input type="text" id="ndc_number" class="input" placeholder="e.g. 12345-678-90" required>
-            <small style="color:#777; font-size:12px;">Numbers and hyphens only e.g. 1234-5678</small>
-          </div>
-
-          <div class="field">
-            <label>Serial Number of Goods<span class="required">*</span></label>
-            <input type="text" id="serial_number_goods" class="input" required>
-          </div>
-
-          <div class="field">
-            <label>Shipment Priority</label>
-            <select id="shipmentPrioritySelect" class="input">
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Shipment Health Score</label>
-            <select id="shipmentHealthSelect" class="input">
-              <option value="low">🟢 Low Risk</option>
-              <option value="medium">🟡 Medium Risk</option>
-              <option value="high">🔴 High Risk</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- RIGHT SIDE -->
-        <div class="split-box">
-          <h4>Additional Details</h4>
-
-          <div class="field">
-            <label>Container Number<span class="required">*</span></label>
-            <input type="text" id="container_number" class="input" required>
-            <small style="color:#777; font-size:12px;">Letters, numbers, and hyphens only (e.g. TN04552 or ABC-123)</small>
-          </div>
-
-          <div class="field">
-            <label>Goods Type<span class="required">*</span></label>
-            <select id="goods_type" class="input" required>
-              <option value="">Select Goods Type</option>
-              <option value="Pharmaceuticals">Pharmaceuticals</option>
-              <option value="Chemicals">Chemicals</option>
-              <option value="Healthcare">Healthcare / Medical Devices</option>
-              <option value="Food">Food & Perishables</option>
-              <option value="Dairy">Dairy & Fresh Produce</option>
-              <option value="Consumer">Consumer Goods</option>
-              <option value="Industrial">Industrial Goods</option>
-              <option value="Other">Other</option>
-            </select>
-            <small style="color:#777; font-size:12px;">Select type of goods being transported</small>
-          </div>
-
-          <div class="field">
-            <label>Expected Delivery Date<span class="required">*</span></label>
-            <input type="date" id="expected_delivery_date" class="input" required>
-          </div>
-
-          <div class="field">
-            <label>Delivery Number<span class="required">*</span></label>
-            <input type="text" id="delivery_number" class="input" required>
-          </div>
-
-          <div class="field">
-            <label>Batch ID<span class="required">*</span></label>
-            <input type="text" id="batch_id" class="input" required>
-          </div>
-
-          <div class="field">
-            <label>Shipment Description</label>
-            <textarea id="shipment_description" class="input"></textarea>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="button-group">
-        <button id="createShipmentBtn" type="button" class="btn-main">CREATE SHIPMENT</button>
-        <button id="clearBtn" type="button" class="btn-clear">CLEAR DETAILS</button>
-      </div>
-
-    </form>
+  <!-- Error summary banner -->
+  <div class="error-banner" id="errorBanner">
+    <strong id="errorBannerTitle">Please fix the errors below:</strong>
+    <span id="errorBannerList"></span>
   </div>
+
+  <form id="shipmentForm" novalidate>
+    <div class="split-wrapper">
+
+      <!-- LEFT SIDE -->
+      <div class="split-box">
+        <h4>Shipment Details</h4>
+
+        <div class="field">
+          <label>Shipment Number <span style="color:#e53935">*</span></label>
+          <input type="text" id="shipment_number" class="input" placeholder="e.g. 123456">
+          <small class="small">Must be exactly 6 digits</small>
+          <div class="field-error-msg" id="err-shipment_number">Enter a valid 6-digit shipment number</div>
+        </div>
+
+        <div class="field">
+          <label>Route Details <span style="color:#e53935">*</span></label>
+          <div class="route-row">
+            <select id="route_from" class="input">
+              <option value="">From</option>
+              <option value="Newyork,USA">New York, USA</option>
+              <option value="Chennai, India">Chennai, India</option>
+              <option value="Bengaluru, India">Bengaluru, India</option>
+              <option value="London, UK">London, UK</option>
+              <option value="Berlin, Germany">Berlin, Germany</option>
+              <option value="Tokyo, Japan">Tokyo, Japan</option>
+              <option value="Sydney, Australia">Sydney, Australia</option>
+              <option value="Toronto, Canada">Toronto, Canada</option>
+            </select>
+            <div class="route-arrow">→</div>
+            <select id="route_to" class="input">
+              <option value="">To</option>
+              <option value="Newyork,USA">New York, USA</option>
+              <option value="Chennai, India">Chennai, India</option>
+              <option value="Bengaluru, India">Bengaluru, India</option>
+              <option value="London, UK">London, UK</option>
+              <option value="Berlin, Germany">Berlin, Germany</option>
+              <option value="Tokyo, Japan">Tokyo, Japan</option>
+              <option value="Sydney, Australia">Sydney, Australia</option>
+              <option value="Toronto, Canada">Toronto, Canada</option>
+            </select>
+          </div>
+          <div class="field-error-msg" id="err-route">Select both origin and destination (they must differ)</div>
+        </div>
+
+        <div class="field">
+          <label>Device <span style="color:#e53935">*</span></label>
+          <select id="device_data" class="input">
+            <option value="">Select Device</option>
+            <optgroup label="Tracking">
+              <option value="Tracking - GPS">GPS Tracker</option>
+              <option value="Tracking - RFID">RFID Tag</option>
+            </optgroup>
+            <optgroup label="Sensors">
+              <option value="Sensors - Temperature">Temperature Sensor</option>
+              <option value="Sensors - Humidity">Humidity Sensor</option>
+              <option value="Sensors - Pressure">Pressure Sensor</option>
+            </optgroup>
+            <optgroup label="Monitoring">
+              <option value="Monitoring - IoT">IoT Gateway</option>
+              <option value="Monitoring - Smart Logger">Data Logger</option>
+            </optgroup>
+            <option value="Other">Other</option>
+          </select>
+          <div class="field-error-msg" id="err-device_data">Please select a device type</div>
+        </div>
+
+        <div class="field">
+          <label>PO Number <span style="color:#e53935">*</span></label>
+          <input type="text" id="po_number" class="input" placeholder="e.g. ABC-123">
+          <small class="small">Letters, numbers, and hyphens only</small>
+          <div class="field-error-msg" id="err-po_number">PO number is required</div>
+        </div>
+
+        <div class="field">
+          <label>NDC Number <span style="color:#e53935">*</span></label>
+          <input type="text" id="ndc_number" class="input" placeholder="e.g. 12345-678-90">
+          <small class="small">Numbers and hyphens only</small>
+          <div class="field-error-msg" id="err-ndc_number">NDC number is required</div>
+        </div>
+
+        <div class="field">
+          <label>Serial Number of Goods <span style="color:#e53935">*</span></label>
+          <input type="text" id="serial_number_goods" class="input">
+          <div class="field-error-msg" id="err-serial_number_goods">Serial number is required</div>
+        </div>
+
+        <div class="field">
+          <label>Shipment Priority</label>
+          <select id="shipmentPrioritySelect" class="input">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Shipment Health Score</label>
+          <select id="shipmentHealthSelect" class="input">
+            <option value="low">🟢 Low Risk</option>
+            <option value="medium">🟡 Medium Risk</option>
+            <option value="high">🔴 High Risk</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE -->
+      <div class="split-box">
+        <h4>Additional Details</h4>
+
+        <div class="field">
+          <label>Container Number <span style="color:#e53935">*</span></label>
+          <input type="text" id="container_number" class="input" placeholder="e.g. TN04552">
+          <small class="small">Letters, numbers, and hyphens only</small>
+          <div class="field-error-msg" id="err-container_number">Container number is required</div>
+        </div>
+
+        <div class="field">
+          <label>Goods Type <span style="color:#e53935">*</span></label>
+          <select id="goods_type" class="input">
+            <option value="">Select Goods Type</option>
+            <option value="Pharmaceuticals">Pharmaceuticals</option>
+            <option value="Chemicals">Chemicals</option>
+            <option value="Healthcare">Healthcare / Medical Devices</option>
+            <option value="Food">Food &amp; Perishables</option>
+            <option value="Dairy">Dairy &amp; Fresh Produce</option>
+            <option value="Consumer">Consumer Goods</option>
+            <option value="Industrial">Industrial Goods</option>
+            <option value="Other">Other</option>
+          </select>
+          <div class="field-error-msg" id="err-goods_type">Please select a goods type</div>
+        </div>
+
+        <div class="field">
+          <label>Expected Delivery Date <span style="color:#e53935">*</span></label>
+          <input type="date" id="expected_delivery_date" class="input">
+          <div class="field-error-msg" id="err-expected_delivery_date">Delivery date is required</div>
+        </div>
+
+        <div class="field">
+          <label>Delivery Number <span style="color:#e53935">*</span></label>
+          <input type="text" id="delivery_number" class="input">
+          <div class="field-error-msg" id="err-delivery_number">Delivery number is required</div>
+        </div>
+
+        <div class="field">
+          <label>Batch ID <span style="color:#e53935">*</span></label>
+          <input type="text" id="batch_id" class="input">
+          <div class="field-error-msg" id="err-batch_id">Batch ID is required</div>
+        </div>
+
+        <div class="field">
+          <label>Shipment Description</label>
+          <textarea id="shipment_description" class="input" placeholder="Optional — add any notes about this shipment"></textarea>
+        </div>
+      </div>
+
+    </div><!-- end split-wrapper -->
+
+    <div class="button-group">
+      <button id="createShipmentBtn" type="button" class="btn-main">CREATE SHIPMENT</button>
+      <button id="clearBtn" type="button" class="btn-clear">CLEAR DETAILS</button>
+    </div>
+
+  </form>
+</div>
 
 <div id="toast"></div>
 
@@ -690,8 +679,7 @@ textarea.input {
      AUTH CHECK
   ============================================================ */
   (function() {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!localStorage.getItem("token")) {
       window.location.replace("/frontend/user.html");
     }
   })();
@@ -726,7 +714,6 @@ textarea.input {
     }
   });
 
-  /* Dropdown toggle */
   const profileBtn      = document.getElementById("profileBtn");
   const profileDropdown = document.getElementById("profileDropdown");
 
@@ -743,55 +730,210 @@ textarea.input {
     }
   });
 
-  /* Sign Out */
   document.getElementById("signOutBtn").addEventListener("click", () => {
     localStorage.removeItem("token");
     window.location.replace("/frontend/user.html");
   });
 
   /* ============================================================
-     SHIPMENT FORM
+     TOAST
   ============================================================ */
   const API_BASE_URL = "http://127.0.0.1:8000";
 
-  function showToast(msg) {
+  function showToast(msg, type = "success") {
     const t = document.getElementById("toast");
     t.textContent = msg;
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2500);
+    t.className = "show " + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove("show"), 3000);
   }
 
-  document.getElementById("route_from").addEventListener("change", function () {
+  /* ============================================================
+     LIVE ERROR CLEARING — remove red border as user types/selects
+  ============================================================ */
+  ["shipment_number","po_number","ndc_number","serial_number_goods",
+   "container_number","delivery_number","batch_id"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => clearFieldError(id));
+  });
+
+  ["device_data","goods_type","expected_delivery_date"].forEach(id => {
+    document.getElementById(id).addEventListener("change", () => clearFieldError(id));
+  });
+
+  document.getElementById("route_from").addEventListener("change", function() {
+    // Disable same option in route_to
     const to = document.getElementById("route_to");
-    [...to.options].forEach(opt => {
-      opt.disabled = opt.value === this.value;
+    [...to.options].forEach(opt => { opt.disabled = opt.value === this.value; });
+    clearRouteError();
+  });
+
+  document.getElementById("route_to").addEventListener("change", () => clearRouteError());
+
+  function clearFieldError(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove("error"); }
+    const errEl = document.getElementById("err-" + id);
+    if (errEl) errEl.classList.remove("show");
+  }
+
+  function clearRouteError() {
+    document.getElementById("route_from").classList.remove("error");
+    document.getElementById("route_to").classList.remove("error");
+    const errEl = document.getElementById("err-route");
+    if (errEl) errEl.classList.remove("show");
+  }
+
+  /* ============================================================
+     VALIDATION
+  ============================================================ */
+  function setFieldError(id, msg) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("error");
+    const errEl = document.getElementById("err-" + id);
+    if (errEl) {
+      if (msg) errEl.textContent = msg;
+      errEl.classList.add("show");
+    }
+  }
+
+  function validateForm() {
+    let errors = [];
+
+    // Clear all previous errors
+    document.querySelectorAll(".input").forEach(el => el.classList.remove("error"));
+    document.querySelectorAll(".field-error-msg").forEach(el => el.classList.remove("show"));
+    document.getElementById("errorBanner").classList.remove("show");
+
+    const v = id => document.getElementById(id).value.trim();
+
+    // Shipment number — exactly 6 digits
+    if (!/^\d{6}$/.test(v("shipment_number"))) {
+      setFieldError("shipment_number", "Must be exactly 6 digits (e.g. 123456)");
+      errors.push("Shipment number");
+    }
+
+    // Route
+    const from = v("route_from"), to = v("route_to");
+    if (!from || !to || from === to) {
+      document.getElementById("route_from").classList.add("error");
+      document.getElementById("route_to").classList.add("error");
+      document.getElementById("err-route").classList.add("show");
+      errors.push("Route (select different origin and destination)");
+    }
+
+    // Required selects & inputs
+    const required = [
+      { id: "device_data",            label: "Device" },
+      { id: "po_number",              label: "PO Number" },
+      { id: "ndc_number",             label: "NDC Number" },
+      { id: "serial_number_goods",    label: "Serial Number of Goods" },
+      { id: "container_number",       label: "Container Number" },
+      { id: "goods_type",             label: "Goods Type" },
+      { id: "expected_delivery_date", label: "Expected Delivery Date" },
+      { id: "delivery_number",        label: "Delivery Number" },
+      { id: "batch_id",               label: "Batch ID" },
+    ];
+
+    required.forEach(({ id, label }) => {
+      if (!v(id)) {
+        setFieldError(id);
+        errors.push(label);
+      }
     });
-  });
 
-  document.getElementById("clearBtn").addEventListener("click", () => {
+    if (errors.length > 0) {
+      const banner = document.getElementById("errorBanner");
+      document.getElementById("errorBannerTitle").textContent =
+        `Please fix ${errors.length} error${errors.length > 1 ? "s" : ""} before submitting:`;
+      document.getElementById("errorBannerList").textContent = errors.join(" · ");
+      banner.classList.add("show");
+
+      // Scroll to first red field
+      const first = document.querySelector(".input.error");
+      if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      return false;
+    }
+
+    return true;
+  }
+
+  /* ============================================================
+     RESET FORM (only called on success or manual clear)
+  ============================================================ */
+  function resetForm() {
     document.getElementById("shipmentForm").reset();
+    document.querySelectorAll(".input").forEach(el => el.classList.remove("error"));
+    document.querySelectorAll(".field-error-msg").forEach(el => el.classList.remove("show"));
+    document.getElementById("errorBanner").classList.remove("show");
+  }
+
+  /* ============================================================
+     CLEAR BUTTON
+  ============================================================ */
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    resetForm();
+    showToast("Form cleared", "success");
   });
 
+  /* ============================================================
+     CREATE SHIPMENT
+  ============================================================ */
   document.getElementById("createShipmentBtn").addEventListener("click", async () => {
+
+    // Run validation first — stop if invalid
+    if (!validateForm()) return;
+
     const payload = {
-      shipment_number:      document.getElementById("shipment_number").value,
-      route_from:           document.getElementById("route_from").value,
-      route_to:             document.getElementById("route_to").value,
-      device:               document.getElementById("device_data").value,
-      po_number:            document.getElementById("po_number").value,
-      ndc_number:           document.getElementById("ndc_number").value,
-      serial_number_goods:  document.getElementById("serial_number_goods").value,
-      shipment_priority:    document.getElementById("shipmentPrioritySelect").value,
-      shipment_health:      document.getElementById("shipmentHealthSelect").value,
-      container_number:     document.getElementById("container_number").value,
-      goods_type:           document.getElementById("goods_type").value,
+      shipment_number:        document.getElementById("shipment_number").value.trim(),
+      route_from:             document.getElementById("route_from").value,
+      route_to:               document.getElementById("route_to").value,
+      device:                 document.getElementById("device_data").value,
+      po_number:              document.getElementById("po_number").value.trim(),
+      ndc_number:             document.getElementById("ndc_number").value.trim(),
+      serial_number_goods:    document.getElementById("serial_number_goods").value.trim(),
+      shipment_priority:      document.getElementById("shipmentPrioritySelect").value,
+      shipment_health:        document.getElementById("shipmentHealthSelect").value,
+      container_number:       document.getElementById("container_number").value.trim(),
+      goods_type:             document.getElementById("goods_type").value,
       expected_delivery_date: document.getElementById("expected_delivery_date").value,
-      delivery_number:      document.getElementById("delivery_number").value,
-      batch_id:             document.getElementById("batch_id").value,
-      shipment_description: document.getElementById("shipment_description").value
+      delivery_number:        document.getElementById("delivery_number").value.trim(),
+      batch_id:               document.getElementById("batch_id").value.trim(),
+      shipment_description:   document.getElementById("shipment_description").value.trim()
     };
 
+    const btn = document.getElementById("createShipmentBtn");
+    btn.textContent = "CREATING…";
+    btn.disabled = true;
+
     try {
+      // DUPLICATE CHECK
+      const checkRes = await fetch(`${API_BASE_URL}/api/shipments`, {
+        headers: { "Authorization": "Bearer " + (localStorage.getItem("token") || "") }
+      });
+
+      if (checkRes.ok) {
+        const raw = await checkRes.json();
+        // API may return an array, or a wrapper like { data:[...] } / { items:[...] } / { shipments:[...] }
+        const shipments = Array.isArray(raw)
+          ? raw
+          : (raw.data || raw.items || raw.shipments || raw.results || []);
+        const exists = shipments.some(s => s.shipment_number === payload.shipment_number);
+
+        if (exists) {
+          setFieldError("shipment_number", "This shipment number already exists. Use a unique one.");
+          document.getElementById("errorBannerTitle").textContent = "Duplicate shipment number:";
+          document.getElementById("errorBannerList").textContent = "Shipment number already exists — please use a different one.";
+          document.getElementById("errorBanner").classList.add("show");
+          document.getElementById("shipment_number").scrollIntoView({ behavior: "smooth", block: "center" });
+          showToast("Shipment number already exists.", "error");
+          btn.textContent = "CREATE SHIPMENT";
+          btn.disabled = false;
+          return;
+        }
+      }
+
+      // CREATE
       const res = await fetch(`${API_BASE_URL}/api/shipments/create`, {
         method: "POST",
         headers: {
@@ -804,20 +946,26 @@ textarea.input {
       if (!res.ok) {
         const err = await res.json();
         const detail = err.detail;
-        if (Array.isArray(detail)) {
-          showToast("❌ " + detail.map(e => e.msg).join(", "));
-        } else {
-          showToast("❌ " + (detail || "Shipment not created"));
-        }
-        console.error(err);
+        const msg = Array.isArray(detail)
+          ? detail.map(e => e.msg).join(", ")
+          : (detail || "Shipment not created");
+        showToast("❌ " + msg, "error");
+        btn.textContent = "CREATE SHIPMENT";
+        btn.disabled = false;
         return;
       }
-      showToast("Shipment Created Successfully!");
+
+      // SUCCESS — only now clear the form
+      showToast("✅ Shipment Created Successfully!", "success");
+      resetForm();
 
     } catch (err) {
       console.error(err);
-      showToast(" please fill all required fields correctly and try again.");
+      showToast("❌ Could not connect to server. Try again.", "error");
     }
+
+    btn.textContent = "CREATE SHIPMENT";
+    btn.disabled = false;
   });
 </script>
 
