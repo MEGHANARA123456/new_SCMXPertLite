@@ -31,6 +31,16 @@ def fix_id(record: dict):
     return record
 
 
+def resolve_timestamp(record: dict):
+    ts = record.get("timestamp") or record.get("Timestamp")
+    if ts:
+        return ts
+    oid = record.get("_id")
+    if isinstance(oid, ObjectId):
+        return oid.generation_time.astimezone(timezone.utc).isoformat()
+    return ""
+
+
 # ============================================================
 # 1️ FETCH UNIQUE DEVICE LIST
 # ============================================================
@@ -102,7 +112,7 @@ def get_recent_data():
                 "First_Sensor_temperature": r.get("First_Sensor_temperature", ""),
                 "Route_From": r.get("Route_From", ""),
                 "Route_To": r.get("Route_To", ""),
-                "timestamp": r.get("timestamp", "")
+                "timestamp": resolve_timestamp(r)
             })
 
         return {"records": final_records}
@@ -134,7 +144,7 @@ def get_device_by_id(device_id: str):
             "First_Sensor_temperature": r.get("First_Sensor_temperature", ""),
             "Route_From": r.get("Route_From", ""),
             "Route_To": r.get("Route_To", ""),
-            "timestamp": r.get("timestamp", ""),
+            "timestamp": resolve_timestamp(r),
         })
 
     return {"records": final}

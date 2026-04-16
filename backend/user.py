@@ -37,6 +37,7 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB_APP] # type: ignore
 users = db["user"]
 otp_col = db["otp_store"]
+sessions_col = db["logged_sessions"]
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 # DB collections (add these after your existing db setup)
 shipments = db["shipments"]
@@ -333,6 +334,16 @@ def login(
         "username": user["username"],
         "email": user.get("email"),
         "role": user.get("role", "user")
+    })
+
+    now = datetime.utcnow()
+    sessions_col.insert_one({
+        "username": user["username"],
+        "email": user.get("email"),
+        "role": user.get("role", "user"),
+        "ts": int(now.timestamp() * 1000),
+        "logged_at": now,
+        "login_method": "password"
     })
 
     return {

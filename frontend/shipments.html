@@ -77,7 +77,7 @@
   width: 100%;
 }
 
-/*  ACTIVE PAGE (this is missing in your code) */
+/*  ACTIVE PAGE  */
 .nav-menu a.active {
   color: #45e4ff;
 }
@@ -191,6 +191,8 @@
     .btn-ghost:hover { border-color: var(--purple); background: var(--purple-light); }
     .btn-danger-ghost { background: #fff; color: var(--danger); border: 1.5px solid #fca5a5; }
     .btn-danger-ghost:hover { background: #fff5f5; }
+    .btn-warning-ghost { background: #fffbeb; color: var(--warning); border: 1.5px solid #fde9bf; }
+    .btn-warning-ghost:hover { background: #fef3c7; }
 
     .btn-edit-inline { padding: 5px 13px; border-radius: 7px; background: var(--purple-light); color: var(--purple); border: 1px solid #d5c8f7; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; }
     .btn-edit-inline:hover { background: var(--purple-mid); }
@@ -757,12 +759,18 @@
 
       if (isAdmin) cells += `<td><span class="created-by-badge">👤 ${s.created_by||'—'}</span></td>`;
 
-      // Both admin and user get Edit + Delete
+      // Admin gets Edit + Delete; User gets Edit + Cancel
       cells += `<td><div class="actions-cell">`;
       if (isAdmin) cells += `<button class="btn-view-inline" data-action="view">View</button>`;
-      cells += `<button class="btn-edit-inline" data-action="edit">Edit</button>
-        <button class="btn-del-inline" data-action="delete">Del</button>
-      </div></td>`;
+      cells += `<button class="btn-edit-inline" data-action="edit">Edit</button>`;
+      
+      if (isAdmin) {
+        cells += `<button class="btn-del-inline" data-action="delete">Del</button>`;
+      } else {
+        cells += `<button class="btn-del-inline" data-action="cancel">Cancel</button>`;
+      }
+      
+      cells += `</div></td>`;
 
       tr.innerHTML = cells;
       tr.querySelectorAll('[data-action]').forEach(btn => {
@@ -772,6 +780,7 @@
           if (act==='view')   openDetailModal(s);
           if (act==='edit')   openEditModal(s);
           if (act==='delete') openConfirmDelete(s);
+          if (act==='cancel') openConfirmCancel(s);
         });
       });
       tbody.appendChild(tr);
@@ -1007,34 +1016,88 @@ if (generalErrors.length) {
       `You're about to permanently delete shipment #${s.shipment_number} (${s.goods_type||''}).`;
     document.getElementById('confirmModal').classList.add('open');
   }
+  /* ── Cancel Shipment ── */
+  let cancelingShipmentNumber = null;
+  
+  function resetConfirmModal() {
+    document.getElementById('cancelDeleteBtn').textContent = 'Cancel';
+    document.getElementById('confirmDeleteBtn').textContent = 'Delete';
+    document.getElementById('confirmDeleteBtn').className = 'btn btn-danger-ghost';
+    document.querySelector('.confirm-icon').textContent = '🗑️';
+    document.querySelector('.modal-title').textContent = 'Delete Shipment?';
+    document.querySelector('.confirm-sub').textContent = 'This action cannot be undone.';
+  }
+  
+  function openConfirmCancel(s) {
+    cancelingShipmentNumber = s.shipment_number;
+    document.getElementById('confirmMsg').textContent =
+      `You're about to cancel shipment #${s.shipment_number} (${s.goods_type||''}).`;
+    document.getElementById('cancelDeleteBtn').textContent = 'Keep';
+    document.getElementById('confirmDeleteBtn').textContent = 'Cancel Shipment';
+    document.getElementById('confirmDeleteBtn').className = 'btn btn-warning-ghost';
+    document.querySelector('.confirm-icon').textContent = '⚠️';
+    document.querySelector('.modal-title').textContent = 'Cancel Shipment?';
+    document.querySelector('.confirm-sub').textContent = 'The shipment status will be updated to cancelled.';
+    document.getElementById('confirmModal').classList.add('open');
+  }
+  
   document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
     document.getElementById('confirmModal').classList.remove('open');
     deletingShipmentNumber = null;
+    cancelingShipmentNumber = null;
+    resetConfirmModal();
   });
+  
   document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-    if (!deletingShipmentNumber) return;
-    const btn = document.getElementById('confirmDeleteBtn');
-    btn.disabled=true; btn.textContent='Deleting…';
-    try {
-      const token = localStorage.getItem("token")||"";
-      const res = await fetch(`${API}/api/shipments/${deletingShipmentNumber}`, {
-        method: "DELETE",
-        headers: {"Authorization": "Bearer "+token}
-      });
-      if (!res.ok) {
-        const data=await res.json();
-        showToast(data.detail||"Delete failed", true); return;
-      }
-      document.getElementById('confirmModal').classList.remove('open');
-      showToast("✓ Shipment deleted");
-      await loadShipments(); // reload from DB
-    } catch { showToast("Network error. Please try again.", true); }
-    finally { btn.disabled=false; btn.textContent='Delete'; deletingShipmentNumber=null; }
+    if (cancelingShipmentNumber) {
+      // Handle cancel shipment
+      const btn = document.getElementById('confirmDeleteBtn');
+      btn.disabled=true; btn.textContent='Cancelling…';
+      try {
+        const token = localStorage.getItem("token")||"";
+        const res = await fetch(`${API}/api/shipments/${cancelingShipmentNumber}`, {
+          method: "PATCH",
+          headers: {"Authorization": "Bearer "+token, "Content-Type": "application/json"},
+          body: JSON.stringify({status: "cancelled"})
+        });
+        if (!res.ok) {
+          const data=await res.json();
+          showToast(data.detail||"Cancel failed", true); return;
+        }
+        document.getElementById('confirmModal').classList.remove('open');
+        resetConfirmModal();
+        showToast("✓ Shipment cancelled");
+        await loadShipments();
+      } catch { showToast("Network error. Please try again.", true); }
+      finally { btn.disabled=false; btn.textContent='Cancel Shipment'; cancelingShipmentNumber=null; }
+    } else if (deletingShipmentNumber) {
+      // Handle delete shipment
+      const btn = document.getElementById('confirmDeleteBtn');
+      btn.disabled=true; btn.textContent='Deleting…';
+      try {
+        const token = localStorage.getItem("token")||"";
+        const res = await fetch(`${API}/api/shipments/${deletingShipmentNumber}`, {
+          method: "DELETE",
+          headers: {"Authorization": "Bearer "+token}
+        });
+        if (!res.ok) {
+          const data=await res.json();
+          showToast(data.detail||"Delete failed", true); return;
+        }
+        document.getElementById('confirmModal').classList.remove('open');
+        showToast("✓ Shipment deleted");
+        await loadShipments();
+      } catch { showToast("Network error. Please try again.", true); }
+      finally { btn.disabled=false; btn.textContent='Delete'; deletingShipmentNumber=null; }
+    }
   });
+  
   document.getElementById('confirmModal').addEventListener('click', e => {
     if (e.target===document.getElementById('confirmModal')) {
       document.getElementById('confirmModal').classList.remove('open');
       deletingShipmentNumber=null;
+      cancelingShipmentNumber=null;
+      resetConfirmModal();
     }
   });
 

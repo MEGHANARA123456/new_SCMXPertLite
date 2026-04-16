@@ -12,11 +12,11 @@ import uvicorn
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backend import db
-import user
-import shipments_da
-import device_data
-import admin_privileges
-import role_management
+from backend import user
+from backend import shipments_da
+from backend import device_data
+from backend import admin_privileges
+from backend import role_management
 import backend.auth_utils as auth_utils
 import backend.db as db
 import backend.models as models

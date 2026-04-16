@@ -556,19 +556,26 @@ tbody tr:hover{background:#fbfbff}
           <div class="device-chart-card">
             <div class="header-row" style="margin-bottom:8px">
               <div>
-                <div class="chart-title">📡 Device ID vs Temperature &amp; Battery</div>
+                <div class="chart-title">📡 Device Telemetry</div>
                 <div class="chart-sub" id="deviceChartSub">Loading IoT data from MONGO_DB_IOT...</div>
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <div class="legend">
-                  <div class="legend-item"><div class="legend-dot" style="background:#7c5cbf"></div>Temp (°C)</div>
+                  <div class="legend-item"><div class="legend-dot" style="background:#7c5cbf"></div>Temperature (°C)</div>
                   <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>Battery (%)</div>
                 </div>
                 <button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="loadDeviceChart()">↻ Refresh</button>
               </div>
             </div>
-            <div class="chart-wrap" style="height:260px">
-              <canvas id="deviceTelChart">Device telemetry loading...</canvas>
+            <div class="chart-grid" style="grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px">
+              <div class="chart-card" style="padding:12px;min-height:260px;">
+                <div class="chart-title">Device vs Temperature</div>
+                <div class="chart-wrap" style="height:220px"><canvas id="deviceTempChart"></canvas></div>
+              </div>
+              <div class="chart-card" style="padding:12px;min-height:260px;">
+                <div class="chart-title">Device vs Battery</div>
+                <div class="chart-wrap" style="height:220px"><canvas id="deviceBatChart"></canvas></div>
+              </div>
             </div>
             <div class="device-stat-row" id="deviceStatRow">
               <div class="device-stat"><div class="device-stat-label">Total Devices</div><div class="device-stat-val" id="dStatTotal">—</div></div>
@@ -577,7 +584,6 @@ tbody tr:hover{background:#fbfbff}
               <div class="device-stat"><div class="device-stat-label">Low Battery</div><div class="device-stat-val" id="dStatBat" style="color:#dc2626">—</div></div>
             </div>
           </div>
-          <!-- Removed: Device Status Distribution & Battery Level Ranges charts -->
  
         </div>
  
@@ -700,7 +706,7 @@ tbody tr:hover{background:#fbfbff}
       <div id="shipmentLoadMsg" style="text-align:center;padding:14px;color:#888;font-size:13px;display:none">Loading shipments...</div>
       <div style="overflow:auto">
         <table id="shipmentTable">
-          <thead><tr><th>Shipment #</th><th>Route</th><th>Goods</th><th>Priority</th><th>Status</th><th>Delivery Date</th><th>Created By</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Shipment ID</th><th>Route</th><th>Goods</th><th>Priority</th><th>Status</th><th>Delivery Date</th><th>Created By</th><th>Actions</th></tr></thead>
           <tbody id="shipmentTableBody"></tbody>
         </table>
       </div>
@@ -741,9 +747,10 @@ tbody tr:hover{background:#fbfbff}
       </div>
       <div style="overflow:auto">
         <table id="deviceTable">
-          <thead><tr><th>Device ID</th><th>Shipment ID</th><th>Temperature</th><th>Humidity</th><th>Battery</th><th>Route From</th><th>Route To</th><th>TimeStamp</th></tr></thead>
+          <thead><tr><th>Device ID</th><th>Temperature</th><th>Battery</th><th>Route From</th><th>Route To</th><th>TimeStamp</th></tr></thead>
           <tbody id="deviceTableBody"></tbody>
         </table>
+        <div style="margin-top:10px;font-size:11px;color:#888;text-align:center">Data refreshes every 15 seconds</div>
       </div>
     </section>
  
@@ -1067,14 +1074,46 @@ function showToast(msg, type="") {
   toastEl.className = "show" + (type ? " toast-"+type : "");
   setTimeout(()=> toastEl.className = "", 2800);
 }
-function fmt(dt) { try { return new Date(dt).toLocaleString(); } catch { return dt||"—"; } }
-function fmtDate(dt) { try { return new Date(dt).toLocaleDateString(); } catch { return dt||"—"; } }
+function fmt(dt) {
+  try {
+    if (dt === null || dt === undefined || dt === "") return "—";
+    let value = dt;
+    if (typeof dt === "string") {
+      const trimmed = dt.trim();
+      if (/^[0-9]+$/.test(trimmed)) {
+        value = Number(trimmed);
+      }
+    }
+    if (typeof value === "number" && value < 1e12) {
+      value = value * 1000;
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return dt || "—";
+    return date.toLocaleString();
+  } catch {
+    return dt || "—";
+  }
+}
+function fmtDate(dt) {
+  try {
+    const value = typeof dt === "number" && dt < 1e12 ? dt * 1000 : dt;
+    return new Date(value).toLocaleDateString();
+  } catch {
+    return dt || "—";
+  }
+}
 function escapeHtml(s) {
   if (!s) return "";
   return String(s).replace(/[&<>"']/g,t=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[t]));
 }
 function tempClass(t) { const n=parseFloat(t); return n>35?"temp-hot":n>28?"temp-warm":"temp-ok"; }
-function batClass(b) { const n=parseFloat(b); return n<20?"bat-low":n<40?"bat-mid":"bat-ok"; }
+function batClass(b) {
+  const n = parseFloat(b);
+  if (Number.isNaN(n)) return "";
+  if (n > 4) return "bat-ok";
+  if (n >= 3) return "bat-mid";
+  return "bat-low";
+}
  
 /* ── PROFILE DROPDOWN ── */
 const profileWrap = document.getElementById("profileWrap");
@@ -1358,28 +1397,38 @@ async function refreshAnalytics() {
    Device_ID, Battery_Level, First_Sensor_temperature, Route_From, Route_To
 ══════════════════════════════════ */
 function normalizeDevice(d) {
+  const timestampValue = [
+    d.updated_at,
+    d.timestamp,
+    d.Timestamp,
+    d.last_seen,
+    d.updatedAt,
+    d.ts,
+    d.created_at
+  ].find(v => v !== undefined && v !== null && v !== "") || "";
   return {
     device_id:   d.device_id   || d.Device_ID   || d.deviceId   || d._id || "—",
-    shipment_id: d.shipment_id || d.Shipment_ID  || d.shipmentId || "—",
     temperature: d.temperature ?? d.First_Sensor_temperature ?? d.Temperature ?? d.temp ?? null,
-    humidity:    d.humidity    ?? d.Humidity     ?? d.humidity_level ?? null,
     battery:     d.battery     ?? d.Battery_Level ?? d.battery_level ?? d.battery_percentage ?? null,
     route_from:  d.route_from  || d.Route_From   || d.origin || "—",
     route_to:    d.route_to    || d.Route_To     || d.destination || "—",
     location:    d.location    || (d.latitude ? `${d.latitude}, ${d.longitude}` : null),
     status:      d.status      || d.Status       || "—",
-    updated_at:  d.updated_at  || d.timestamp    || d.last_seen || d.updatedAt || "",
+    updated_at:  timestampValue,
+    timestamp:   timestampValue,
   };
 }
  
 /* ══════════════════════════════════
    DEVICE TELEMETRY CHART 
 ══════════════════════════════════ */
-let deviceTelChart = null;
+let deviceTempChart = null;
+let deviceBatChart = null;
  
 async function loadDeviceChart() {
-  const canvas = document.getElementById("deviceTelChart");
-  if (!canvas) return;
+  const tempCanvas = document.getElementById("deviceTempChart");
+  const batCanvas  = document.getElementById("deviceBatChart");
+  if (!tempCanvas || !batCanvas) return;
   try {
     let records = null;
     for (const url of [`${API}/device-data/recent`]) {
@@ -1396,73 +1445,104 @@ async function loadDeviceChart() {
     const el = document.getElementById("statDevices"); if(el) el.textContent = records.length;
     if(document.getElementById("sysDevices")) document.getElementById("sysDevices").textContent = records.length;
   } catch {
-    document.getElementById("deviceChartSub").textContent = "Could not load IoT device data — check MONGO_DB_IOT connection";
+    document.getElementById("deviceChartSub").textContent = "Could not load IoT device data — check MONGOdb connection";
   }
 }
  
 function renderDeviceChart(devices) {
-  const labels = devices.map(d => String(d.device_id));
-  const temps  = devices.map(d => d.temperature !== null ? parseFloat(d.temperature) : 0);
-  const bats   = devices.map(d => d.battery    !== null ? parseFloat(d.battery)    : 0);
-  
-  if (deviceTelChart) { deviceTelChart.destroy(); deviceTelChart = null; }
- 
-  deviceTelChart = new Chart(document.getElementById("deviceTelChart"), {
-    type: "bar",
+  const sorted = [...devices].sort((a,b) => (parseFloat(a.device_id) || 0) - (parseFloat(b.device_id) || 0));
+  const labels = sorted.map(d => String(d.device_id || d._id || "Device"));
+  const temps  = sorted.map(d => d.temperature !== null ? parseFloat(d.temperature) : null);
+  const bats   = sorted.map(d => d.battery !== null ? parseFloat(d.battery) : null);
+
+  if (deviceTempChart) { deviceTempChart.destroy(); deviceTempChart = null; }
+  if (deviceBatChart)  { deviceBatChart.destroy(); deviceBatChart = null; }
+
+  deviceTempChart = new Chart(document.getElementById("deviceTempChart"), {
+    type: "line",
     data: {
       labels,
       datasets: [
         {
           label: "Temperature (°C)",
           data: temps,
-          backgroundColor: temps.map(t => t > 35 ? "rgba(220,38,38,0.82)" : t > 28 ? "rgba(180,83,9,0.75)" : "rgba(124,92,191,0.75)"),
-          borderRadius: 5,
-          borderSkipped: false,
-          yAxisID: "yTemp",
-          order: 2
+          borderColor: "rgba(124,92,191,0.95)",
+          backgroundColor: "rgba(124,92,191,0.25)",
+          tension: 0.35,
+          fill: true,
+          pointRadius: 4,
+          yAxisID: "yTemp"
         },
         {
-          label: "Battery (%)",
+          label: "Battery (V)",
           data: bats,
-          type: "line",
-          borderColor: "#059669",
-          backgroundColor: "rgba(5,150,105,0.10)",
-          borderWidth: 2,
-          pointRadius: 5,
-          pointBackgroundColor: bats.map(b => b < 20 ? "#dc2626" : b < 40 ? "#b45309" : "#059669"),
-          fill: true,
+          borderColor: "rgba(5,150,105,0.95)",
+          backgroundColor: "rgba(5,150,105,0.25)",
           tension: 0.35,
-          yAxisID: "yBat",
-          order: 1
+          fill: true,
+          pointRadius: 4,
+          yAxisID: "yBat"
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode:"index", intersect:false },
       plugins: {
-        legend: { display:false },
+        legend: { display: true, position: "bottom", labels: { color: "#333", font: { size: 12 } } },
         tooltip: {
           callbacks: {
-            label: ctx => ctx.dataset.label === "Battery (%)"
-              ? ` Battery: ${ctx.raw.toFixed(0)}%`
-              : ` Temp: ${ctx.raw.toFixed(1)}°C`
+            label: ctx => {
+              const value = ctx.parsed.y;
+              return ctx.dataset.label === "Battery (V)"
+                ? `Battery: ${value.toFixed(2)}V`
+                : `Temp: ${value.toFixed(1)}°C`;
+            }
           }
         }
       },
       scales: {
-        x: { grid:{color:"rgba(0,0,0,0.04)"}, ticks:{color:"#999",font:{size:11},autoSkip:true,maxRotation:35,maxTicksLimit:12} },
+        x: { grid: { display: false }, ticks: { color: "#555", font: { size: 11 }, autoSkip: true, maxRotation: 45 } },
         yTemp: {
-          position:"left", beginAtZero:true,
-          title:{display:true,text:"°C",color:"#7c5cbf",font:{size:11}},
-          grid:{color:"rgba(0,0,0,0.04)"}, ticks:{color:"#999",font:{size:11}}
+          type: "linear",
+          position: "left",
+          title: { display: true, text: "Temperature (°C)", color: "#7c5cbf", font: { size: 11 } },
+          ticks: { color: "#7c5cbf", font: { size: 11 } },
+          grid: { color: "rgba(0,0,0,0.05)" }
         },
         yBat: {
-          position:"right", min:0, max:100,
-          title:{display:true,text:"%",color:"#059669",font:{size:11}},
-          grid:{drawOnChartArea:false}, ticks:{color:"#999",font:{size:11}}
+          type: "linear",
+          position: "right",
+          title: { display: true, text: "Battery (V)", color: "#059669", font: { size: 11 } },
+          ticks: { color: "#059669", font: { size: 11 }, stepSize: 0.5 },
+          grid: { drawOnChartArea: false }
         }
+      }
+    }
+  });
+
+  deviceBatChart = new Chart(document.getElementById("deviceBatChart"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Battery (V)",
+        data: bats,
+        backgroundColor: bats.map(b => b > 4 ? "rgba(5,150,105,0.85)" : b >= 3 ? "rgba(180,83,9,0.85)" : "rgba(220,38,38,0.85)"),
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `Battery: ${ctx.parsed.y.toFixed(2)}V` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: "#555", font: { size: 11 }, autoSkip: true, maxRotation: 40 } },
+        y: { beginAtZero: true, max: 6, title: { display: true, text: "Voltage (V)", color: "#059669", font: { size: 11 } }, ticks: { color: "#999", font: { size: 11 }, stepSize: 0.5 }, grid: { color: "rgba(0,0,0,0.05)" } }
       }
     }
   });
@@ -1471,7 +1551,7 @@ function renderDeviceChart(devices) {
   const online   = devices.filter(d=>(d.status||"").toLowerCase()==="online").length;
   const avgTemp  = devices.length ? (temps.reduce((a,b)=>a+b,0)/temps.length).toFixed(1) : "—";
   const avgBat   = devices.length ? Math.round(bats.reduce((a,b)=>a+b,0)/bats.length) : "—";
-  const lowBat   = bats.filter(b=>b<30).length;
+  const lowBat   = bats.filter(b=>b<3).length;
   const highTemp = temps.filter(t=>t>30).length;
  
   const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
@@ -1857,7 +1937,7 @@ let allDeviceData = [];
 async function loadDeviceData() {
   const tbody = document.getElementById("deviceTableBody");
   if(!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#888;padding:28px">⏳ Loading IoT device data...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#888;padding:28px">⏳ Loading IoT device data...</td></tr>`;
  
   let records = null;
   const endpoints = [
@@ -1876,11 +1956,11 @@ for (const url of endpoints) {
   }
  
   if (records === null) {
-    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:#dc2626;padding:28px"> Check MONGOdb connection.</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:#dc2626;padding:28px"> Check MONGOdb connection.</td></tr>`;
     return;
   }
   if (!records.length) {
-    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:#888;padding:28px">No IoT device records found</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:#888;padding:28px">No IoT device records found</td></tr>`;
     return;
   }
  
@@ -1908,21 +1988,18 @@ function renderDeviceTable() {
   if (sfilt) data = data.filter(d=>(d.status||"").toLowerCase()===sfilt);
   if (search) data = data.filter(d=>JSON.stringify(d).toLowerCase().includes(search));
  
-  if (!data.length) { tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:#888">No devices match filter</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">No devices match filter</td></tr>`; return; }
  
   tbody.innerHTML = data.map(d=>{
     const temp    = d.temperature !== null ? parseFloat(d.temperature).toFixed(1)+"°C" : "—";
-    const humidity= d.humidity    !== null ? parseFloat(d.humidity).toFixed(1)+"%" : "—";
-    const battery = d.battery     !== null ? parseFloat(d.battery).toFixed(0)+"%" : "—";
+    const battery = d.battery !== null ? parseFloat(d.battery).toFixed(1)+"V" : "—";
     const status  = d.status || "—";
     const sClass  = `dbadge dbadge-${(status||"").toLowerCase().trim()}`;
     const tClass  = d.temperature !== null ? tempClass(d.temperature) : "";
-    const bClass  = d.battery     !== null ? batClass(d.battery) : "";
+    const bClass  = d.battery !== null ? batClass(d.battery) : "";
     return `<tr>
       <td style="font-family:'DM Mono',monospace;font-weight:700;color:#4a1ca0;font-size:12px">${escapeHtml(String(d.device_id))}</td>
-      <td style="font-size:12px;color:#666">${escapeHtml(String(d.shipment_id))}</td>
       <td class="${tClass}" style="font-family:'DM Mono',monospace">${temp}</td>
-      <td style="font-family:'DM Mono',monospace">${humidity}</td>
       <td class="${bClass}" style="font-family:'DM Mono',monospace">${battery}</td>
       <td style="font-size:12px;color:#666">${escapeHtml(String(d.route_from))}</td>
       <td style="font-size:12px;color:#666">${escapeHtml(String(d.route_to))}</td>
@@ -2026,7 +2103,7 @@ loadAdminMessages();
 refreshAnalytics();
 loadDeviceChart();
  
-// Auto-poll every 30 seconds
+// Auto-poll every 15 seconds for real-time device data
 window._pollInterval = setInterval(()=>{
   if(authFailed) return;
   loadAdminStats();
@@ -2034,7 +2111,11 @@ window._pollInterval = setInterval(()=>{
   updateLoggedList();
   refreshAnalytics();
   loadDeviceChart();
-}, 30000);
+  // Also refresh device table if panel is visible
+  if(document.getElementById("panelDeviceData").classList.contains("show")) {
+    loadDeviceData();
+  }
+}, 15000);
 // TEMP DEBUG — remove after fixing
 (async function debugShipments() {
   const token = getToken();

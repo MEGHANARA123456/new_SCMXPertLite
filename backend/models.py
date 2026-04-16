@@ -58,6 +58,7 @@ class ShipmentCreate(BaseModel):
     route_from: str = Field(..., min_length=2, max_length=50)
     route_to: str = Field(..., min_length=2, max_length=50)
     device: str = Field(..., min_length=1, max_length=80)
+    device_id: str = Field(..., pattern="^115[0-8]$")
     po_number: str = Field(..., min_length=1, max_length=50)
     ndc_number: str = Field(..., min_length=1, max_length=100)
     serial_number_goods: str = Field(..., min_length=1, max_length=80)
@@ -76,14 +77,6 @@ class ShipmentCreate(BaseModel):
     shipment_description: str | None = Field(default="", max_length=300)
 
     # -------- VALIDATION --------
-    @validator("*", pre=True)
-    def no_empty_strings(cls, v):
-        if isinstance(v, str):
-            v = v.strip()
-        if not v:
-            raise ValueError("Field cannot be empty")
-        return v
-
     @validator("route_from", "route_to")
     def validate_route(cls, v):
         if not re.match(r'^[A-Za-z\s,]+$', v):

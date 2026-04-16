@@ -83,6 +83,7 @@ def get_shipments(current_user: dict = Depends(get_current_user)):
             "shipment_priority": r.get("shipment_priority"),
             "shipment_health":   r.get("shipment_health"),
             "device":            r.get("device"),
+            "device_id":         r.get("device_id"),
             "po_number":         r.get("po_number"),
             "ndc_number":        r.get("ndc_number"),
             "serial_number_goods": r.get("serial_number_goods"),
@@ -104,6 +105,94 @@ def get_shipments(current_user: dict = Depends(get_current_user)):
         })
 
     return {"records": output}
+
+# =========================
+# READ (GET ALL) for ADMIN
+# =========================
+@router.get("/admin/shipments")
+def get_all_shipments_admin(current_user: dict = Depends(get_current_user)):
+    require_role(current_user, ["admin", "super_admin"])
+    
+    records = list(shipments_collection.find().sort("created_at", -1))
+    
+    output = []
+    for r in records:
+        output.append({
+            "shipment_number": r.get("shipment_number"),
+            "container_number": r.get("container_number"),
+            "route_from": r.get("route_from"),
+            "route_to": r.get("route_to"),
+            "goods_type": r.get("goods_type"),
+            "shipment_priority": r.get("shipment_priority"),
+            "shipment_health": r.get("shipment_health"),
+            "device": r.get("device"),
+            "device_id": r.get("device_id"),
+            "po_number": r.get("po_number"),
+            "ndc_number": r.get("ndc_number"),
+            "serial_number_goods": r.get("serial_number_goods"),
+            "delivery_number": r.get("delivery_number"),
+            "batch_id": r.get("batch_id"),
+            "shipment_description": r.get("shipment_description"),
+            "expected_delivery_date": (
+                r["expected_delivery_date"].strftime("%Y-%m-%d")
+                if isinstance(r.get("expected_delivery_date"), datetime)
+                else r.get("expected_delivery_date")
+            ),
+            "created_at": (
+                r["created_at"].isoformat()
+                if isinstance(r.get("created_at"), datetime)
+                else r.get("created_at")
+            ),
+            "created_by": r.get("created_by"),
+            "status": r.get("status"),
+        })
+    
+    return {"records": output}
+
+# =========================
+# READ (GET ONE)
+# =========================
+@router.get("/api/shipments/{shipment_number}")
+def get_shipment(shipment_number: str, current_user: dict = Depends(get_current_user)):
+    role = current_user.get("role", "user").lower()
+    
+    query = {"shipment_number": shipment_number}
+    if role != "admin":
+        query["created_by"] = current_user["username"]
+    
+    record = shipments_collection.find_one(query)
+    if not record:
+        raise HTTPException(404, "Shipment not found")
+    
+    return {
+        "shipment_number": record.get("shipment_number"),
+        "container_number": record.get("container_number"),
+        "route_from": record.get("route_from"),
+        "route_to": record.get("route_to"),
+        "goods_type": record.get("goods_type"),
+        "shipment_priority": record.get("shipment_priority"),
+        "shipment_health": record.get("shipment_health"),
+        "device": record.get("device"),
+        "device_id": record.get("device_id"),
+        "po_number": record.get("po_number"),
+        "ndc_number": record.get("ndc_number"),
+        "serial_number_goods": record.get("serial_number_goods"),
+        "delivery_number": record.get("delivery_number"),
+        "batch_id": record.get("batch_id"),
+        "shipment_description": record.get("shipment_description"),
+        "expected_delivery_date": (
+            record["expected_delivery_date"].strftime("%Y-%m-%d")
+            if isinstance(record.get("expected_delivery_date"), datetime)
+            else record.get("expected_delivery_date")
+        ),
+        "created_at": (
+            record["created_at"].isoformat()
+            if isinstance(record.get("created_at"), datetime)
+            else record.get("created_at")
+        ),
+        "created_by": record.get("created_by"),
+        "status": record.get("status"),
+    }
 
 # =========================
 # update shipment dispatch info 
@@ -158,7 +247,7 @@ async def update_dispatch(
 # create shipment with validation[admin]
 # =========================
 @router.post("/", status_code=201)
-async def create_shipment(payload: ShipmentCreate, db=Depends(get_db)): # type: ignore
+async def create_shipment(payload: ShipmentCreate, db=Depends(get_db)):
     data = payload.model_dump(exclude_none=True)
     data["created_at"] = datetime.now(timezone.utc)
     data["updated_at"] = datetime.now(timezone.utc)
@@ -193,17 +282,37 @@ def delete_shipment(
         raise HTTPException(404, "Not found")
 
     return {"message": "Deleted"}
+#=======================================================
+#cancel shipment (soft delete by setting status to 'cancelled') by admin or the user who created it
+#=======================================================    
+@router.post("/api/shipments/{shipment_number}/cancel")
+def cancel_shipment(        
+    shipment_number: str,
+    current_user: dict = Depends(get_current_user)
+):
+    role = current_user.get("role", "user").lower()
+
+    query = {"shipment_number": shipment_number}
+    if role != "admin":
+        query["created_by"] = current_user["username"]
+
+    result = shipments_collection.update_one(query, {"$set": {"status": "cancelled"}})
+
+    if result.matched_count == 0:
+        raise HTTPException(404, "Not found")
+
+    return {"message": "Shipment cancelled"}
 # ======================================================
 #  ADMIN — PATCH SHIPMENT (status + priority+expected_delivery_date)
 # ======================================================
-@router.patch("/admin/shipments/{shipment_id}")
-def patch_shipment(shipment_id: str, data: dict,
+@router.patch("/admin/shipments/{shipment_number}")
+def patch_shipment(shipment_number: str, data: dict,
                    current_user=Depends(get_current_user)):
     require_role(current_user, ["admin","super_admin"])
  
-    doc = find_shipment(shipment_id) # type: ignore
+    doc = shipments_collection.find_one({"shipment_number": shipment_number})
     if not doc:
-        raise HTTPException(404, f"Shipment '{shipment_id}' not found")
+        raise HTTPException(404, f"Shipment '{shipment_number}' not found")
  
     update_fields = {}
     if "status" in data:
@@ -222,14 +331,28 @@ def patch_shipment(shipment_id: str, data: dict,
     if not update_fields:
         raise HTTPException(400, "No valid fields to update")
  
-    shipments_da.update_one({"_id": doc["_id"]}, {"$set": update_fields}) # type: ignore
+    shipments_collection.update_one({"_id": doc["_id"]}, {"$set": update_fields})
  
     return {"success": True, "updated": update_fields}
 # ======================================================
 #  ADMIN — PUT SHIPMENT (full update / same as PATCH)
 # ======================================================
-@router.put("/admin/shipments/{shipment_id}")
-def put_shipment(shipment_id: str, data: dict,
+@router.put("/admin/shipments/{shipment_number}")
+def put_shipment(shipment_number: str, data: dict,
                  current_user=Depends(get_current_user)):
-    return patch_shipment(shipment_id, data, current_user)
+    return patch_shipment(shipment_number, data, current_user)
+
+# ======================================================
+#  ADMIN — DELETE SHIPMENT
+# ======================================================
+@router.delete("/admin/shipments/{shipment_number}")
+def delete_shipment_admin(shipment_number: str, current_user=Depends(get_current_user)):
+    require_role(current_user, ["admin","super_admin"])
+    
+    result = shipments_collection.delete_one({"shipment_number": shipment_number})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Shipment not found")
+    
+    return {"message": "Deleted"}
  

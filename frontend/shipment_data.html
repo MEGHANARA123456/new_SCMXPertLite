@@ -637,7 +637,22 @@ textarea.input { min-height: 100px; resize: vertical; }
           </select>
           <div class="field-error-msg" id="err-goods_type">Please select a goods type</div>
         </div>
-
+        <div class="field">
+          <label>Device ID <span style="color:#e53935">*</span></label>
+          <select id="device_id" class="input">
+            <option value="">Select Device ID</option>
+            <option value="1150">1150</option>
+            <option value="1151">1151</option>
+            <option value="1152">1152</option>
+            <option value="1153">1153</option>
+            <option value="1154">1154</option>
+            <option value="1155">1155</option>
+            <option value="1156">1156</option>
+            <option value="1157">1157</option>
+            <option value="1158">1158</option>
+          </select>
+          <div class="field-error-msg" id="err-device_id">Please select a device ID</div>
+        </div>
         <div class="field">
           <label>Expected Delivery Date <span style="color:#e53935">*</span></label>
           <input type="date" id="expected_delivery_date" class="input">
@@ -756,7 +771,7 @@ textarea.input { min-height: 100px; resize: vertical; }
     document.getElementById(id).addEventListener("input", () => clearFieldError(id));
   });
 
-  ["device_data","goods_type","expected_delivery_date"].forEach(id => {
+  ["device_data","device_id","goods_type","expected_delivery_date"].forEach(id => {
     document.getElementById(id).addEventListener("change", () => clearFieldError(id));
   });
 
@@ -824,6 +839,7 @@ textarea.input { min-height: 100px; resize: vertical; }
     // Required selects & inputs
     const required = [
       { id: "device_data",            label: "Device" },
+      { id: "device_id",              label: "Device ID" },
       { id: "po_number",              label: "PO Number" },
       { id: "ndc_number",             label: "NDC Number" },
       { id: "serial_number_goods",    label: "Serial Number of Goods" },
@@ -896,6 +912,7 @@ textarea.input { min-height: 100px; resize: vertical; }
       shipment_health:        document.getElementById("shipmentHealthSelect").value,
       container_number:       document.getElementById("container_number").value.trim(),
       goods_type:             document.getElementById("goods_type").value,
+      device_id:              document.getElementById("device_id").value,
       expected_delivery_date: document.getElementById("expected_delivery_date").value,
       delivery_number:        document.getElementById("delivery_number").value.trim(),
       batch_id:               document.getElementById("batch_id").value.trim(),
