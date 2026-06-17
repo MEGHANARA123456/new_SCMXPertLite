@@ -200,9 +200,10 @@
     .btn-view-inline:hover { background: #e0f2fe; }
     .btn-del-inline  { padding: 5px 10px; border-radius: 7px; background: #fff5f5; color: var(--danger); border: 1px solid #fca5a5; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; }
     .btn-del-inline:hover { background: #fee2e2; }
-    .btn-small { padding: 7px 14px; border-radius: 7px; background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; }
-    .btn-small:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); }
-    .btn-small:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-small { padding: 9px 16px; border-radius: 8px; background: var(--surface); color: var(--text-dim); border: 1.5px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .btn-small:hover:not(.disabled-btn) { border-color: var(--purple); color: var(--purple); background: var(--purple-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(108,39,217,0.15); }
+    .btn-small:active:not(.disabled-btn) { transform: translateY(0); }
+    .btn-small.disabled-btn { cursor: not-allowed; opacity: 0.45; }
 
     /* ── TABLE ── */
     .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
@@ -239,10 +240,10 @@
     .empty-state-icon { font-size: 38px; margin-bottom: 12px; }
     .empty-state p { font-size: 15px; }
 
-    .pagination-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; flex-wrap: wrap; gap: 10px; }
-    .page-size-wrap { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-muted); }
-    .page-info { font-size: 13px; color: var(--text-muted); }
-    .page-nav  { display: flex; align-items: center; gap: 8px; }
+    .pagination-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; flex-wrap: wrap; gap: 12px; padding: 16px; background: linear-gradient(135deg, var(--purple-light) 0%, var(--purple-mid) 100%); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(108,39,217,0.06); }
+    .page-size-wrap { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--purple); }
+    .page-info { font-size: 13px; font-weight: 600; color: var(--text-dim); }
+    .page-nav  { display: flex; align-items: center; gap: 10px; }
 
     /* ── MODALS ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(30,17,53,0.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 1000; }
@@ -733,8 +734,24 @@
 
     document.getElementById('pageInfo').textContent =
       `Page ${currentPage} of ${totalPages}  ·  ${total} shipment${total!==1?'s':''}`;
-    document.getElementById('prevPage').disabled = currentPage <= 1;
-    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    
+    const canGoPrev = currentPage > 1;
+    const canGoNext = currentPage < totalPages;
+    
+    // Update button visual state without blocking clicks
+    if (prevBtn) {
+      prevBtn.style.opacity = canGoPrev ? '1' : '0.45';
+      prevBtn.style.cursor = canGoPrev ? 'pointer' : 'not-allowed';
+      prevBtn.classList.toggle('disabled-btn', !canGoPrev);
+    }
+    
+    if (nextBtn) {
+      nextBtn.style.opacity = canGoNext ? '1' : '0.45';
+      nextBtn.style.cursor = canGoNext ? 'pointer' : 'not-allowed';
+      nextBtn.classList.toggle('disabled-btn', !canGoNext);
+    }
 
     if (!slice.length) {
       const cols = isAdmin ? 9 : 8;
@@ -787,11 +804,63 @@
     });
   }
 
-  document.getElementById('prevPage').addEventListener('click', () => { if(currentPage>1){currentPage--;renderTable();} });
-  document.getElementById('nextPage').addEventListener('click', () => { const tp=Math.max(1,Math.ceil(applyFilters().length/pageSize)); if(currentPage<tp){currentPage++;renderTable();} });
-  document.getElementById('pageSizeSelect').addEventListener('change', () => { currentPage=1; renderTable(); });
-  document.getElementById('searchBox').addEventListener('input', () => { currentPage=1; renderTable(); });
-  document.getElementById('statusFilter').addEventListener('change', () => { currentPage=1; renderTable(); });
+  // ── PAGINATION SETUP ──
+  function setupPaginationListeners() {
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+    
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const filtered = applyFilters();
+        const tp = Math.max(1, Math.ceil(filtered.length / pageSize));
+        if (currentPage < tp) {
+          currentPage++;
+          renderTable();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+    
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    if (pageSizeSelect) {
+      pageSizeSelect.addEventListener('change', () => { 
+        currentPage = 1; 
+        renderTable(); 
+      });
+    }
+    
+    const searchBox = document.getElementById('searchBox');
+    if (searchBox) {
+      searchBox.addEventListener('input', () => { 
+        currentPage = 1; 
+        renderTable(); 
+      });
+    }
+    
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+      statusFilter.addEventListener('change', () => { 
+        currentPage = 1; 
+        renderTable(); 
+      });
+    }
+  }
+  
+  document.addEventListener('DOMContentLoaded', setupPaginationListeners);
 
   /* ── CSV Export ── */
   document.getElementById('exportCsvBtn').addEventListener('click', () => {

@@ -446,9 +446,13 @@
     <div id="fp-step-password" style="display:none;">
       <label>New password</label>
       <input id="forgot-new-password" type="password">
+        <span onclick="togglePassword('forgot-new-password', this)"
+          style="position:absolute;right:30px;top:50%;transform:translateY(-50%);cursor:pointer;">👁️</span>
 
       <label>Confirm</label>
       <input id="forgot-confirm-password" type="password">
+      <span onclick="togglePassword('forgot-confirm-password', this)"
+        style="position:absolute;right:30px;top:50%;transform:translateY(-50%);cursor:pointer;">👁️</span>
 
       <button class="btn" id="forgot-reset-btn" style="width:100%;margin-top:12px;">Reset Password</button>
     </div>
@@ -464,13 +468,11 @@ function togglePassword(id, btn){
     field.type = field.type === "password" ? "text" : "password";
     btn.textContent = field.type === "password" ? "👁️" : "🙈";
 }
-
 /* ==========================
     BASIC CONFIG
 ========================== */
 const API_BASE_URL = `${location.protocol}//${location.hostname}:8000`;
 const RECAPTCHA_SITE_KEY = "6LdxN8orAAAAAK_nUskDJoJbpyP3U2F23QqPh0Z-";
-
 /* ==========================
     UI Switch Login/Signup
 ========================== */
@@ -807,7 +809,6 @@ document.getElementById("forgot-reset-btn").onclick = async function(){
   alert("Password updated.");
   closeForgot();
 };
-
 </script>
 </body>
 </html>

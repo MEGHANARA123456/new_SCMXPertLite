@@ -379,7 +379,7 @@ tbody tr:hover{background:#fbfbff}
 <header class="topbar">
   <div class="nav-left">
     <div class="brand">SCMXPert<span class="teal">Lite</span><span class="admin-badge" id="adminBadge">Admin</span></div>
-    <a href="/frontend/shipment_data.html" class="nav-link">+ Create Shipment</a>
+    <a href="/frontend/shipment_data.html" class="nav-link">Create Shipment</a>
   </div>
   <div class="nav-right">
     <div class="welcome-text">Welcome — <span id="currentAdmin">...</span></div>
@@ -764,6 +764,32 @@ tbody tr:hover{background:#fbfbff}
         <span style="background:#fef2f2;color:#dc2626;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid #fecaca">⚠️ SUPER ADMIN ONLY</span>
       </div>
  
+      <!-- View All Credentials -->
+      <div class="super-section">
+        <h5>👤 All User Credentials</h5>
+        <p style="font-size:12px;color:#666;margin-bottom:10px">View all registered users and their information:</p>
+        <div style="overflow:auto;margin-bottom:8px">
+          <table id="allCredentialsTable">
+            <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Created</th></tr></thead>
+            <tbody id="allCredentialsList"></tbody>
+          </table>
+        </div>
+        <button class="btn super" style="width:100%" onclick="loadAllCredentials()">↻ Load All Credentials</button>
+      </div>
+
+      <!-- View All Admins -->
+      <div class="super-section">
+        <h5>🔐 All Admins Management</h5>
+        <p style="font-size:12px;color:#666;margin-bottom:10px">Manage all admin accounts and their privileges:</p>
+        <div style="overflow:auto;margin-bottom:8px">
+          <table id="allAdminsTable">
+            <thead><tr><th>Admin Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+            <tbody id="allAdminsList"></tbody>
+          </table>
+        </div>
+        <button class="btn super" style="width:100%" onclick="loadAllAdmins()">↻ Load All Admins</button>
+      </div>
+
       <!-- Danger Zone: Delete Users -->
       <div class="super-section">
         <h5>🗑️ User Management (Irreversible)</h5>
@@ -773,9 +799,23 @@ tbody tr:hover{background:#fbfbff}
             <tbody id="superUsersList"></tbody>
           </table>
         </div>
-        <button class="btn super" style="margin-top:10px" onclick="loadSuperUsers()">↻ Refresh User List</button>
+        <button class="btn super" style="margin-top:10px;width:100%" onclick="loadSuperUsers()">↻ Refresh User List</button>
       </div>
- 
+
+      <!-- Promote/Demote Users -->
+      <div class="super-section">
+        <h5>📈 Role Promotions & Demotions</h5>
+        <p style="font-size:12px;color:#666;margin-bottom:10px">Promote users to admin or demote admins:</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+          <input id="promoteUsername" type="text" placeholder="Username to promote..." style="padding:8px;border:1px solid #e0e0e0;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px">
+          <button class="btn primary" style="width:100%" onclick="promoteToAdmin()">📈 Promote to Admin</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <input id="demoteUsername" type="text" placeholder="Admin to demote..." style="padding:8px;border:1px solid #e0e0e0;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px">
+          <button class="btn danger-solid" style="width:100%" onclick="demoteAdmin()">📉 Demote to User</button>
+        </div>
+      </div>
+
       <!-- Force logout all -->
       <div class="super-section">
         <h5>🚪 Session Management</h5>
@@ -784,48 +824,59 @@ tbody tr:hover{background:#fbfbff}
           <button class="btn danger-solid" onclick="forceLogoutAll()">🚪 Force Logout All Sessions</button>
         </div>
       </div>
- 
+
       <!-- System stats -->
       <div class="super-section">
         <h5>📊 System Overview</h5>
         <div id="superSystemStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px">
           <div class="device-stat"><div class="device-stat-label">Total Users</div><div class="device-stat-val" id="sysUsers">—</div></div>
+          <div class="device-stat"><div class="device-stat-label">Total Admins</div><div class="device-stat-val" id="sysAdmins">—</div></div>
           <div class="device-stat"><div class="device-stat-label">Active Sessions</div><div class="device-stat-val" id="sysSessions">—</div></div>
-          <div class="device-stat"><div class="device-stat-label">Total Shipments</div><div class="device-stat-val" id="sysShipments">—</div></div>
-          <div class="device-stat"><div class="device-stat-label">IoT Devices</div><div class="device-stat-val" id="sysDevices">—</div></div>
           <div class="device-stat"><div class="device-stat-label">Pending Requests</div><div class="device-stat-val" id="sysPending">—</div></div>
+          <div class="device-stat"><div class="device-stat-label">Total Shipments</div><div class="device-stat-val" id="sysShipments">—</div></div>
           <div class="device-stat"><div class="device-stat-label">Total Replies</div><div class="device-stat-val" id="sysReplies">—</div></div>
         </div>
-        <button class="btn super" style="margin-top:10px" onclick="loadSuperStats()">↻ Refresh Stats</button>
+        <button class="btn super" style="margin-top:10px;width:100%" onclick="loadSuperStats()">↻ Refresh Stats</button>
       </div>
+
+      <!-- Audit Log -->
+      <div class="super-section">
+        <h5>📋 Admin Actions Audit Log</h5>
+        <p style="font-size:12px;color:#666;margin-bottom:10px">Track all role changes and admin actions:</p>
+        <div style="overflow:auto">
+          <table id="auditLogTable">
+            <thead><tr><th>User</th><th>Action</th><th>Role</th><th>Timestamp</th></tr></thead>
+            <tbody id="auditLogBody"></tbody>
+          </table>
+        </div>
+        <button class="btn super" style="margin-top:10px;width:100%" onclick="loadAuditLog()">↻ Load Audit Log</button>
+      
     </section>
- 
-  </main>
-</div>
- 
-<!-- ══ ROLE MODAL ══ -->
+<!-- ══ ROLE EDIT MODAL ══ -->
 <div id="roleModal" class="modal-backdrop">
-  <div class="modal">
+  <div class="modal" style="max-width:420px;width:95%">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h4>Edit Team Member Role</h4>
+      <h4>Edit User Role</h4>
       <button class="close-btn" id="closeModal">✕ Close</button>
     </div>
-    <div style="color:#666;font-size:13px;margin-bottom:4px">User: <strong id="modalUsername">—</strong></div>
-    <div style="color:#666;font-size:13px;margin-bottom:16px">Email: <span id="modalUserEmail">—</span></div>
-    <label style="display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase">Role</label>
-    <select id="modalRoleSelect" class="search" style="width:100%;margin-bottom:0">
-      <option value="">-- choose role --</option>
-      <option value="admin">Admin</option>
-      <option value="manager">Manager</option>
-      <option value="user">User</option>
+    <div style="background:#f7f4ff;border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;color:#222" id="modalUsername">—</div>
+      <div style="font-size:12px;color:#888;margin-top:3px" id="modalUserEmail">—</div>
+    </div>
+    <label style="display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:6px;
+                  letter-spacing:.04em;text-transform:uppercase">Assign Role</label>
+    <select id="modalRoleSelect" style="width:100%;padding:9px 10px;border-radius:8px;
+            border:1px solid #e0e0e0;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:20px">
+      <option value="viewer">👁 Viewer</option>
+      <option value="manager">📋 Manager</option>
+      <option value="admin">🔐 Admin</option>
     </select>
-    <div style="margin-top:18px;display:flex;gap:8px;justify-content:flex-end">
+    <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn ghost" id="modalCancel">Cancel</button>
       <button class="btn primary" id="modalSave">Save Role</button>
     </div>
   </div>
 </div>
- 
 <!-- ══ EDIT SHIPMENT MODAL ══ -->
 <div id="editShipmentModal" class="modal-backdrop">
   <div class="modal">
@@ -1229,6 +1280,135 @@ async function loadSuperStats() {
   if (get(shR)) { const d=await get(shR).json(); const arr=d.records||d.shipments||d||[]; document.getElementById("sysShipments").textContent=arr.length; }
   const repR = await apiFetch(`${API}/admin/replies`);
   if (repR && repR.ok) { const d=await repR.json(); document.getElementById("sysReplies").textContent=(d.replies||[]).length; }
+  
+  // Load system stats from super admin endpoint
+  const statsRes = await apiFetch(`${API}/superadmin/system-stats`);
+  if (statsRes && statsRes.ok) {
+    const s = await statsRes.json();
+    const stats = s.stats || {};
+    if (document.getElementById("sysUsers")) document.getElementById("sysUsers").textContent = stats.total_users || "—";
+    if (document.getElementById("sysAdmins")) document.getElementById("sysAdmins").textContent = stats.total_admins || "—";
+    if (document.getElementById("sysSessions")) document.getElementById("sysSessions").textContent = stats.active_sessions || "—";
+    if (document.getElementById("sysPending")) document.getElementById("sysPending").textContent = stats.pending_requests || "—";
+    if (document.getElementById("sysShipments")) document.getElementById("sysShipments").textContent = stats.total_shipments || "—";
+    if (document.getElementById("sysReplies")) document.getElementById("sysReplies").textContent = stats.total_replies || "—";
+  }
+}
+
+async function loadAllCredentials() {
+  if (!isSuperAdmin) return showToast("⛔ Super admin only", "danger");
+  const tbody = document.getElementById("allCredentialsList");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">Loading credentials...</td></tr>`;
+  const res = await apiFetch(`${API}/superadmin/all-credentials`);
+  if (!res || !res.ok) { 
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:#c62828">⛔ Access Denied</td></tr>`; 
+    return; 
+  }
+  const data = await res.json();
+  const users = data.users || [];
+  if (!users.length) { 
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center">No users found</td></tr>`; 
+    return; 
+  }
+  tbody.innerHTML = users.map(u => `<tr>
+    <td style="font-weight:600;color:#333">${escapeHtml(u.username)}</td>
+    <td style="color:#666;font-size:12px">${escapeHtml(u.email || "(no email)")}</td>
+    <td><span class="role-badge ${u.role==='super_admin'?'super':''}">${escapeHtml(u.role||"user")}</span></td>
+    <td style="color:#888;font-size:11px">${fmt(u.created_at)}</td>
+  </tr>`).join("");
+  showToast(`✅ Loaded ${users.length} user credentials`, "success");
+}
+
+async function loadAllAdmins() {
+  if (!isSuperAdmin) return showToast("⛔ Super admin only", "danger");
+  const tbody = document.getElementById("allAdminsList");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">Loading admins...</td></tr>`;
+  const res = await apiFetch(`${API}/superadmin/all-admins`);
+  if (!res || !res.ok) { 
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:#c62828">⛔ Access Denied</td></tr>`; 
+    return; 
+  }
+  const data = await res.json();
+  const admins = data.admins || [];
+  if (!admins.length) { 
+    tbody.innerHTML=`<tr><td colspan="4">No admin accounts found</td></tr>`; 
+    return; 
+  }
+  tbody.innerHTML = admins.map(u => {
+    const isSelf = u.username === adminName;
+    const isSuper = u.role === "super_admin";
+    const badgeCls = isSuper ? "role-badge super" : "role-badge";
+    return `<tr>
+      <td style="font-weight:600">${escapeHtml(u.username)} ${isSelf?'<span style="font-size:11px;color:#888">(you)</span>':''}</td>
+      <td style="color:#666;font-size:12px">${escapeHtml(u.email||"(no email)")}</td>
+      <td><span class="${badgeCls}">${escapeHtml(u.role)}</span></td>
+      <td>${isSelf?'<span style="color:#888;font-size:11px">(yourself)</span>':isSuper?'<span style="color:#dc2626;font-size:11px">🛡️ Super Admin</span>':'<button class="btn danger sm" onclick="demoteAdmin(\''+escapeHtml(u.username)+'\')">Demote</button>'}</td>
+    </tr>`;
+  }).join("");
+  showToast(`✅ Loaded ${admins.length} admin accounts`, "success");
+}
+
+async function promoteToAdmin() {
+  if (!isSuperAdmin) return showToast("⛔ Super admin only", "danger");
+  const username = document.getElementById("promoteUsername").value.trim();
+  if (!username) return showToast("⚠️ Enter username to promote", "danger");
+  if (!confirm(`Promote "${username}" to Admin role?`)) return;
+  const res = await apiFetch(`${API}/superadmin/promote-to-admin/${encodeURIComponent(username)}`, { method:"POST" });
+  if (res && res.ok) {
+    showToast(`✅ "${username}" promoted to Admin`, "success");
+    document.getElementById("promoteUsername").value = "";
+    loadAllAdmins();
+    loadSuperUsers();
+  } else {
+    const err = res ? await res.json() : {};
+    showToast(`❌ Failed: ${err.detail || "Unknown error"}`, "danger");
+  }
+}
+
+async function demoteAdmin(username) {
+  if (!isSuperAdmin) return showToast("⛔ Super admin only", "danger");
+  if (!username) username = document.getElementById("demoteUsername").value.trim();
+  if (!username) return showToast("⚠️ Enter admin username to demote", "danger");
+  if (!confirm(`⚠️ Demote "${username}" from Admin? They will become a regular User.`)) return;
+  const res = await apiFetch(`${API}/superadmin/demote-admin/${encodeURIComponent(username)}`, { method:"POST" });
+  if (res && res.ok) {
+    showToast(`📉 "${username}" demoted to User`, "success");
+    document.getElementById("demoteUsername").value = "";
+    loadAllAdmins();
+    loadSuperUsers();
+  } else {
+    const err = res ? await res.json() : {};
+    showToast(`❌ Failed: ${err.detail || "Unknown error"}`, "danger");
+  }
+}
+
+async function loadAuditLog() {
+  if (!isSuperAdmin) return showToast("⛔ Super admin only", "danger");
+  const tbody = document.getElementById("auditLogBody");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#888;padding:20px">Loading audit log...</td></tr>`;
+  const res = await apiFetch(`${API}/superadmin/audit-log`);
+  if (!res || !res.ok) { 
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center">No audit data available</td></tr>`; 
+    return; 
+  }
+  const data = await res.json();
+  const entries = data.audit_entries || [];
+  if (!entries.length) { 
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center">No admin actions recorded yet</td></tr>`; 
+    return; 
+  }
+  tbody.innerHTML = entries.map(e => {
+    const action = e.promoted_by ? `Promoted by ${e.promoted_by}` : e.demoted_by ? `Demoted by ${e.demoted_by}` : "Unknown";
+    return `<tr>
+      <td style="font-weight:600">${escapeHtml(e.username)}</td>
+      <td>${action}</td>
+      <td><span class="role-badge ${e.role==='super_admin'?'super':''}">${escapeHtml(e.role||'user')}</span></td>
+      <td style="font-size:11px;color:#888">${fmt(e.promoted_at || e.demoted_at || '')}</td>
+    </tr>`;
+  }).join("");
 }
  
 /* ══════════════════════════════════

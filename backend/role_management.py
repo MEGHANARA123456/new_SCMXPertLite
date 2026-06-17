@@ -30,7 +30,7 @@ async def set_role(username: str, data: dict = Body(...), current_user=Depends(g
 
     new_role = data.get("role", "").lower().strip()
 
-    if new_role not in ALLOWED:
+    if new_role not in ALLOWED and new_role != "super_admin":
         raise HTTPException(400, "Invalid role")
 
     # Fetch user from DB
@@ -40,6 +40,14 @@ async def set_role(username: str, data: dict = Body(...), current_user=Depends(g
 
     old_role = user.get("role", "user")
     user_email = user.get("email")
+
+    # Only super_admin can assign/manage super_admin role
+    if new_role == "super_admin" and current_user.get("role") != "super_admin":
+        raise HTTPException(403, "Only super admin can assign super_admin role")
+    
+    # Cannot modify existing super_admin unless you're super_admin
+    if old_role == "super_admin" and current_user.get("role") != "super_admin":
+        raise HTTPException(403, "Cannot modify super admin credentials")
 
     # Update DB
     users.update_one(
